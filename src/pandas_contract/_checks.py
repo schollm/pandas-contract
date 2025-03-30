@@ -13,6 +13,7 @@ from typing import (
 
 import pandas as pd
 import pandera as pa
+import pandera.errors as pa_errors
 
 from pandas_contract._lib import get_df_arg
 
@@ -35,6 +36,7 @@ class Check(Protocol):
         This is used by the decorator to determine whether the check should be applied
         at all. is_active can be set as attribute within __(post)init__.
         """
+        ...
 
     def mk_check(
         self, fn: MyFunctionType, args: tuple, kwargs: dict[str, Any]
@@ -49,6 +51,7 @@ class Check(Protocol):
         :param kwargs: The keyword arguments of the function.
         :return: A function that takes a single data-frame and returns a list of errors.
         """
+        ...
 
 
 @dataclass(frozen=True)  # type: ignore[call-overload]
@@ -83,7 +86,7 @@ class CheckSchema:
                     inplace=True,
                 )
 
-            except (pa.errors.SchemaErrors, pa.errors.SchemaError) as exc:
+            except (pa_errors.SchemaErrors, pa_errors.SchemaError) as exc:
                 return list(exc.args)
             else:
                 return []

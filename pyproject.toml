@@ -46,4 +46,5 @@ dev-dependencies = [
     "ruff>=0.11.0",
     "pandas-stubs>=2.2.2.240807",
     "pytest-mypy>=1.0.0",
+    "pyright>=1.1.398",
 ]

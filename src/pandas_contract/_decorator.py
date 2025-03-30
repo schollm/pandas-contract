@@ -139,6 +139,13 @@ class result:  # noqa: N801
         self.same_index_as = same_index_as = ensure_list(self.same_index_as)
         self.same_size_as = same_size_as = ensure_list(self.same_size_as)
         checks: list[Check] = [
+            CheckSchema(
+                self.schema,
+                self.head,
+                self.tail,
+                self.sample,
+                self.random_state,
+            ),
             CheckKeepIndex(same_index_as),
             CheckKeepLength(same_size_as),
             CheckExtends(self.extends, self.schema),
@@ -179,7 +186,7 @@ def _get_from_key(key: Any, input_: Any) -> pd.DataFrame:
     if key is _UNDEFINED:
         return input_
     if callable(key):
-        return key(input_)
+        return cast("pd.DataFrame", key(input_))
     return input_[key]
 
 

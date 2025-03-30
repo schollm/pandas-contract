@@ -4,10 +4,10 @@ test: test-src lint
 test-src:
 	uv run pytest src/tests
 
-lint: lint-uv lint-mypy
+lint: lint-uv lint-type
 lint-uv:
 	uv run ruff check
 	uv run ruff format --check
 
-lint-mypy:
-	uv run mypy src/
+lint-type:
+	uv run pyright src/
