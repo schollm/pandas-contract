@@ -122,6 +122,7 @@ class CheckSchema:
         return schema
 
 
+@dataclass(frozen=True)
 class CheckKeepIndex:
     """Check that the DataFrame index is the same as another DataFrame.
 
@@ -137,12 +138,11 @@ class CheckKeepIndex:
 
     """
 
-    indices: list[tuple[str, pd.Index]]
+    same_index_as: list[str]
 
-    def __init__(self, same_index_as: list[str]) -> None:
-        super().__init__()
-        self.same_index_as = same_index_as
-        self.is_active = bool(same_index_as)
+    @property
+    def is_active(self) -> bool:
+        return bool(self.same_index_as)
 
     def mk_check(
         self, fn: Callable, args: tuple[Any, ...], kwargs: dict[str, Any]
@@ -158,15 +158,15 @@ class CheckKeepIndex:
         ]
 
 
+@dataclass(frozen=True)
 class CheckKeepLength:
     """Check the DataFrame and keep the index."""
 
-    lengths: list[tuple[str, int]]
+    same_length_as: list[str]
 
-    def __init__(self, same_length_as: list[str]) -> None:
-        super().__init__()
-        self.same_length_as = same_length_as
-        self.is_active = bool(same_length_as)
+    @property
+    def is_active(self) -> bool:
+        return bool(self.same_length_as)
 
     def mk_check(
         self, fn: Callable, args: tuple[Any], kwargs: dict[str, Any]
@@ -183,7 +183,7 @@ class CheckKeepLength:
         ]
 
 
-@dataclass
+@dataclass(frozen=True)
 class CheckExtends:
     """Ensures resulting dataframe extends another dataframe.
 
@@ -204,9 +204,12 @@ class CheckExtends:
     extends: str | None
     schema: pa.DataFrameSchema | pa.SeriesSchema | None
 
+    @property
+    def is_active(self) -> bool:
+        return self.extends is not None
+
     def __post_init__(self) -> None:
         super().__init__()
-        self.is_active = self.extends is not None
         if self.is_active:
             if self.schema is None:
                 raise ValueError("extends: Schema must be provided.")

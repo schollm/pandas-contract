@@ -44,8 +44,68 @@ class argument:  # noqa: N801
     :param sample: The number of rows to validate randomly. If None, all rows are used
         for validation.
     :param random_state: The random state for the random sampling.
+    :param same_index_as: The name of the input argument(s) that should have the same
+        index.
+    :param same_size_as: The name of the input argument(s) that should have the same
+        size.
+    :param key: The key of the input to check. If None, the entire input is checked.
 
+    ## Examples:
+    ### Ensure that input dataframe as a column "a" of type int.
+    ```
+    @argument(arg="df", schema=pa.DataFrameSchema({"a": pa.Column(pa.Int)}))
+    def func(df: pd.DataFrame) -> None:
+        ...
+    ```
+    ### Ensure that input dataframe as a column "a" of type int and "b" of type float.
+    ```
+    @argument(
+        arg="df",
+        schema=pa.DataFrameSchema({"a": pa.Column(pa.Int), "b": pa.Column(pa.Float)}),
+    )
+    def func(df: pd.DataFrame) -> None:
+        ...
+    ```
 
+    ### Ensure that the dataframes df1 and df2 have the same indices
+    ```
+    @argument(arg="df1", same_index_as="df2")
+    def func(df1: pd.DataFrame, df2: pd.DataFrame) -> None:
+        ...
+    ```
+
+    ### Ensure that the dataframes df1 and df2 have the same size
+    ```
+    @argument(arg="df1", same_size_as="df2")
+    def func(df1: pd.DataFrame, df2: pd.DataFrame) -> None:
+        ...
+    ```
+
+    ### All-together
+    Ensure that the input dataframe has a column "a" of type int, the same index as df2,
+    and the same size as df3.
+
+    ```
+    @argument(
+        arg="dfs",
+        schema=pa.DataFrameSchema({"a": pa.Column(pa.Int)}),
+        same_index_as="df2",
+        same_size_as="df3",
+    )
+    def func(dfs: pd.DataFrame, df2: pd.DataFrame, df3: pd.DataFrame) -> None:
+        ...
+    ```
+
+    ### Data Series
+    Instead of a DataFrame, one can also validate a Series. Then the schema must
+    be of type pa.SeriesSchema.
+
+    For example, to ensure that the input series is of type int, one can use:
+    ```
+    @argument(arg="ds", schema=pa.SeriesSchema(pa.Int))
+    def func(ds: pd.Series) -> None:
+        ...
+    ```
     """
 
     arg: str
@@ -54,7 +114,6 @@ class argument:  # noqa: N801
     tail: int | None = None
     sample: int | None = None
     random_state: int | None = None
-    fix: bool = False
     same_index_as: str | Sequence[str] = ()
     same_size_as: str | Sequence[str] = ()
     key: Any = _UNDEFINED
@@ -110,18 +169,79 @@ class result:  # noqa: N801
 
     The schema is used to validate the output DataFrame of the function.
 
-    :param key: The key of the output to check. If None, the entire output is checked.
-        This can be used if the function returns a tuple or a mapping.
     :param schema: The schema to validate the output DataFrame.
     :param head: The number of rows to validate from the head.
     :param tail: The number of rows to validate from the tail.
     :param sample: The number of rows to validate randomly.
     :param random_state: The random state for the random sampling.
-    :param fix: Whether to fix the values instead of reporting them as an error.
     :param same_index_as: The name of the input argument(s) that should have the
         same index.
     :param same_size_as: The name of the input argument(s) that should have the same
         size.
+    :param key: The key of the output to check. If None, the entire output is checked.
+        This can be used if the function returns a tuple or a mapping.
+
+    ## Examples
+    ### Ensure that the output dataframe has a column "a" of type int.
+    ```
+    @result(schema=pa.DataFrameSchema({"a": pa.Column(pa.Int)})
+    def func() -> pd.DataFrame:
+       return pd.DataFrame({"a": [1, 2]})
+    ```
+
+    ### Ensure that the output dataframe has a column "a" of type int and "b" of type
+        float.
+    ```
+    @result(
+        schema=pa.DataFrameSchema({"a": pa.Column(pa.Int), "b": pa.Column(pa.Float)})
+    )
+    def func() -> pd.DataFrame:
+        return pd.DataFrame({"a": [1, 2], "b": [1.0, 2.0]})
+    ```
+
+    ### Ensure that the output dataframe has the same index as df.
+    ```
+    @result(schema=pa.DataFrameSchema({"a": pa.Column(pa.Int)}, same_index_as="df"))
+    def func(df: pd.DataFrame) -> pd.DataFrame:
+        return df
+    ```
+
+    ### Ensure that the output dataframe has the same size as df.
+    ```
+    @result(schema=pa.DataFrameSchema({"a": pa.Column(pa.Int)}, same_size_as="df"))
+    def func(df: pd.DataFrame) -> pd.DataFrame:
+        return df
+    ```
+
+    ### Ensure same index
+    Ensure that the output dataframe has the same index as df1 and the same size as df2.
+    ```
+    @result(
+        schema=pa.DataFrameSchema({"a": pa.Column(pa.Int)}),
+        same_index_as="df1",
+        same_size_as="df2",
+    )
+    def func(df1: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
+        return df1
+    ```
+
+    ### Ensures that the output extends the input schema.
+    ```
+    @result(extends="df")
+    def func(df: pd.DataFrame) -> pd.DataFrame:
+        return df.assign(a=1)
+    ```
+
+    ### Output extends only input schema
+    Ensures that the output extends the input schema and has a column "a" of type int.
+    ```
+    @result(
+        schema=pa.DataFrameSchema({"a": pa.Column(pa.Int)}),
+        extends="df"x
+    )
+    def func(df: pd.DataFrame) -> pd.DataFrame:
+        return df.assign(a=1)
+    ```
     """
 
     schema: pa.DataFrameSchema | pa.SeriesSchema | None = None
@@ -129,7 +249,6 @@ class result:  # noqa: N801
     tail: int | None = None
     sample: int | None = None
     random_state: int | None = None
-    fix: bool = False
     same_index_as: str | Sequence[str] = ()
     same_size_as: str | Sequence[str] = ()
     key: Any = _UNDEFINED
