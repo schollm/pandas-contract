@@ -1,6 +1,6 @@
 [project]
 name = "pandas-contract"
-version = "0.1.0"
+version = "0.1.1"
 description = "Define input and output columns for functions working on pandas dataframes."
 readme = "README.md"
 authors = [
@@ -29,10 +29,10 @@ dependencies = [
     "pandera>=0.10.0",
 ]
 [project.urls]
-homepage= "https://github.com/schollm/check-dependencies"
+homepage= "https://github.com/schollm/pandas-contract"
 issues = "https://github.com/schollm/pandas-contract/projects"
-source = "https://github.com/schollm/check-dependencies"
-changelog = "https://github.com/schollm/check-dependencies/CHANGELOG.md"
+source = "https://github.com/schollm/pandas-contract"
+changelog = "https://github.com/schollm/pandas-contract/blob/main/CHANGELOG.md"
 
 [tool.uv]
 dev-dependencies = [
