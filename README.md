@@ -45,7 +45,7 @@ Additionally, it provides checks to ensure cross-argument and output constraints
 import pandas as pd
 import pandas_contract as pc
 
-@pc.output(same_index_as=["df1", "df2"])
+@pc.result(same_index_as=["df1", "df2"])
 def my_func(df1: pd.DataFrame, df2: pd.DataFrame):
     # Output has the same index as input
     return pd.DataFrame(index=df1.index)
@@ -61,7 +61,7 @@ def my_func(df1, df2):
 import pandas as pd
 import pandas_contract as pc
 
-@pc.output(same_size_as="df1")
+@pc.result(same_size_as="df1")
 def my_func(df1: pd.DataFrame):
     # Output has the same size as input
     return pd.DataFrame(index=df1.index  + 1)
