@@ -91,6 +91,7 @@ def set_mode(
     return mode
 
 
+@contextmanager
 def raises() -> Generator[None, None, None]:
     """Context decorator to raise errors on failed dataframe tests."""
     with as_mode(Modes.RAISE):

@@ -4,12 +4,7 @@ from collections.abc import Generator
 
 import pytest
 
-from pandas_contract.mode import (
-    Modes,
-    as_mode,
-    get_mode,
-    silent,
-)
+from pandas_contract.mode import Modes, as_mode, get_mode, raises, silent
 from pandas_contract.mode import (
     logger as mode_logger,
 )
@@ -58,6 +53,15 @@ def test_silent_2() -> None:
     with silent():
         assert get_mode() == Modes.SILENT
     assert get_mode() == "raise"
+
+
+def test_raises() -> None:
+    """Test silent context manager."""
+    with silent():
+        assert get_mode() == Modes.SILENT
+        with raises():
+            assert get_mode() == Modes.RAISE
+    assert get_mode() == Modes.RAISE
 
 
 @pytest.mark.parametrize(
