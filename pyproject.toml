@@ -28,8 +28,10 @@ dependencies = [
     "pandera>=0.23.1",
 ]
 [project.urls]
-Homepage= "https://github.com/schollm/check-dependencies"
-Bugtracking = "https://github.com/schollm/pandas-contract/projects"
+homepage= "https://github.com/schollm/check-dependencies"
+issues = "https://github.com/schollm/pandas-contract/projects"
+source = "https://github.com/schollm/check-dependencies"
+changelog = "https://github.com/schollm/check-dependencies/CHANGELOG.md"
 
 [tool.uv]
 dev-dependencies = [
