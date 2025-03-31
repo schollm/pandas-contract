@@ -261,8 +261,8 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "pandas", specifier = ">=2.2.3" },
-    { name = "pandera", specifier = ">=0.23.1" },
+    { name = "pandas", specifier = ">=1.4.0" },
+    { name = "pandera", specifier = ">=0.10.0" },
 ]
 
 [package.metadata.requires-dev]

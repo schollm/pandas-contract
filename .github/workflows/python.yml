@@ -25,7 +25,25 @@ jobs:
         run: ruff format --check
       - name: 'Ruff check'
         run: ruff check
+  test-olded-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.10
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+      - name: Install dependencies
+        run: uv sync
+      - name: Run pytest
+        run: |
+          # Keep --with in sync pyproject.toml
+          # --python 3.10 is the latest with pre-compiled pandas 1.4.0 releases. 
+          uv run --python 3.10 --with pandas==1.4.0 --pandera==0.10.0 pytest src/tests
   test:
+    name: "🏃 Test Python 🐍 application"
     strategy:
       matrix:
         os: ['ubuntu-latest', 'macos-latest', 'windows-latest']
@@ -54,9 +72,10 @@ jobs:
     - name: Run pytest
       run: |
         echo ${{ github.ref }}
-        uv run pytest src/tests
+        uv run --python ${{ python-version }} pytest src/tests
 
   build:
+    name: Build package 📦
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
