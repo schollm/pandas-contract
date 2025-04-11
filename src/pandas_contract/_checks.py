@@ -118,7 +118,10 @@ class CheckSchema:
             schema = copy.deepcopy(schema)
             for col in list(getattr(schema, "columns", {})):
                 if callable(col):
-                    schema.columns[col(fn, args, kwargs)] = schema.columns.pop(col)
+                    col_arg = col(fn, args, kwargs)
+                    col_schema = schema.columns.pop(col)
+                    for col_val in col_arg if isinstance(col_arg, list) else [col_arg]:
+                        schema.columns[col_val] = col_schema
         return schema
 
 
