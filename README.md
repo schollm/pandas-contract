@@ -32,7 +32,13 @@ import pandas as pd
 import pandas_contract as pc
 import pandera as pa
 
-@pc.argument("df", schema=pa.DataFrameSchema({pc.from_arg("val_col"): pa.Int}))
+@pc.argument("df", schema=pa.DataFrameSchema(
+        {
+            pc.from_arg("val_col"): pa.Column(),
+            pc.from_arg("group_cols"): pa.Column(),
+        }
+    )
+)
 @pc.result(schema=pa.DataFrameSchema({pc.from_arg("val_col"): pa.String}))
 def col_to_string(df: pd.DataFrame, val_col: str) -> pd.DataFrame:
     return df.assign(**{val_col: df[val_col].astype(str)})
@@ -79,3 +85,5 @@ import pandera as pa
 def into_dict(df: pd.DataFrame) -> dict[str, pd.DataFrame]:
     return dict(data=df)
 ``` 
+
+### Dataframe output extends input

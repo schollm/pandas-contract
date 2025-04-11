@@ -120,10 +120,7 @@ def test_same_index_as__failing() -> None:
 def test_same_size_as() -> None:
     """Test same_size_as argument."""
 
-    @result(
-        schema=pa.DataFrameSchema({"a": pa.Column(int)}),
-        same_size_as="df",
-    )
+    @result(same_size_as="df")
     def my_fn(df: pd.DataFrame) -> pd.DataFrame:
         """Test function."""
         return df.copy().assign(xx=1)
@@ -136,10 +133,7 @@ def test_same_size_as() -> None:
 def test_same_size_as__failing() -> None:
     """Test same_size_as argument failing."""
 
-    @result(
-        schema=pa.DataFrameSchema({"a": pa.Column(int)}),
-        same_size_as="df",
-    )
+    @result(same_size_as="df")
     def my_fn(df: pd.DataFrame) -> pd.DataFrame:
         return pd.concat((df, df))
 
@@ -191,6 +185,16 @@ def test_result_extends__arg_name() -> None:
         return df.assign(**{col: 1})
 
     my_fn(pd.DataFrame({"x": [1]}), col="x")
+
+
+def test_result_extends__arg_name_is_list() -> None:
+    """Test result decorator with extends argument."""
+
+    @result(schema=pa.DataFrameSchema({from_arg("cols"): pa.Column()}))
+    def my_fn(cols: list[str]) -> pd.DataFrame:
+        return pd.DataFrame(dict.fromkeys(cols, (0,)))
+
+    my_fn(["x", "y"])
 
 
 def test_result_extends__fail_extra_column() -> None:
