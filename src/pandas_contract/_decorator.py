@@ -180,6 +180,8 @@ class result:  # noqa: N801
         size.
     :param key: The key of the output to check. If None, the entire output is checked.
         This can be used if the function returns a tuple or a mapping.
+    :param extends: The name of the input argument that the output extends. Only
+        columns defined in the output schema are allowed to be mutated or added.
 
     ## Examples
     ### Ensure that the output dataframe has a column "a" of type int.
