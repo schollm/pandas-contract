@@ -266,7 +266,7 @@ class CheckExtends:
             if "err" in hash_self:
                 yield f"{prefix}{self.arg_name} {hash_self['err']}"
             if "err" in hash_other:
-                yield f"{prefix}{self.extends} {hash_self['err']}"
+                yield f"{prefix}{self.extends} {hash_other['err']}"
             return
 
         if hash_self["index"] != hash_other["index"]:
