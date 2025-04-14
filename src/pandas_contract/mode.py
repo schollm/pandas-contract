@@ -5,11 +5,17 @@ from __future__ import annotations
 import enum
 from contextlib import contextmanager
 from logging import getLogger
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, Union
 
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Generator, Iterable
 
+ModesT = Union[
+    "Modes",
+    Literal[
+        "skip", "silent", "trace", "debug", "info", "warn", "error", "critical", "raise"
+    ],
+]
 
 logger = getLogger(__name__)
 _LOG_LEVELS = {
@@ -28,6 +34,7 @@ class Modes(enum.Enum):
     SKIP = "skip"
     SILENT = "silent"
     TRACE = "trace"
+    DEBUG = "debug"
     INFO = "info"
     WARN = "warn"
     ERROR = "error"
@@ -66,10 +73,7 @@ def get_mode() -> Modes:
 
 
 @contextmanager
-def as_mode(
-    mode: Modes
-    | Literal["skip", "silent", "trace", "info", "warn", "error", "critical", "raise"],
-) -> Generator[None, None, None]:
+def as_mode(mode: ModesT) -> Generator[None, None, None]:
     """Context manager to temporarily set the global mode for handling errors."""
     prev_mode = _MODE
     set_mode(mode)
@@ -79,10 +83,7 @@ def as_mode(
         set_mode(prev_mode)
 
 
-def set_mode(
-    mode: Modes
-    | Literal["skip", "silent", "trace", "info", "warn", "error", "critical", "raise"],
-) -> Modes:
+def set_mode(mode: ModesT) -> Modes:
     """Set the global mode for handling errors."""
     global _MODE  # noqa: PLW0603
     if isinstance(mode, str):
