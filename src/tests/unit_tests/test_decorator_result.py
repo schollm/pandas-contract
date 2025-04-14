@@ -219,3 +219,11 @@ def test_result_extends__fail_change_idx() -> None:
 
     with pytest.raises(KeyError, match="None of .10. are"):
         my_fn(pd.DataFrame(index=[0]))
+
+
+def test_inplace() -> None:
+    """Check inplace argument."""
+
+    @result(inplace="df")
+    def my_fn(df: pd.DataFrame) -> pd.DataFrame:
+        return df
