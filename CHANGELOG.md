@@ -3,6 +3,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [0.3.0] - 2025-04-14
+### Bugfixes
+- Allow multiple pandas contract checkers attached to a single function
+### Changes
+- By default, be silent. 
+  - This means that if a contract check fails, it will not output anything.
+  - You can still use the `raises` and `as_mode`. For tests, its recommended to
+    call `set_mode(Modes.RAISES)` within the test setup.
+- Improve error message in case one argument or the output does not extend another one.
+  If the `pc.argument(extend=<arg>)` or `pc.result(extend=<arg>)` does not hold,
+  the error message will provide a more detailed explanation.
+
 ## [0.2.0] - 2025-04-11
 ### Added
 - Support multiple columns from function argument

@@ -57,7 +57,7 @@ class Modes(enum.Enum):
         return super().__eq__(other)
 
 
-_MODE: Modes = Modes.RAISE
+_MODE: Modes = Modes.SILENT
 
 
 def get_mode() -> Modes:

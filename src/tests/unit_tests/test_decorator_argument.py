@@ -23,6 +23,16 @@ def test() -> None:
     my_fn(df=pd.DataFrame({"a": [1]}))
 
 
+def test_very_simple() -> None:
+    """Test argument decorator."""
+
+    @argument(arg="df")
+    def my_fn(df: pd.DataFrame) -> int:
+        return len(df)
+
+    my_fn(df=pd.DataFrame({"a": [1]}))
+
+
 def test_fail(caplog: pytest.LogCaptureFixture) -> None:
     """Test argument decorator failing."""
 
@@ -102,6 +112,39 @@ def test_series() -> None:
         return len(ds)
 
     my_fn(ds=pd.Series([1], name="a"))
+
+
+def test_extends() -> None:
+    """Test extends argument."""
+
+    @argument(
+        arg="df",
+        schema=pa.DataFrameSchema({"a": pa.Column(int)}),
+        extends="df2",
+    )
+    def my_fn(df: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
+        return df
+
+    df_ = pd.DataFrame({"a": [1], "b": ["x"]})
+    res = my_fn(df=df_, df2=pd.DataFrame({"b": ["x"]}))
+    assert res is df_
+
+
+def test_extends__fails() -> None:
+    """Test extends argument."""
+
+    @argument(
+        arg="df",
+        schema=pa.DataFrameSchema({"a": pa.Column(int)}),
+        extends="df2",
+    )
+    def my_fn(df: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
+        return df
+
+    df_ = pd.DataFrame({"a": [1], "b": ["x"], "c": 10})
+    with pytest.raises(ValueError, match="my_fn: Argument df:") as excinfo:
+        my_fn(df=df_, df2=pd.DataFrame({"b": ["y"], "c": 10}))
+    excinfo.match("'b'")
 
 
 @pytest.mark.parametrize(

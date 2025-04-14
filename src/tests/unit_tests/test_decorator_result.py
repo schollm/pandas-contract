@@ -204,7 +204,9 @@ def test_result_extends__fail_extra_column() -> None:
     def my_fn(df: pd.DataFrame) -> pd.DataFrame:
         return df.assign(a=1, b=2)
 
-    with pytest.raises(ValueError, match="Hash of result not equal to hash of df."):
+    with pytest.raises(
+        ValueError, match=r"my_fn: Output: extends df: Columns differ: \[\] != \['b'\]"
+    ):
         my_fn(pd.DataFrame())
 
 

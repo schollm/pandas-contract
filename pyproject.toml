@@ -1,6 +1,6 @@
 [project]
 name = "pandas-contract"
-version = "0.2.0"
+version = "0.3.0"
 description = "Define input and output columns for functions working on pandas dataframes."
 readme = "README.md"
 authors = [
@@ -41,6 +41,7 @@ dev-dependencies = [
     "pandas-stubs>=2.2.2.240807",
     "pytest-mypy>=1.0.0",
     "pyright>=1.1.398",
+    "pytest-cov>=6.1.1",
 ]
 
 [tool.ruff]
@@ -69,6 +70,16 @@ parametrize-names-type = "csv"
     "ARG", # Unused function args -> fixtures nevertheless are functionally relevant...
     "FBT", # Don't care about booleans as positional arguments in tests, e.g. via @pytest.mark.parametrize()
 ]
+
+[tool.pytest.ini_options]
+addopts = """
+  --junit-xml=.out/junit-pytest.xml
+  --cov=src/pandas_contract
+  --cov-report=xml:.out/coverage.xml
+  --cov-report=html:.out/coverage-html
+  --cov-report term-missing
+  --cov-branch
+"""
 
 [build-system]
 requires = ["hatchling"]

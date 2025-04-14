@@ -26,6 +26,9 @@ def ensure_list(value: str | Sequence[str]) -> list[str]:
     return list(value)
 
 
+ORIGINAL_FUNCTION_ATTRIBUTE = "_pandas_contract_original_function"
+
+
 def from_arg(arg: str) -> Callable[[MyFunctionType, tuple[Any], dict[str, Any]], Any]:
     """Get the named argument from the function call via a call-back.
 
@@ -36,6 +39,8 @@ def from_arg(arg: str) -> Callable[[MyFunctionType, tuple[Any], dict[str, Any]],
     def wrapper(
         fn: MyFunctionType, args: tuple[Any, ...], kwargs: dict[str, Any]
     ) -> object:
+        """Get the named argument from the function call."""
+        fn = getattr(fn, ORIGINAL_FUNCTION_ATTRIBUTE, fn)
         return get_fn_arg(fn, arg, args, kwargs)
 
     return wrapper
