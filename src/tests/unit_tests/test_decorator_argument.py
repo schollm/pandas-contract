@@ -206,3 +206,25 @@ class TestFromArg:
             def my_fn(df: pd.DataFrame) -> int:
                 """Test function."""
                 return len(df)
+
+
+def test_no_handling__in_setup() -> None:
+    """Test the no-handling mode."""
+    with as_mode("skip"):
+
+        @argument(arg="ds", schema=pa.SeriesSchema(int))
+        def my_fn(ds: pd.Series) -> None:
+            return
+
+        my_fn(pd.Series(["xx"]))
+
+
+def test_no_handling__in_call() -> None:
+    """Test the no-handling mode."""
+
+    @argument(arg="ds", schema=pa.SeriesSchema(int))
+    def my_fn(ds: pd.Series) -> None:
+        return
+
+    with as_mode("skip"):
+        my_fn(pd.Series(["xx"]))

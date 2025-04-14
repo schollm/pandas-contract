@@ -9,7 +9,7 @@ import pandas as pd
 import pandera as pa
 import pytest
 
-from pandas_contract import from_arg, result
+from pandas_contract import as_mode, from_arg, result
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -227,3 +227,25 @@ def test_inplace() -> None:
     @result(inplace="df")
     def my_fn(df: pd.DataFrame) -> pd.DataFrame:
         return df
+
+
+def test_no_handling__in_setup() -> None:
+    """Test the no-handling mode."""
+    with as_mode("skip"):
+
+        @result(same_size_as="df")
+        def my_fn(df: pd.DataFrame) -> pd.DataFrame:
+            return pd.DataFrame(index=[1, 2, 3, 4])
+
+        my_fn(pd.DataFrame())
+
+
+def test_no_handling__in_call() -> None:
+    """Test the no-handling mode."""
+
+    @result(same_size_as="df")
+    def my_fn(df: pd.DataFrame) -> pd.DataFrame:
+        return pd.DataFrame(index=[1, 2, 3, 4])
+
+    with as_mode("skip"):
+        my_fn(pd.DataFrame())
