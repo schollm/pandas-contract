@@ -134,7 +134,7 @@ class argument:  # noqa: N801
             ),
             CheckKeepIndex(same_index_as),
             CheckKeepLength(same_size_as),
-            CheckExtends(self.extends, self.schema),
+            CheckExtends(self.extends, self.schema, self.arg),
         ]
         self.checks = [check for check in checks if check.is_active]
 
@@ -273,7 +273,7 @@ class result:  # noqa: N801
             ),
             CheckKeepIndex(same_index_as),
             CheckKeepLength(same_size_as),
-            CheckExtends(self.extends, self.schema),
+            CheckExtends(self.extends, self.schema, "return"),
         ]
         self.checks: list[Check] = [check for check in checks if check.is_active]
 

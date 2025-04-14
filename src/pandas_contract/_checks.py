@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import copy
 from dataclasses import dataclass
+from itertools import zip_longest
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -18,6 +19,8 @@ import pandera.errors as pa_errors
 from pandas_contract._lib import get_df_arg
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+
     from pandera.api.base.schema import BaseSchema
 
     from ._lib import MyFunctionType
@@ -110,7 +113,7 @@ class CheckSchema:
         :param kwargs: The keyword arguments of the function.
         :return: The schema with the actual column names.
         """
-        if schema is None:
+        if schema is None:  # pragma: no cover
             raise RuntimeError(
                 "schema: Schema must be provided (This should never happen)."
             )
@@ -206,17 +209,18 @@ class CheckExtends:
 
     extends: str | None
     schema: pa.DataFrameSchema | pa.SeriesSchema | None
+    arg_name: str
 
     @property
     def is_active(self) -> bool:
-        return self.extends is not None
+        return bool(self.extends)
 
     def __post_init__(self) -> None:
         super().__init__()
         if self.is_active:
             if self.schema is None:
                 raise ValueError("extends: Schema must be provided.")
-            if isinstance(self.schema, pa.SeriesSchema):
+            if not isinstance(self.schema, pa.DataFrameSchema):
                 raise ValueError("extends: Schema must be a DataFrameSchema.")
 
     def mk_check(
@@ -231,18 +235,53 @@ class CheckExtends:
 
         def check(df: pd.DataFrame | pd.Series) -> list[str]:
             """Check the DataFrame and keep the index."""
-            if self._get_hash(df) != hash_:
-                return [f"Hash of result not equal to hash of {self.extends}."]
+            if (df_hash := self._get_hash(df)) != hash_:
+                return list(self._get_diff(hash_, df_hash))
             return []
 
         return check
 
-    def _get_hash(self, df: pd.DataFrame | pd.Series) -> object:
-        if not isinstance(self.schema, pa.DataFrameSchema):
-            return 0
-        if isinstance(df, pd.Series):
-            return hash(df.to_numpy().tobytes()) + hash(df.index.to_numpy().tobytes())
+    def _get_hash(self, df: Any) -> dict[str, Any]:
+        if not isinstance(self.schema, pa.DataFrameSchema):  # pragma: no cover
+            # We check this in __post_init__, but mypy doesn't see it.
+            raise RuntimeError("This should never happen")  # noqa:TRY004
+
+        if not isinstance(df, pd.DataFrame):
+            return {"err": f"not a DataFrame, got {type(df)}.", "hash": id(df)}
+
         df_hash = df[[c for c in df if c not in self.schema.columns]]
-        return hash(df_hash.to_numpy().tobytes()) + hash(
-            df_hash.columns.to_numpy().tobytes()
-        )
+        return {
+            "type": pd.DataFrame,
+            "index": hash(df.index.to_numpy().tobytes()),
+            "columns": list(df_hash.columns),
+            "data": [(col, hash(df_hash[col].to_numpy().tobytes())) for col in df_hash],
+        }
+
+    def _get_diff(
+        self, hash_self: dict[str, Any], hash_other: dict[str, Any]
+    ) -> Iterable[str]:
+        """Get the difference between two hashes."""
+        prefix = f"extends {self.extends}: "
+        if "err" in hash_self or "err" in hash_other:
+            if "err" in hash_self:
+                yield f"{prefix}{self.arg_name} {hash_self['err']}"
+            if "err" in hash_other:
+                yield f"{prefix}{self.extends} {hash_self['err']}"
+            return
+
+        if hash_self["index"] != hash_other["index"]:
+            yield f"{prefix}index differ"
+
+        if hash_self["columns"] != hash_other["columns"]:
+            yield (
+                f"{prefix}Columns differ: "
+                f"{hash_self['columns']} != {hash_other['columns']}"
+            )
+
+        for (col1, val1), (col2, val2) in zip_longest(
+            cast("list[tuple[str, int]]", hash_self["data"]),
+            cast("list[tuple[str, int]]", hash_other["data"]),
+            fillvalue=("<missing>", -1),
+        ):
+            if col1 == col2 and val1 != val2:
+                yield f"{prefix}Column {col1!r} was changed."
