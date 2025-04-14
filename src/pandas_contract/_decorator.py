@@ -14,7 +14,7 @@ from ._checks import (
     CheckKeepLength,
     CheckSchema,
 )
-from ._lib import ensure_list, get_fn_arg, has_fn_arg
+from ._lib import ORIGINAL_FUNCTION_ATTRIBUTE, ensure_list, get_fn_arg, has_fn_arg
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
@@ -141,9 +141,11 @@ class argument:  # noqa: N801
     def __call__(self, fn: T) -> T:
         if get_mode() == Modes.SKIP:
             return fn
+
+        orig_fn = getattr(fn, ORIGINAL_FUNCTION_ATTRIBUTE, fn)
         _check_fn_args(
             f"@argument(arg={self.arg!r})",
-            fn,
+            orig_fn,
             (self.arg, *self.same_index_as, *self.same_size_as),
         )
 
@@ -151,15 +153,17 @@ class argument:  # noqa: N801
         def wrapper(*args: Any, **kwargs: Any) -> T:
             if (mode := get_mode()).no_handling():
                 return fn(*args, **kwargs)
-            checkers = [check.mk_check(fn, args, kwargs) for check in self.checks]
 
-            arg = get_fn_arg(fn, self.arg, args, kwargs)
+            checkers = [check.mk_check(orig_fn, args, kwargs) for check in self.checks]
+
+            arg = get_fn_arg(orig_fn, self.arg, args, kwargs)
             df = _get_from_key(self.key, arg)
             errs = chain.from_iterable(check(df) for check in checkers)
 
             mode.handle(errs, f"{fn.__name__}: Argument {self.arg}: ")
             return fn(*args, **kwargs)
 
+        setattr(wrapper, ORIGINAL_FUNCTION_ATTRIBUTE, orig_fn)
         return cast("T", wrapper)
 
 
@@ -276,13 +280,15 @@ class result:  # noqa: N801
     def __call__(self, fn: T) -> T:
         if get_mode() == Modes.SKIP:
             return fn
-        _check_fn_args("result", fn, (*self.same_index_as, *self.same_size_as))
+        orig_fn = getattr(fn, ORIGINAL_FUNCTION_ATTRIBUTE, fn)
+        _check_fn_args("result", orig_fn, (*self.same_index_as, *self.same_size_as))
 
         @functools.wraps(fn)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
             if (mode := get_mode()).no_handling():
                 return fn(*args, **kwargs)
-            checkers = [check.mk_check(fn, args, kwargs) for check in self.checks]
+
+            checkers = [check.mk_check(orig_fn, args, kwargs) for check in self.checks]
 
             res = fn(*args, **kwargs)
             df = _get_from_key(self.key, res)
@@ -290,6 +296,7 @@ class result:  # noqa: N801
             mode.handle(errs, f"{fn.__name__}: Output: ")
             return res
 
+        setattr(wrapper, ORIGINAL_FUNCTION_ATTRIBUTE, orig_fn)
         return cast("T", wrapper)
 
 
