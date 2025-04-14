@@ -18,7 +18,7 @@ import pandera.errors as pa_errors
 
 from pandas_contract._lib import get_df_arg
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Iterable
 
     from pandera.api.base.schema import BaseSchema
@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 DataCheckFunctionT = Callable[[Union[pd.DataFrame, pd.Series]], list[str]]
 
 
-class Check(Protocol):
+class Check(Protocol):  # pragma: no cover
     """Check the DataFrame."""
 
     @property

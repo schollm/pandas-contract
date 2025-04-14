@@ -7,7 +7,7 @@ from contextlib import contextmanager
 from logging import getLogger
 from typing import TYPE_CHECKING, Literal
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Generator, Iterable
 
 
