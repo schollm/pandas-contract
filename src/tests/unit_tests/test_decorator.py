@@ -101,12 +101,12 @@ class TestComplete:
         self, df: pd.DataFrame, df2: pd.DataFrame, ds: pd.Series
     ) -> None:
         """Change index of one input."""
-        df.index = [100, 200]
+        df_new = pd.DataFrame(df.to_dict(orient="list"), index=[100, 200])
         with pytest.raises(
             ValueError,
             match="Argument ds: Index of df not equal to output index.",
         ):
-            self.my_fn(df, df2, ds=ds, side_effect=True)
+            self.my_fn(df_new, df2, ds=ds)
 
     def test_extra_output_col(
         self, df: pd.DataFrame, df2: pd.DataFrame, ds: pd.Series
