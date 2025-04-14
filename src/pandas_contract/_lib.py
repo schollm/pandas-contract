@@ -2,14 +2,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Callable, Protocol, cast
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     import types
     from collections.abc import Sequence
 
     import pandas as pd
 
 
-class MyFunctionType(Protocol):
+class MyFunctionType(Protocol):  # pragma: no cover
     def __call__(self, *args: Any, **kwargs: Any) -> Any: ...
 
     __code__: types.CodeType

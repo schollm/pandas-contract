@@ -80,3 +80,20 @@ def test_is___eq__(left: Modes, right: Modes) -> None:
 def test_is_not___eq__(left: Modes, right: Modes) -> None:
     """Test that the mode is not equal to another mode."""
     assert left != right
+
+
+@pytest.mark.parametrize("mode", [Modes.SILENT, Modes.SKIP, "silent", "skip"])
+def test_mode_no_handling(mode: Modes, caplog: pytest.LogCaptureFixture) -> None:
+    """Test SILENT handling."""
+    Modes(mode).handle(["err"], "prefix")
+    assert caplog.text == ""
+
+
+@pytest.mark.parametrize(
+    "mode",
+    [Modes.TRACE, Modes.DEBUG, Modes.INFO, Modes.WARN, Modes.CRITICAL, Modes.ERROR],
+)
+def test_mode_logging(mode: Modes, caplog: pytest.LogCaptureFixture) -> None:
+    """Test SILENT handling."""
+    mode.handle(["err"], "prefix: ")
+    assert "prefix: err" in caplog.text

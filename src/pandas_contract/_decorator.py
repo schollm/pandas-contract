@@ -17,7 +17,7 @@ from ._checks import (
 )
 from ._lib import ORIGINAL_FUNCTION_ATTRIBUTE, ensure_list, get_fn_arg, has_fn_arg
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Iterable, Sequence
 
     import pandas as pd

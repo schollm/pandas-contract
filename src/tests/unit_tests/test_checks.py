@@ -6,7 +6,7 @@ import pandas as pd
 import pytest
 from pandera import DataFrameSchema, SeriesSchema
 
-from pandas_contract._checks import CheckExtends, CheckInplace
+from pandas_contract._checks import CheckExtends, CheckInplace, CheckSchema
 
 
 class TestCheckExtends:
@@ -84,6 +84,18 @@ class TestCheckExtends:
         assert res(pd.Series([])) == []
 
 
+class TestCheckSchema:
+    """Test cases for CheckSchema."""
+
+    def test_none(self) -> None:
+        """Test mk_check function if schema is None."""
+        check = CheckSchema(
+            schema=None, head=None, tail=None, sample=None, random_state=None
+        )
+        res = check.mk_check(lambda _: 0, (), {})
+        assert res(pd.Series()) == []
+
+
 class TestCheckInplace:
     """Test cases for CheckIdentity."""
 
@@ -94,3 +106,11 @@ class TestCheckInplace:
         fn = res.mk_check(lambda df: df, (df,), {})
         assert fn(df) == []
         assert fn(df.copy()) == ["is not df"]
+
+    def test_check_none(self) -> None:
+        """Test for inplace argument."""
+        res = CheckInplace(other=None)
+        df = pd.DataFrame(index=[])
+        fn = res.mk_check(lambda df: df, (df,), {})
+        assert fn(df) == []
+        assert fn(df.copy()) == []
