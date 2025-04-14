@@ -285,3 +285,24 @@ class CheckExtends:
         ):
             if col1 == col2 and val1 != val2:
                 yield f"{prefix}Column {col1!r} was changed."
+
+
+@dataclass(frozen=True)
+class CheckInplace:
+    other: str | None
+
+    @property
+    def is_active(self) -> bool:
+        return bool(self.other)
+
+    def mk_check(
+        self, fn: Callable, args: tuple[Any], kwargs: dict[str, Any]
+    ) -> DataCheckFunctionT:
+        def check_fn(df: pd.DataFrame | pd.Series) -> list[str]:
+            """Check if input is self,other."""
+            if self.other is None:
+                return []
+            other_df = get_df_arg(fn, self.other, args, kwargs)
+            return [f"is not {self.other}"] if df is not other_df else []
+
+        return check_fn

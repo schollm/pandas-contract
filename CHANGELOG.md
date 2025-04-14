@@ -3,6 +3,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [0.4.0] - 2025-04-14
+### Added
+- The decorator `result` got a new attribute `inplace`, wich can take the name  
+  of an input argument. It ensures that the dataframe is changed inplace, i.e. 
+  `res is $(result.inplace)` is true.
+
 ## [0.3.0] - 2025-04-14
 ### Bugfixes
 - Allow multiple pandas contract checkers attached to a single function

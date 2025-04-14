@@ -48,6 +48,7 @@ class TestComplete:
         schema=pa.DataFrameSchema({"x": pa.Column(int)}),
         extends="df",
         same_index_as="df2",
+        inplace="df",
     )
     def my_fn(
         self,
@@ -150,9 +151,24 @@ class TestComplete:
         def change_df(
             df: pd.DataFrame, df2: pd.DataFrame, ds: pd.Series
         ) -> pd.DataFrame:
-            return df.drop(columns="a").assign(x=1)
+            df.drop(columns="a", inplace=True)  # noqa:PD002
+            df["x"] = 1
+            return df
 
         with pytest.raises(
             ValueError, match=r"Output: extends df: Columns differ: \['a'\] != \[\]"
         ):
             self.my_fn(df, df2, ds=ds, callback=change_df)
+
+    def test_output_is_input__fail(
+        self, df: pd.DataFrame, df2: pd.DataFrame, ds: pd.Series
+    ) -> None:
+        """Test result.inplace argument."""
+
+        def change_df(
+            df: pd.DataFrame, df2: pd.DataFrame, ds: pd.Series
+        ) -> pd.DataFrame:
+            return df.assign(x=ds)
+
+        with pytest.raises(ValueError, match="Output: is not df"):
+            self.my_fn(df, df2, ds, callback=change_df)
