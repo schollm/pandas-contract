@@ -1,0 +1,87 @@
+name: Testing
+
+on:
+  workflow_call:
+
+jobs:
+  lint-typing:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+      - name: Install project dependencies
+        run: uv sync
+      - name: 'Type check'
+        run: uv run pyright src
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/ruff-action@v3
+        with:
+          src: "./src"
+          args: "check"
+      - name: 'Ruff format check'
+        run: ruff format --check
+      - name: 'Ruff check'
+        run: ruff check
+  test-old-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+      - name: Install dependencies
+        run: uv sync
+      - name: Run pytest
+        run: |
+          # Keep --with in sync pyproject.toml
+          # python 3.10 is the latest with pre-compiled pandas 1.4.0 releases. 
+          uv run --python 3.10 --with pandas==1.4.0 --with pandera==0.10.0 pytest src/tests
+  test:
+    name: Test Python 🐍 application
+    strategy:
+      matrix:
+        os: ['ubuntu-latest', 'macos-latest', 'windows-latest']
+        python-version: ["3.12"]
+        # Add all python versions for ubuntu.
+        include:
+          - os: "ubuntu-latest"
+            python-version: "3.9"
+          - os: "ubuntu-latest"
+            python-version: "3.10"
+          - os: "ubuntu-latest"
+            python-version: "3.11"
+            coverage: true
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+      - name: Install dependencies
+        run: uv sync
+      - name: Run pytest
+        run: |
+          echo ${{ github.ref }}
+          uv run --python ${{ matrix.python-version }} pytest src/tests
+      - name: Code Coverage Summary Report
+        if: matrix.coverage==true
+        uses: irongut/CodeCoverageSummary@v1.3.0
+        with:
+          filename: '.out/coverage*.xml'
+          badge: true
+          format: 'markdown'
+          output: 'both'
+          thresholds: '75 98'
+      - name: Write to Job Summary
+        if: matrix.coverage==true
+        run: cat code-coverage-results.md >> $GITHUB_STEP_SUMMARY
