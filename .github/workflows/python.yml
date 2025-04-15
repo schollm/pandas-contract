@@ -52,6 +52,7 @@ jobs:
       Sign the Python 🐍 distribution 📦 with Sigstore
       and upload them to GitHub Release
     needs: [testing]
+    if: success() && startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
 
     permissions:
