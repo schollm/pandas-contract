@@ -1,8 +1,4 @@
-name: Release
-  +
-#permissions:
-#  contents: write
-#  id-token: write
+name: Testing
 
 on:
   workflow_call:
