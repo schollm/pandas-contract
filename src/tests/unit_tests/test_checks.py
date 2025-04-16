@@ -32,7 +32,9 @@ class TestCheckExtends:
     def test_init__fail(self, schema: Any) -> None:
         """Test initialization of CheckExtends."""
         with pytest.raises(
-            ValueError, match="extends: Schema must be (provided|a DataFrameSchema)."
+            TypeError,
+            match="CheckExtends: If extends is set, then schema must be of type "
+            "pandera.DataFrameSchema, got",
         ):
             CheckExtends("df", schema, "foo")
 
@@ -56,7 +58,7 @@ class TestCheckExtends:
     )
     def test_mk_check(self, df_to_be_extend: pd.DataFrame, expect: list[str]) -> None:
         """Test mk_check method of CheckExtends."""
-        check = CheckExtends(extends="df", schema=DataFrameSchema(), arg_name="out_df")
+        check = CheckExtends(extends="df", schema=DataFrameSchema(), arg_name="df2")
         out_df = pd.DataFrame({"a": [1]}, index=[0])
         fn = check.mk_check(lambda df: df, (df_to_be_extend,), {})
         assert fn(out_df) == expect
@@ -71,12 +73,6 @@ class TestCheckExtends:
             "extends df: df2 not a DataFrame, got <class 'pandas.core.series.Series'>.",
             "extends df: df not a DataFrame, got <class 'pandas.core.series.Series'>.",
         ]
-
-    def test_no_extend(self) -> None:
-        """Test CheckExtends with .extends=None."""
-        check = CheckExtends(None, DataFrameSchema(), "df2")
-        res = check.mk_check(lambda df: df, (1,), {})
-        assert res(pd.Series([])) == []
 
 
 class TestCheckSchema:

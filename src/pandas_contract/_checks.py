@@ -189,8 +189,7 @@ class CheckKeepLength:
         ]
 
 
-@dataclass(frozen=True)
-class CheckExtends:
+class CheckExtends(Check):
     """Ensures resulting dataframe extends another dataframe.
 
     Check that the resulting dataframe extends another dataframe (provided
@@ -207,29 +206,40 @@ class CheckExtends:
 
     """
 
-    extends: str | None
-    schema: pa.DataFrameSchema | pa.SeriesSchema | None
+    extends: str
+    schema: pa.DataFrameSchema
     arg_name: str
+
+    def __init__(
+        self,
+        extends: str | None,
+        schema: pa.SeriesSchema | pa.DataFrameSchema | None,
+        arg_name: str,
+    ) -> None:
+        if extends is None:
+            self.extends = ""
+            self.schema = cast("pa.DataFrameSchema", None)
+            self.arg_name = arg_name
+            return
+
+        if not isinstance(schema, pa.DataFrameSchema):
+            msg = (
+                f"CheckExtends: If extends is set, then schema must be of type "
+                f"pandera.DataFrameSchema, got {type(schema)}."
+            )
+            raise TypeError(msg)
+        self.extends = extends
+        self.schema = schema
+        self.arg_name = arg_name
 
     @property
     def is_active(self) -> bool:
         return bool(self.extends)
 
-    def __post_init__(self) -> None:
-        super().__init__()
-        if self.is_active:
-            if self.schema is None:
-                raise ValueError("extends: Schema must be provided.")
-            if not isinstance(self.schema, pa.DataFrameSchema):
-                raise ValueError("extends: Schema must be a DataFrameSchema.")
-
     def mk_check(
         self, fn: Callable, args: tuple[Any], kwargs: dict[str, Any]
     ) -> DataCheckFunctionT:
         """Check the DataFrame and keep the index."""
-        if not self.extends:
-            return lambda _: []
-
         df_extends = get_df_arg(fn, self.extends, args, kwargs)
         hash_ = self._get_hash(df_extends)
 
@@ -242,10 +252,6 @@ class CheckExtends:
         return check
 
     def _get_hash(self, df: Any) -> dict[str, Any]:
-        if not isinstance(self.schema, pa.DataFrameSchema):  # pragma: no cover
-            # We check this in __post_init__, but mypy doesn't see it.
-            raise RuntimeError("This should never happen")  # noqa:TRY004
-
         if not isinstance(df, pd.DataFrame):
             return {"err": f"not a DataFrame, got {type(df)}.", "hash": id(df)}
 
