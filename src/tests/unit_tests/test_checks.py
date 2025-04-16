@@ -1,5 +1,7 @@
 """Unit tests for the CheckExtends class."""
 
+from __future__ import annotations
+
 from typing import Any
 
 import pandas as pd
@@ -54,10 +56,10 @@ class TestCheckExtends:
     )
     def test_mk_check(self, df_to_be_extend: pd.DataFrame, expect: list[str]) -> None:
         """Test mk_check method of CheckExtends."""
-        check = CheckExtends("df", DataFrameSchema(), "df2")
-        df2 = pd.DataFrame({"a": [1]}, index=[0])
-        assert fn(df2) == expect
+        check = CheckExtends(extends="df", schema=DataFrameSchema(), arg_name="out_df")
+        out_df = pd.DataFrame({"a": [1]}, index=[0])
         fn = check.mk_check(lambda df: df, (df_to_be_extend,), {})
+        assert fn(out_df) == expect
 
     def test_mk_check__invalid_output(self) -> None:
         """Test mk_check method of CheckExtends."""
