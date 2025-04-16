@@ -50,15 +50,15 @@ class TestCheckExtends:
             (pd.DataFrame({"a": [1.0]}), ["extends df: Column 'a' was changed."]),
             (
                 pd.DataFrame({"b": [1]}),
-                ["extends df: Columns differ: ['b'] != ['a']"],
+                ["extends df: Columns differ: ['a'] != ['b']"],
             ),
             (pd.DataFrame({"a": [1]}, index=[1]), ["extends df: index differ"]),
-            (1, ["extends df: df2 not a DataFrame, got <class 'int'>."]),
+            (1, ["extends df: df not a DataFrame, got <class 'int'>."]),
         ],
     )
     def test_mk_check(self, df_to_be_extend: pd.DataFrame, expect: list[str]) -> None:
         """Test mk_check method of CheckExtends."""
-        check = CheckExtends(extends="df", schema=DataFrameSchema(), arg_name="df2")
+        check = CheckExtends(extends="df", schema=DataFrameSchema(), arg_name="out_df")
         out_df = pd.DataFrame({"a": [1]}, index=[0])
         fn = check.mk_check(lambda df: df, (df_to_be_extend,), {})
         assert fn(out_df) == expect
@@ -70,6 +70,16 @@ class TestCheckExtends:
         df2 = pd.Series([])
         fn = check.mk_check(lambda df: df, (df,), {})
         assert fn(df2) == [
+            "extends df: df2 not a DataFrame, got <class 'pandas.core.series.Series'>.",
+            "extends df: df not a DataFrame, got <class 'pandas.core.series.Series'>.",
+        ]
+
+    def test_mk_check__invalid_output__identical_arg(self) -> None:
+        """Test mk_check method of CheckExtends."""
+        check = CheckExtends("df", DataFrameSchema(), "df2")
+        df = pd.Series([])
+        fn = check.mk_check(lambda df: df, (df,), {})
+        assert fn(df) == [
             "extends df: df2 not a DataFrame, got <class 'pandas.core.series.Series'>.",
             "extends df: df not a DataFrame, got <class 'pandas.core.series.Series'>.",
         ]

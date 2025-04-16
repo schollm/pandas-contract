@@ -239,19 +239,17 @@ class CheckExtends(Check):
     ) -> DataCheckFunctionT:
         """Check the DataFrame and keep the index."""
         df_extends = get_df_arg(fn, self.extends, args, kwargs)
-        hash_ = self._get_hash(df_extends)
+        hash_extends = self._get_hash(df_extends)
 
         def check(df: pd.DataFrame | pd.Series) -> list[str]:
             """Check the DataFrame and keep the index."""
-            if (df_hash := self._get_hash(df)) != hash_:
-                return list(self._get_diff(hash_, df_hash))
-            return []
+            return list(self._get_diff(self._get_hash(df), hash_extends))
 
         return check
 
     def _get_hash(self, df: Any) -> dict[str, Any]:
         if not isinstance(df, pd.DataFrame):
-            return {"err": f"not a DataFrame, got {type(df)}.", "hash": id(df)}
+            return {"err": f"not a DataFrame, got {type(df)}."}
 
         df_hash = df[[c for c in df if c not in self.schema.columns]]
         return {
