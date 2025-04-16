@@ -10,7 +10,7 @@ from pandas_contract.mode import Modes, get_mode
 from ._checks import (
     Check,
     CheckExtends,
-    CheckInplace,
+    CheckIs,
     CheckKeepIndex,
     CheckKeepLength,
     CheckSchema,
@@ -185,7 +185,7 @@ class result:  # noqa: N801
         This can be used if the function returns a tuple or a mapping.
     :param extends: The name of the input argument that the output extends. Only
         columns defined in the output schema are allowed to be mutated or added.
-    :param inplace: Name of argument tha the output is identical to. The resulting
+    :param is_: Name of argument tha the output is identical to. The resulting
         data-frame/series is identical to the given argument (assert fn(df) is df),
         i.e. the function changes the dataframe in-place.
 
@@ -265,7 +265,7 @@ class result:  # noqa: N801
     same_size_as: str | Sequence[str] = ()
     key: Any = _UNDEFINED
     extends: str | None = None
-    inplace: str | None = None
+    is_: str | None = None
 
     def __post_init__(self) -> None:
         self.same_index_as = same_index_as = ensure_list(self.same_index_as)
@@ -281,7 +281,8 @@ class result:  # noqa: N801
             CheckKeepIndex(same_index_as),
             CheckKeepLength(same_size_as),
             CheckExtends(self.extends, self.schema, "return"),
-            CheckInplace(self.inplace),
+            CheckIs(self.is_),
+            CheckIsNot(self.is_not),
         ]
         self._checks: list[Check] = [check for check in checks if check.is_active]
 

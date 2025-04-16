@@ -48,7 +48,7 @@ class TestComplete:
         schema=pa.DataFrameSchema({"x": pa.Column(int)}),
         extends="df",
         same_index_as="df2",
-        inplace="df",
+        is_="df",
     )
     def my_fn(
         self,

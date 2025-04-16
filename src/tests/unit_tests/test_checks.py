@@ -8,7 +8,7 @@ import pandas as pd
 import pytest
 from pandera import DataFrameSchema, SeriesSchema
 
-from pandas_contract._checks import CheckExtends, CheckInplace, CheckSchema
+from pandas_contract._checks import CheckExtends, CheckIs, CheckSchema
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -100,12 +100,12 @@ class TestCheckSchema:
         assert res(pd.Series()) == []
 
 
-class TestCheckInplace:
-    """Test cases for CheckIdentity."""
+class TestCheckIs:
+    """Test cases for CheckIsNot."""
 
     def test(self) -> None:
         """Test for inplace argument."""
-        res = CheckInplace(other="df")
+        res = CheckIs(other="df")
         df = pd.DataFrame(index=[])
         fn = res.mk_check(lambda df: df, (df,), {})
         assert fn(df) == []
@@ -113,7 +113,7 @@ class TestCheckInplace:
 
     def test_check_none(self) -> None:
         """Test for inplace argument."""
-        res = CheckInplace(other=None)
+        res = CheckIs(other=None)
         df = pd.DataFrame(index=[])
         fn = res.mk_check(lambda df: df, (df,), {})
         assert fn(df) == []

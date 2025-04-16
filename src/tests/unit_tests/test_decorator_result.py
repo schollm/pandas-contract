@@ -223,7 +223,7 @@ def test_result_extends__fail_change_idx() -> None:
 def test_inplace() -> None:
     """Check inplace argument."""
 
-    @result(inplace="df")
+    @result(is_="df")
     def my_fn(df: pd.DataFrame) -> pd.DataFrame:
         return df
 

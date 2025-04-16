@@ -300,7 +300,7 @@ class CheckExtends(Check):
 
 
 @dataclass(frozen=True)
-class CheckInplace:
+class CheckIs:
     other: str | None
 
     @property
