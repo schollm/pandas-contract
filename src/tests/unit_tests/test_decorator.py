@@ -155,10 +155,9 @@ class TestComplete:
             df["x"] = 1
             return df
 
-        with pytest.raises(
-            ValueError, match=r"Output: extends df: Columns differ: \['a'\] != \[\]"
-        ):
+        with pytest.raises(ValueError, match=r"Columns differ:") as exc:
             self.my_fn(df, df2, ds=ds, callback=change_df)
+        assert "Output: extends df: Columns differ: [] != ['a']" in exc.value.args[0]
 
     def test_output_is_input__fail(
         self, df: pd.DataFrame, df2: pd.DataFrame, ds: pd.Series
