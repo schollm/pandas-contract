@@ -40,7 +40,7 @@ class TestCheckExtends:
         assert CheckExtends(arg, DataFrameSchema(), "foo").is_active == expects
 
     @pytest.mark.parametrize(
-        "df, expect",
+        "df_to_be_extend, expect",
         [
             (pd.DataFrame({"a": [1]}), []),
             (pd.DataFrame({"a": [1.0]}), ["extends df: Column 'a' was changed."]),
@@ -52,12 +52,12 @@ class TestCheckExtends:
             (1, ["extends df: df2 not a DataFrame, got <class 'int'>."]),
         ],
     )
-    def test_mk_check(self, df: pd.DataFrame, expect: list[str]) -> None:
+    def test_mk_check(self, df_to_be_extend: pd.DataFrame, expect: list[str]) -> None:
         """Test mk_check method of CheckExtends."""
         check = CheckExtends("df", DataFrameSchema(), "df2")
         df2 = pd.DataFrame({"a": [1]}, index=[0])
-        fn = check.mk_check(lambda df: df, (df,), {})
         assert fn(df2) == expect
+        fn = check.mk_check(lambda df: df, (df_to_be_extend,), {})
 
     def test_mk_check__invalid_output(self) -> None:
         """Test mk_check method of CheckExtends."""
