@@ -34,17 +34,10 @@ class TestCheckExtends:
         ):
             CheckExtends("df", schema, "foo")
 
-    @pytest.mark.parametrize(
-        "check, expects",
-        [
-            (CheckExtends("df", DataFrameSchema(), "foo"), True),
-            (CheckExtends("", DataFrameSchema(), "foo"), False),
-            (CheckExtends(None, DataFrameSchema(), "foo"), False),
-        ],
-    )
-    def test_is_active(self, check: CheckExtends, expects: bool) -> None:
+    @pytest.mark.parametrize("arg, expects", [("df", True), ("", False), (None, False)])
+    def test_is_active(self, arg: str | None, expects: bool) -> None:
         """Test is_active property of CheckExtends."""
-        assert check.is_active == expects
+        assert CheckExtends(arg, DataFrameSchema(), "foo").is_active == expects
 
     @pytest.mark.parametrize(
         "df, expect",
