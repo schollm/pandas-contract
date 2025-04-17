@@ -3,3 +3,5 @@
 **/.pyc
 **/.out/**
 **/.coverage
+**/.DS_Store
+docs/_out/**
