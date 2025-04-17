@@ -248,3 +248,30 @@ def test_no_handling__in_call() -> None:
 
     with as_mode("skip"):
         my_fn(pd.DataFrame())
+
+
+class TestIsNot:
+    """Ensure argument is not identical to other."""
+
+    @pytest.mark.parametrize(
+        "is_not", [(), [], "df", ["df"], ["df", "df2"], "df, df2", " df  ,  df2 "]
+    )
+    def test_is_not(self, is_not: Sequence[str]) -> None:
+        """Test is_not argument."""
+
+        @result(is_not=is_not)
+        def my_fn(df: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
+            return pd.concat((df, df2))
+
+        my_fn(pd.DataFrame(), pd.DataFrame())
+
+    def test_is_not__fail(self) -> None:
+        """Test is_not argument failing."""
+
+        @result(is_not="df")
+        def my_fn(df: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
+            del df2
+            return df
+
+        with pytest.raises(ValueError, match="Output: is df"):
+            my_fn(pd.DataFrame(), pd.DataFrame())

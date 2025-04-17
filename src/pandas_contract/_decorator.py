@@ -11,6 +11,7 @@ from ._checks import (
     Check,
     CheckExtends,
     CheckIs,
+    CheckIsNot,
     CheckKeepIndex,
     CheckKeepLength,
     CheckSchema,
@@ -266,6 +267,7 @@ class result:  # noqa: N801
     key: Any = _UNDEFINED
     extends: str | None = None
     is_: str | None = None
+    is_not: str | Sequence[str] = ()
 
     def __post_init__(self) -> None:
         self.same_index_as = same_index_as = ensure_list(self.same_index_as)

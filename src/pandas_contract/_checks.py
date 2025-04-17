@@ -318,3 +318,41 @@ class CheckIs:
             return [f"is not {self.other}"] if df is not other_df else []
 
         return check_fn
+
+
+class CheckIsNot(Check):
+    """Ensures that the result is not identical (`is` operator) to `others`."""
+
+    __slots__ = ("others",)
+    others: tuple[str, ...]
+
+    def __init__(self, others: Sequence[str] | None) -> None:
+        if not others:
+            self.others = ()
+        elif isinstance(others, str):
+            self.others = tuple(o.strip() for o in others.split(","))
+        else:
+            self.others = tuple(others)
+
+    @property
+    def is_active(self) -> bool:
+        return bool(self.others)
+
+    def mk_check(
+        self, fn: Callable, args: tuple[Any], kwargs: dict[str, Any]
+    ) -> DataCheckFunctionT:
+        def check_fn(df: pd.DataFrame | pd.Series) -> list[str]:
+            """Check if input is self,other."""
+            return [
+                f"is {other.strip()}"
+                for other, other_df in zip(
+                    self.others,
+                    (
+                        get_df_arg(fn, other.strip(), args, kwargs)
+                        for other in self.others
+                    ),
+                )
+                if other_df is df
+            ]
+
+        return check_fn

@@ -8,7 +8,7 @@ import pandas as pd
 import pytest
 from pandera import DataFrameSchema, SeriesSchema
 
-from pandas_contract._checks import CheckExtends, CheckIs, CheckSchema
+from pandas_contract._checks import CheckExtends, CheckIs, CheckIsNot, CheckSchema
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -118,3 +118,15 @@ class TestCheckIs:
         fn = res.mk_check(lambda df: df, (df,), {})
         assert fn(df) == []
         assert fn(df.copy()) == []
+
+
+class TestCheckIsNot:
+    """Test cases for CheckIsNot."""
+
+    @pytest.mark.parametrize(
+        "others, is_active",
+        [("df", True), (["df"], True), (["df", "df2"], True), ([], False)],
+    )
+    def test_is_active(self, others: Sequence[str], is_active: bool) -> None:
+        """Test is_active property of CheckIsNot."""
+        assert CheckIsNot(others=others).is_active == is_active
