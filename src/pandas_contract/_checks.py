@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import copy
+from collections.abc import Iterable
 from dataclasses import dataclass
 from itertools import zip_longest
 from typing import (
     TYPE_CHECKING,
     Any,
     Callable,
+    NamedTuple,
     Protocol,
     Union,
     cast,
@@ -19,14 +21,14 @@ import pandera.errors as pa_errors
 from pandas_contract._lib import get_df_arg
 
 if TYPE_CHECKING:  # pragma: no cover
-    from collections.abc import Iterable
+    from collections.abc import Hashable, Sequence
 
     from pandera.api.base.schema import BaseSchema
 
     from ._lib import MyFunctionType
 
 
-DataCheckFunctionT = Callable[[Union[pd.DataFrame, pd.Series]], list[str]]
+DataCheckFunctionT = Callable[[Union[pd.DataFrame, pd.Series]], Iterable[str]]
 
 
 class Check(Protocol):  # pragma: no cover
@@ -156,11 +158,11 @@ class CheckKeepIndex:
         indices = [
             (arg, get_df_arg(fn, arg, args, kwargs).index) for arg in self.same_index_as
         ]
-        return lambda df: [
+        return lambda df: (
             f"Index of {other_arg} not equal to output index."
             for other_arg, other_idx in indices
             if not df.index.equals(other_idx)
-        ]
+        )
 
 
 @dataclass(frozen=True)
@@ -181,11 +183,22 @@ class CheckKeepLength:
             (arg, len(get_df_arg(fn, arg, args, kwargs))) for arg in self.same_length_as
         ]
 
-        return lambda df: [
+        return lambda df: (
             f"Length of {other_arg} = {other_len} != {len(df)}."
             for other_arg, other_len in lengths
             if len(df) != other_len
-        ]
+        )
+
+
+class HashDf(NamedTuple):
+    type: type
+    index_: int
+    columns: list[str]
+    data: list[tuple[Hashable, int]]
+
+
+class HashErr(NamedTuple):
+    err: str
 
 
 class CheckExtends(Check):
@@ -239,54 +252,49 @@ class CheckExtends(Check):
     ) -> DataCheckFunctionT:
         """Check the DataFrame and keep the index."""
         df_extends = get_df_arg(fn, self.extends, args, kwargs)
-        hash_extends = self._get_hash(df_extends)
+        hash_other = self._get_hash(df_extends)
 
-        def check(df: pd.DataFrame | pd.Series) -> list[str]:
+        def check(df: pd.DataFrame | pd.Series) -> Iterable[str]:
             """Check the DataFrame and keep the index."""
-            return list(self._get_diff(self._get_hash(df), hash_extends))
+            hash_self = self._get_hash(df)
+            prefix = f"extends {self.extends}: "
+            if isinstance(hash_self, HashErr) or isinstance(hash_other, HashErr):
+                if isinstance(hash_self, HashErr):
+                    yield f"{prefix}{self.arg_name} {hash_self.err}"
+                if isinstance(hash_other, HashErr):
+                    yield f"{prefix}{self.extends} {hash_other.err}"
+                return
+            if hash_self == hash_other:
+                return  # early exit
+
+            if hash_self.index_ != hash_other.index_:
+                yield f"{prefix}index differ"
+
+            if hash_self.columns != hash_other.columns:
+                yield (
+                    f"{prefix}Columns differ: "
+                    f"{hash_self.columns} != {hash_other.columns}"
+                )
+
+            for (col1, val1), (col2, val2) in zip_longest(
+                hash_self.data, hash_other.data, fillvalue=("<missing>", -1)
+            ):
+                if col1 == col2 and val1 != val2:
+                    yield f"{prefix}Column {col1!r} was changed."
 
         return check
 
-    def _get_hash(self, df: Any) -> dict[str, Any]:
+    def _get_hash(self, df: Any) -> HashErr | HashDf:
         if not isinstance(df, pd.DataFrame):
-            return {"err": f"not a DataFrame, got {type(df)}."}
+            return HashErr(err=f"not a DataFrame, got {type(df)}.")
 
         df_hash = df[[c for c in df if c not in self.schema.columns]]
-        return {
-            "type": pd.DataFrame,
-            "index": hash(df.index.to_numpy().tobytes()),
-            "columns": list(df_hash.columns),
-            "data": [(col, hash(df_hash[col].to_numpy().tobytes())) for col in df_hash],
-        }
-
-    def _get_diff(
-        self, hash_self: dict[str, Any], hash_other: dict[str, Any]
-    ) -> Iterable[str]:
-        """Get the difference between two hashes."""
-        prefix = f"extends {self.extends}: "
-        if "err" in hash_self or "err" in hash_other:
-            if "err" in hash_self:
-                yield f"{prefix}{self.arg_name} {hash_self['err']}"
-            if "err" in hash_other:
-                yield f"{prefix}{self.extends} {hash_other['err']}"
-            return
-
-        if hash_self["index"] != hash_other["index"]:
-            yield f"{prefix}index differ"
-
-        if hash_self["columns"] != hash_other["columns"]:
-            yield (
-                f"{prefix}Columns differ: "
-                f"{hash_self['columns']} != {hash_other['columns']}"
-            )
-
-        for (col1, val1), (col2, val2) in zip_longest(
-            cast("list[tuple[str, int]]", hash_self["data"]),
-            cast("list[tuple[str, int]]", hash_other["data"]),
-            fillvalue=("<missing>", -1),
-        ):
-            if col1 == col2 and val1 != val2:
-                yield f"{prefix}Column {col1!r} was changed."
+        return HashDf(
+            type=pd.DataFrame,
+            index_=hash(df.index.to_numpy().tobytes()),
+            columns=list(df_hash.columns),
+            data=[(col, hash(df_hash[col].to_numpy().tobytes())) for col in df_hash],
+        )
 
 
 @dataclass(frozen=True)

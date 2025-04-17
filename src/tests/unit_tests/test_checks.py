@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pandas as pd
 import pytest
 from pandera import DataFrameSchema, SeriesSchema
 
 from pandas_contract._checks import CheckExtends, CheckInplace, CheckSchema
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 class TestCheckExtends:
@@ -61,7 +64,7 @@ class TestCheckExtends:
         check = CheckExtends(extends="df", schema=DataFrameSchema(), arg_name="out_df")
         out_df = pd.DataFrame({"a": [1]}, index=[0])
         fn = check.mk_check(lambda df: df, (df_to_be_extend,), {})
-        assert fn(out_df) == expect
+        assert list(fn(out_df)) == expect
 
     def test_mk_check__invalid_output(self) -> None:
         """Test mk_check method of CheckExtends."""
@@ -69,7 +72,7 @@ class TestCheckExtends:
         df = pd.Series([])
         df2 = pd.Series([])
         fn = check.mk_check(lambda df: df, (df,), {})
-        assert fn(df2) == [
+        assert list(fn(df2)) == [
             "extends df: df2 not a DataFrame, got <class 'pandas.core.series.Series'>.",
             "extends df: df not a DataFrame, got <class 'pandas.core.series.Series'>.",
         ]
@@ -79,7 +82,7 @@ class TestCheckExtends:
         check = CheckExtends("df", DataFrameSchema(), "df2")
         df = pd.Series([])
         fn = check.mk_check(lambda df: df, (df,), {})
-        assert fn(df) == [
+        assert list(fn(df)) == [
             "extends df: df2 not a DataFrame, got <class 'pandas.core.series.Series'>.",
             "extends df: df not a DataFrame, got <class 'pandas.core.series.Series'>.",
         ]
