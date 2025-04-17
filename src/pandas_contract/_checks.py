@@ -135,12 +135,11 @@ class CheckKeepIndex:
     This check ensures that the index of the data-frame is identical to the dataframe of
     another argument (or a list of arguments).
 
-    Example:
-    ```
-    @result(same_index_as="df2")
-    def my_fn(df: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
-        return df.join(df2)
-    ```
+    *Example*
+
+    >>> @result(same_index_as="df2")
+    >>> def my_fn(df: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
+    >>>     return df.join(df2)
 
     """
 
@@ -197,12 +196,11 @@ class CheckExtends(Check):
     a) only the columns are added that are also provided in `schema` and
     b) Any other columns have not been modified.
 
-    Example:
-    ```
-    @result(schema=pa.DataFrameSchema({"a": pa.Column(int)}), extends="df")
-    def my_fn(df: pd.DataFrame) -> pd.DataFrame:
-        return df.assign(a=1)
-    ```
+    *Example*
+
+    >>> @result(schema=pa.DataFrameSchema({"a": pa.Column(int)}), extends="df")
+    >>> def my_fn(df: pd.DataFrame) -> pd.DataFrame:
+    >>>     return df.assign(a=1)
 
     """
 
