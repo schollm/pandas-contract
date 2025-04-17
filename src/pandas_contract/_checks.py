@@ -217,6 +217,8 @@ class CheckExtends(Check):
 
     """
 
+    __slots__ = ("arg_name", "extends", "schema")
+
     extends: str
     schema: pa.DataFrameSchema
     arg_name: str
