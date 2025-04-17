@@ -10,7 +10,8 @@ from pandas_contract.mode import Modes, get_mode
 from ._checks import (
     Check,
     CheckExtends,
-    CheckInplace,
+    CheckIs,
+    CheckIsNot,
     CheckKeepIndex,
     CheckKeepLength,
     CheckSchema,
@@ -26,8 +27,9 @@ if TYPE_CHECKING:  # pragma: no cover
     from ._lib import MyFunctionType
 
 _UNDEFINED = object()
-
+"""Mark a parameter as undefined."""
 T = TypeVar("T", bound=Callable[..., Any])
+""""Type variable for the function type."""
 
 
 @dataclass
@@ -52,63 +54,60 @@ class argument:  # noqa: N801
     :param key: The key of the input to check. If None, the entire input is checked.
     :param extends: Name of argument that this output extends.
 
+    **Examples**
+    *Ensure that the input dataframe has a column "a" of type int.*
 
-    ## Examples:
-    ### Ensure that input dataframe as a column "a" of type int.
-    ```
-    @argument(arg="df", schema=pa.DataFrameSchema({"a": pa.Column(pa.Int)}))
-    def func(df: pd.DataFrame) -> None:
-        ...
-    ```
-    ### Ensure that input dataframe as a column "a" of type int and "b" of type float.
-    ```
-    @argument(
-        arg="df",
-        schema=pa.DataFrameSchema({"a": pa.Column(pa.Int), "b": pa.Column(pa.Float)}),
-    )
-    def func(df: pd.DataFrame) -> None:
-        ...
-    ```
+    >>> @argument(arg="df", schema=pa.DataFrameSchema({"a": pa.Column(pa.Int)}))
+    >>> def func(df: pd.DataFrame) -> None:
+    >>>    ...
 
-    ### Ensure that the dataframes df1 and df2 have the same indices
-    ```
-    @argument(arg="df1", same_index_as="df2")
-    def func(df1: pd.DataFrame, df2: pd.DataFrame) -> None:
-        ...
-    ```
+    *Ensure that input dataframe as a column "a" of type int and "b" of type float.*
 
-    ### Ensure that the dataframes df1 and df2 have the same size
-    ```
-    @argument(arg="df1", same_size_as="df2")
-    def func(df1: pd.DataFrame, df2: pd.DataFrame) -> None:
-        ...
-    ```
+    >>> @argument(
+    >>>     arg="df",
+    >>>     schema=pa.DataFrameSchema(
+    >>>         {"a": pa.Column(pa.Int), "b": pa.Column(pa.Float)}
+    >>>     ),
+    >>> )
+    >>> def func(df: pd.DataFrame) -> None:
+    >>>     ...
 
-    ### All-together
-    Ensure that the input dataframe has a column "a" of type int, the same index as df2,
-    and the same size as df3.
+    *Ensure that the dataframes df1 and df2 have the same indices*
 
-    ```
-    @argument(
-        arg="dfs",
-        schema=pa.DataFrameSchema({"a": pa.Column(pa.Int)}),
-        same_index_as="df2",
-        same_size_as="df3",
-    )
-    def func(dfs: pd.DataFrame, df2: pd.DataFrame, df3: pd.DataFrame) -> None:
-        ...
-    ```
+    >>> @argument(arg="df1", same_index_as="df2")
+    >>> def func(df1: pd.DataFrame, df2: pd.DataFrame) -> None:
+    >>>     ...
 
-    ### Data Series
+    *Ensure that the dataframes df1 and df2 have the same size*
+
+    >>> @argument(arg="df1", same_size_as="df2")
+    >>> def func(df1: pd.DataFrame, df2: pd.DataFrame) -> None:
+    >>>     ...
+
+    *All-together*
+
+    Ensure that the input dataframe has a column `"a"` of type int, the same index as
+    df2, and the same size as df3.
+
+    >>> @argument(
+    >>>     arg="dfs",
+    >>>     schema=pa.DataFrameSchema({"a": pa.Column(pa.Int)}),
+    >>>     same_index_as="df2",
+    >>>     same_size_as="df3",
+    >>> )
+    >>> def func(dfs: pd.DataFrame, df2: pd.DataFrame, df3: pd.DataFrame) -> None:
+    >>>     ...
+
+    *Data Series*
+
     Instead of a DataFrame, one can also validate a Series. Then the schema must
     be of type pa.SeriesSchema.
 
     For example, to ensure that the input series is of type int, one can use:
-    ```
-    @argument(arg="ds", schema=pa.SeriesSchema(pa.Int))
-    def func(ds: pd.Series) -> None:
-        ...
-    ```
+
+    >>> @argument(arg="ds", schema=pa.SeriesSchema(pa.Int))
+    >>> def func(ds: pd.Series) -> None:
+    >>>     ...
     """
 
     arg: str
@@ -139,7 +138,7 @@ class argument:  # noqa: N801
             CheckKeepLength(same_size_as),
             CheckExtends(self.extends, self.schema, self.arg),
         ]
-        self.checks = [check for check in checks if check.is_active]
+        self._checks = [check for check in checks if check.is_active]
 
     def __call__(self, fn: T) -> T:
         if get_mode() == Modes.SKIP:
@@ -157,7 +156,7 @@ class argument:  # noqa: N801
             if (mode := get_mode()).no_handling():
                 return fn(*args, **kwargs)
 
-            checkers = [check.mk_check(orig_fn, args, kwargs) for check in self.checks]
+            checkers = [check.mk_check(orig_fn, args, kwargs) for check in self._checks]
 
             arg = get_fn_arg(orig_fn, self.arg, args, kwargs)
             df = _get_from_key(self.key, arg)
@@ -189,71 +188,77 @@ class result:  # noqa: N801
         This can be used if the function returns a tuple or a mapping.
     :param extends: The name of the input argument that the output extends. Only
         columns defined in the output schema are allowed to be mutated or added.
-    :param inplace: Name of argument tha the output is identical to. The resulting
+    :param is_: Name of argument tha the output is identical to. The resulting
         data-frame/series is identical to the given argument (assert fn(df) is df),
         i.e. the function changes the dataframe in-place.
 
-    ## Examples
-    ### Ensure that the output dataframe has a column "a" of type int.
-    ```
-    @result(schema=pa.DataFrameSchema({"a": pa.Column(pa.Int)})
-    def func() -> pd.DataFrame:
-       return pd.DataFrame({"a": [1, 2]})
-    ```
+    **Examples**
 
-    ### Ensure that the output dataframe has a column "a" of type int and "b" of type
-        float.
-    ```
-    @result(
-        schema=pa.DataFrameSchema({"a": pa.Column(pa.Int), "b": pa.Column(pa.Float)})
-    )
-    def func() -> pd.DataFrame:
-        return pd.DataFrame({"a": [1, 2], "b": [1.0, 2.0]})
-    ```
+    *Ensure that the output dataframe has a column "a" of type int.*
 
-    ### Ensure that the output dataframe has the same index as df.
-    ```
-    @result(schema=pa.DataFrameSchema({"a": pa.Column(pa.Int)}, same_index_as="df"))
-    def func(df: pd.DataFrame) -> pd.DataFrame:
-        return df
-    ```
+    >>> @result(schema=pa.DataFrameSchema({"a": pa.Column(pa.Int)})
+    >>> def func() -> pd.DataFrame:
+    >>> return pd.DataFrame({"a": [1, 2]})
 
-    ### Ensure that the output dataframe has the same size as df.
-    ```
-    @result(schema=pa.DataFrameSchema({"a": pa.Column(pa.Int)}, same_size_as="df"))
-    def func(df: pd.DataFrame) -> pd.DataFrame:
-        return df
-    ```
 
-    ### Ensure same index
+    *Ensure that the output dataframe has a column "a" of type int and "b" of type
+    float.*
+
+    >>> @result(
+    >>>     schema=pa.DataFrameSchema(
+    >>>         {"a": pa.Column(pa.Int), "b": pa.Column(pa.Float)}
+    >>>    )
+    >>> )
+    >>> def func() -> pd.DataFrame:
+    >>>     return pd.DataFrame({"a": [1, 2], "b": [1.0, 2.0]})
+
+    **Ensure that the output dataframe has the same index as df.**
+
+    >>> @result(schema=pa.DataFrameSchema({"a": pa.Column(pa.Int)}, same_index_as="df"))
+    >>> def func(df: pd.DataFrame) -> pd.DataFrame:
+    >>>     return df
+
+    **Ensure that the output dataframe has the same size as df.**
+
+    >>> @result(schema=pa.DataFrameSchema({"a": pa.Column(pa.Int)}, same_size_as="df"))
+    >>> def func(df: pd.DataFrame) -> pd.DataFrame:
+    >>>     return df
+
+    **Ensure same index.**
     Ensure that the output dataframe has the same index as df1 and the same size as df2.
-    ```
-    @result(
-        schema=pa.DataFrameSchema({"a": pa.Column(pa.Int)}),
-        same_index_as="df1",
-        same_size_as="df2",
-    )
-    def func(df1: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
-        return df1
-    ```
 
-    ### Ensures that the output extends the input schema.
-    ```
-    @result(extends="df")
-    def func(df: pd.DataFrame) -> pd.DataFrame:
-        return df.assign(a=1)
-    ```
+    >>> @result(
+    >>>     schema=pa.DataFrameSchema({"a": pa.Column(pa.Int)}),
+    >>>     same_index_as="df1",
+    >>>     same_size_as="df2",
+    >>> )
+    >>> def func(df1: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
+    >>>     return df1
 
-    ### Output extends only input schema
+    **Ensures that the output extends the input schema.**
+
+    >>> @result(extends="df")
+    >>> def func(df: pd.DataFrame) -> pd.DataFrame:
+    >>>     return df.assign(a=1)
+
+    Note that any columns listed the result schema can be modified. To specify a column
+    that is returned, but cannot be modified, use the schema argument of the input
+    argument.
+
     Ensures that the output extends the input schema and has a column "a" of type int.
-    ```
-    @result(
-        schema=pa.DataFrameSchema({"a": pa.Column(pa.Int)}),
-        extends="df"x
-    )
-    def func(df: pd.DataFrame) -> pd.DataFrame:
-        return df.assign(a=1)
-    ```
+    The following will fail in any of the three cases:
+
+    * df does not have a column "in" of type int
+    * The result does not have a column "out" of type int
+    * The column 'a' was changed.
+
+    >>> @pc.argument(arg="df", schema=pa.DataFrameSchema({"in": pa.Column(pa.Int)}))
+    >>> @pc.result(
+    >>>     schema=pa.DataFrameSchema({"out": pa.Column(pa.Int)}),
+    >>>     extends="df"
+    >>> )
+    >>> def func(df: pd.DataFrame) -> pd.DataFrame:
+    >>>     return df.assign(out=1)
     """
 
     schema: pa.DataFrameSchema | pa.SeriesSchema | None = None
@@ -265,7 +270,8 @@ class result:  # noqa: N801
     same_size_as: str | Sequence[str] = ()
     key: Any = _UNDEFINED
     extends: str | None = None
-    inplace: str | None = None
+    is_: str | None = None
+    is_not: str | Sequence[str] = ()
 
     def __post_init__(self) -> None:
         self.same_index_as = same_index_as = ensure_list(self.same_index_as)
@@ -281,9 +287,10 @@ class result:  # noqa: N801
             CheckKeepIndex(same_index_as),
             CheckKeepLength(same_size_as),
             CheckExtends(self.extends, self.schema, "return"),
-            CheckInplace(self.inplace),
+            CheckIs(self.is_),
+            CheckIsNot(self.is_not),
         ]
-        self.checks: list[Check] = [check for check in checks if check.is_active]
+        self._checks: list[Check] = [check for check in checks if check.is_active]
 
     def __call__(self, fn: T) -> T:
         if get_mode() == Modes.SKIP:
@@ -296,7 +303,7 @@ class result:  # noqa: N801
             if (mode := get_mode()).no_handling():
                 return fn(*args, **kwargs)
 
-            checkers = [check.mk_check(orig_fn, args, kwargs) for check in self.checks]
+            checkers = [check.mk_check(orig_fn, args, kwargs) for check in self._checks]
 
             res = fn(*args, **kwargs)
             df = _get_from_key(self.key, res)
@@ -316,8 +323,7 @@ def _get_from_key(key: Any, input_: Any) -> pd.DataFrame:
     Otherwise, return input[key].
 
     As an edge case, if the actual key is a callable, one has to wrap it with another
-    callable, i.e.
-      key=lambda x: x
+    callable, i.e. key=lambda x: x
     """
     if key is _UNDEFINED:
         return input_

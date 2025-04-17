@@ -12,7 +12,7 @@ import pytest
 from pandas_contract import as_mode, from_arg, result
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
+    from collections.abc import Mapping, Sequence
 
 
 @pytest.mark.parametrize("lazy", [True, False])
@@ -204,10 +204,9 @@ def test_result_extends__fail_extra_column() -> None:
     def my_fn(df: pd.DataFrame) -> pd.DataFrame:
         return df.assign(a=1, b=2)
 
-    with pytest.raises(
-        ValueError, match=r"my_fn: Output: extends df: Columns differ: \[\] != \['b'\]"
-    ):
+    with pytest.raises(ValueError, match="Columns differ") as exc:
         my_fn(pd.DataFrame())
+    assert "my_fn: Output: extends df: Columns differ: ['b'] != []" in exc.value.args[0]
 
 
 def test_result_extends__fail_change_idx() -> None:
@@ -224,7 +223,7 @@ def test_result_extends__fail_change_idx() -> None:
 def test_inplace() -> None:
     """Check inplace argument."""
 
-    @result(inplace="df")
+    @result(is_="df")
     def my_fn(df: pd.DataFrame) -> pd.DataFrame:
         return df
 
@@ -249,3 +248,30 @@ def test_no_handling__in_call() -> None:
 
     with as_mode("skip"):
         my_fn(pd.DataFrame())
+
+
+class TestIsNot:
+    """Ensure argument is not identical to other."""
+
+    @pytest.mark.parametrize(
+        "is_not", [(), [], "df", ["df"], ["df", "df2"], "df, df2", " df  ,  df2 "]
+    )
+    def test_is_not(self, is_not: Sequence[str]) -> None:
+        """Test is_not argument."""
+
+        @result(is_not=is_not)
+        def my_fn(df: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
+            return pd.concat((df, df2))
+
+        my_fn(pd.DataFrame(), pd.DataFrame())
+
+    def test_is_not__fail(self) -> None:
+        """Test is_not argument failing."""
+
+        @result(is_not="df")
+        def my_fn(df: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
+            del df2
+            return df
+
+        with pytest.raises(ValueError, match="Output: is df"):
+            my_fn(pd.DataFrame(), pd.DataFrame())

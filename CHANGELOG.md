@@ -3,6 +3,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [0.6.0] - 2025-04-17
+### Changes
+- `pa.result.inplace` renamed to `pa.result.is_`.
+### Added
+- Add `pa.result.is_not: str | Sequence[str]` to check if the result is not
+  identical to the given parameters.
+### Bugfixes
+- Fix error message in case the `.extend` check does not get a valid argument. 
+- Many documentation fixes to make docstrings sphinx compatible.
 ## [0.5.0] - 2025-04-15
 ### Changes
 - Add .github/workflow/testing.yml (Internal change)
@@ -14,15 +24,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.4.0] - 2025-04-14
 ### Added
-- The decorator `result` got a new attribute `inplace`, wich can take the name  
-  of an input argument. It ensures that the dataframe is changed inplace, i.e. 
+- The decorator `result` got a new attribute `inplace`, wich can take the name
+  of an input argument. It ensures that the dataframe is changed inplace, i.e.
   `res is $(result.inplace)` is true.
 
 ## [0.3.0] - 2025-04-14
 ### Bugfixes
 - Allow multiple pandas contract checkers attached to a single function
 ### Changes
-- By default, be silent. 
+- By default, be silent.
   - This means that if a contract check fails, it will not output anything.
   - You can still use the `raises` and `as_mode`. For tests, its recommended to
     call `set_mode(Modes.RAISES)` within the test setup.
@@ -37,7 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   import pandas as pd
   import pandas_contract as pc
   import pandera as pa
-  
+
   @pc.argument("df", schema=pa.DataFrameSchema(
           {pc.from_arg("group_cols"): pa.Column()}
       )

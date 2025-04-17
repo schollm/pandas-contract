@@ -1,40 +1,16 @@
-# pandas-contract
-Provide decorators to check functions arguments and return values using pandas DataFrame.
+# Usage
+## Imports
 
-The decorators utilize the [pandera.io](https://pandera.readthedocs.io/) library to validate
-data types and constraints of the input arguments and output values of functions.
-
-
-## Installation
-```bash
-pip install pandas-contract
+:::{note}
+Generally, the standard abbreviations for the package imports are
+```python
+import pandas as pd
+import pandas_contract as pc
+import pandera as pa
 ```
+:::
 
-## Usage
-> ℹ️ **Info:** Generally, the standard abbreviations for the package imports are
-> ```python
-> import pandas as pd
-> import pandas_contract as pc
-> import pandera as pa
-> ```
-
-### Setup
-
-> ❗**Important** By default, the decorators will be attached to the functions, but
-> they will not run. The method `pandas_contract.set_mode` and the context generat **
-> `pandas_contract.as_mode` can be used to set the global or context-specific mode.
->
-> ```python
-> import pandas_contract as pc
->
->
-> pc.set_mode("warn")  # print warn messages on standard log for all violations.
-> with pc.as_mode("raise"):  # Within the context, raise an ValueError on violation.
->     ...
-> ```
-> See [Setup](docs/setup) for more
-
-### Check Dataframe structure
+## Check Dataframe structure
 The following defines a function that takes a DataFrame with a column `'x'` of type
 integer as input and returns a DataFrame with the column `'x'` of type string as output.
 
@@ -51,9 +27,9 @@ def col_x_to_string(df: pd.DataFrame) -> pd.DataFrame:
     return df.assign(x=df["x"].astype(str))
 ```
 
-### Cross-argument and output constraints
+## Cross-argument and output constraints
 Additionally, it provides checks to ensure cross-argument and output constraints like
-#### Dataframes should have the same index.
+### Dataframes should have the same index.
   ```python
 import pandas as pd
 import pandas_contract as pc
@@ -69,7 +45,7 @@ def my_func(df1, df2):
     df1["x"] = df2["x"]
   ```
 
-#### Size of dataframes should be equal.
+### Size of dataframes should be equal.
   ```python
 import pandas as pd
 import pandas_contract as pc
@@ -80,7 +56,7 @@ def my_func(df1: pd.DataFrame):
     return pd.DataFrame(index=df1.index  + 1)
   ```
 
-### Dataframe is changed in-place or copied
+## Dataframe is changed in-place or copied
 The `result.is_: str` argument declares the output to be identical (in the sense of the same
 objet) as a parameter.
 
@@ -113,7 +89,7 @@ assert df2 is not concat(df1, df2)
 ```
 
 
-### Dataframe output extends input
+## Dataframe output extends input
 A common use-case is to extend the input dataframe with new columns. This can be done using the `extends` argument of the `result` decorator.
 It ensures that the output dataframe extends the input dataframe, i.e. only the columns defined in the output schema are allowed to be changed.
 ```python
@@ -134,7 +110,7 @@ def foo(df):
 
 
 
-### Retrieve dataframes from a more complex argument
+## Retrieve dataframes from a more complex argument
 Sometimes the dataframe is not a direct argument of the function, but is part of a more complex argument.
 In this case, the decorator argument `key` can be used to specify the key of the dataframe in the argument.
 
@@ -142,7 +118,7 @@ If `key` is a callable, the
 If it's a callable, it will be called with the argument and the result will be used as the dataframe.
 Otherwise, it will be used as a key to retrieve the dataframe from the argument, i.e. `arg[key]`
 
-#### Dataframe result is wrapped within another object
+### Dataframe result is wrapped within another object
 ```python
 import pandas as pd
 import pandas_contract as pc
@@ -205,7 +181,7 @@ def return_generators():
     }
 ```
 
-### Dynamic Arguments and return values
+## Dynamic Arguments and return values
 Required columns and arguments can also be specified dynamically using a function that returns a schema.
 ```python
 import pandas as pd
@@ -219,7 +195,7 @@ import pandera as pa
 def col_to_string(df: pd.DataFrame, col: str) -> pd.DataFrame:
     return df.assign(**{col: df[col].astype(str)})
 ```
-#### Multiple columns in function argument
+### Multiple columns in function argument
 The decorator also supports multiple columns from the function argument.
 ```python
 import pandas as pd

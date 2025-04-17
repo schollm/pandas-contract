@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import copy
+from collections.abc import Iterable
 from dataclasses import dataclass
 from itertools import zip_longest
 from typing import (
     TYPE_CHECKING,
     Any,
     Callable,
+    NamedTuple,
     Protocol,
     Union,
     cast,
@@ -19,14 +21,14 @@ import pandera.errors as pa_errors
 from pandas_contract._lib import get_df_arg
 
 if TYPE_CHECKING:  # pragma: no cover
-    from collections.abc import Iterable
+    from collections.abc import Hashable, Sequence
 
     from pandera.api.base.schema import BaseSchema
 
     from ._lib import MyFunctionType
 
 
-DataCheckFunctionT = Callable[[Union[pd.DataFrame, pd.Series]], list[str]]
+DataCheckFunctionT = Callable[[Union[pd.DataFrame, pd.Series]], Iterable[str]]
 
 
 class Check(Protocol):  # pragma: no cover
@@ -135,12 +137,11 @@ class CheckKeepIndex:
     This check ensures that the index of the data-frame is identical to the dataframe of
     another argument (or a list of arguments).
 
-    Example:
-    ```
-    @result(same_index_as="df2")
-    def my_fn(df: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
-        return df.join(df2)
-    ```
+    *Example*
+
+    >>> @result(same_index_as="df2")
+    >>> def my_fn(df: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
+    >>>     return df.join(df2)
 
     """
 
@@ -157,11 +158,11 @@ class CheckKeepIndex:
         indices = [
             (arg, get_df_arg(fn, arg, args, kwargs).index) for arg in self.same_index_as
         ]
-        return lambda df: [
+        return lambda df: (
             f"Index of {other_arg} not equal to output index."
             for other_arg, other_idx in indices
             if not df.index.equals(other_idx)
-        ]
+        )
 
 
 @dataclass(frozen=True)
@@ -182,15 +183,25 @@ class CheckKeepLength:
             (arg, len(get_df_arg(fn, arg, args, kwargs))) for arg in self.same_length_as
         ]
 
-        return lambda df: [
+        return lambda df: (
             f"Length of {other_arg} = {other_len} != {len(df)}."
             for other_arg, other_len in lengths
             if len(df) != other_len
-        ]
+        )
 
 
-@dataclass(frozen=True)
-class CheckExtends:
+class HashDf(NamedTuple):
+    type: type
+    index_: int
+    columns: list[str]
+    data: list[tuple[Hashable, int]]
+
+
+class HashErr(NamedTuple):
+    err: str
+
+
+class CheckExtends(Check):
     """Ensures resulting dataframe extends another dataframe.
 
     Check that the resulting dataframe extends another dataframe (provided
@@ -198,97 +209,98 @@ class CheckExtends:
     a) only the columns are added that are also provided in `schema` and
     b) Any other columns have not been modified.
 
-    Example:
-    ```
-    @result(schema=pa.DataFrameSchema({"a": pa.Column(int)}), extends="df")
-    def my_fn(df: pd.DataFrame) -> pd.DataFrame:
-        return df.assign(a=1)
-    ```
+    *Example*
+
+    >>> @result(schema=pa.DataFrameSchema({"a": pa.Column(int)}), extends="df")
+    >>> def my_fn(df: pd.DataFrame) -> pd.DataFrame:
+    >>>     return df.assign(a=1)
 
     """
 
-    extends: str | None
-    schema: pa.DataFrameSchema | pa.SeriesSchema | None
+    __slots__ = ("arg_name", "extends", "schema")
+
+    extends: str
+    schema: pa.DataFrameSchema
     arg_name: str
+
+    def __init__(
+        self,
+        extends: str | None,
+        schema: pa.SeriesSchema | pa.DataFrameSchema | None,
+        arg_name: str,
+    ) -> None:
+        if extends is None:
+            self.extends = ""
+            self.schema = cast("pa.DataFrameSchema", None)
+            self.arg_name = arg_name
+            return
+
+        if not isinstance(schema, pa.DataFrameSchema):
+            msg = (
+                f"CheckExtends: If extends is set, then schema must be of type "
+                f"pandera.DataFrameSchema, got {type(schema)}."
+            )
+            raise TypeError(msg)
+        self.extends = extends
+        self.schema = schema
+        self.arg_name = arg_name
 
     @property
     def is_active(self) -> bool:
         return bool(self.extends)
 
-    def __post_init__(self) -> None:
-        super().__init__()
-        if self.is_active:
-            if self.schema is None:
-                raise ValueError("extends: Schema must be provided.")
-            if not isinstance(self.schema, pa.DataFrameSchema):
-                raise ValueError("extends: Schema must be a DataFrameSchema.")
-
     def mk_check(
         self, fn: Callable, args: tuple[Any], kwargs: dict[str, Any]
     ) -> DataCheckFunctionT:
         """Check the DataFrame and keep the index."""
-        if not self.extends:
-            return lambda _: []
-
         df_extends = get_df_arg(fn, self.extends, args, kwargs)
-        hash_ = self._get_hash(df_extends)
+        hash_other = self._get_hash(df_extends)
 
-        def check(df: pd.DataFrame | pd.Series) -> list[str]:
+        def check(df: pd.DataFrame | pd.Series) -> Iterable[str]:
             """Check the DataFrame and keep the index."""
-            if (df_hash := self._get_hash(df)) != hash_:
-                return list(self._get_diff(hash_, df_hash))
-            return []
+            hash_self = self._get_hash(df)
+            prefix = f"extends {self.extends}: "
+            if isinstance(hash_self, HashErr) or isinstance(hash_other, HashErr):
+                if isinstance(hash_self, HashErr):
+                    yield f"{prefix}{self.arg_name} {hash_self.err}"
+                if isinstance(hash_other, HashErr):
+                    yield f"{prefix}{self.extends} {hash_other.err}"
+                return
+            if hash_self == hash_other:
+                return  # early exit
+
+            if hash_self.index_ != hash_other.index_:
+                yield f"{prefix}index differ"
+
+            if hash_self.columns != hash_other.columns:
+                yield (
+                    f"{prefix}Columns differ: "
+                    f"{hash_self.columns} != {hash_other.columns}"
+                )
+
+            for (col1, val1), (col2, val2) in zip_longest(
+                hash_self.data, hash_other.data, fillvalue=("<missing>", -1)
+            ):
+                if col1 == col2 and val1 != val2:
+                    yield f"{prefix}Column {col1!r} was changed."
 
         return check
 
-    def _get_hash(self, df: Any) -> dict[str, Any]:
-        if not isinstance(self.schema, pa.DataFrameSchema):  # pragma: no cover
-            # We check this in __post_init__, but mypy doesn't see it.
-            raise RuntimeError("This should never happen")  # noqa:TRY004
-
+    def _get_hash(self, df: Any) -> HashErr | HashDf:
         if not isinstance(df, pd.DataFrame):
-            return {"err": f"not a DataFrame, got {type(df)}.", "hash": id(df)}
+            return HashErr(err=f"not a DataFrame, got {type(df)}.")
 
         df_hash = df[[c for c in df if c not in self.schema.columns]]
-        return {
-            "type": pd.DataFrame,
-            "index": hash(df.index.to_numpy().tobytes()),
-            "columns": list(df_hash.columns),
-            "data": [(col, hash(df_hash[col].to_numpy().tobytes())) for col in df_hash],
-        }
-
-    def _get_diff(
-        self, hash_self: dict[str, Any], hash_other: dict[str, Any]
-    ) -> Iterable[str]:
-        """Get the difference between two hashes."""
-        prefix = f"extends {self.extends}: "
-        if "err" in hash_self or "err" in hash_other:
-            if "err" in hash_self:
-                yield f"{prefix}{self.arg_name} {hash_self['err']}"
-            if "err" in hash_other:
-                yield f"{prefix}{self.extends} {hash_other['err']}"
-            return
-
-        if hash_self["index"] != hash_other["index"]:
-            yield f"{prefix}index differ"
-
-        if hash_self["columns"] != hash_other["columns"]:
-            yield (
-                f"{prefix}Columns differ: "
-                f"{hash_self['columns']} != {hash_other['columns']}"
-            )
-
-        for (col1, val1), (col2, val2) in zip_longest(
-            cast("list[tuple[str, int]]", hash_self["data"]),
-            cast("list[tuple[str, int]]", hash_other["data"]),
-            fillvalue=("<missing>", -1),
-        ):
-            if col1 == col2 and val1 != val2:
-                yield f"{prefix}Column {col1!r} was changed."
+        return HashDf(
+            type=pd.DataFrame,
+            index_=hash(df.index.to_numpy().tobytes()),
+            columns=list(df_hash.columns),
+            data=[(col, hash(df_hash[col].to_numpy().tobytes())) for col in df_hash],
+        )
 
 
 @dataclass(frozen=True)
-class CheckInplace:
+class CheckIs:
     other: str | None
 
     @property
@@ -304,5 +316,43 @@ class CheckInplace:
                 return []
             other_df = get_df_arg(fn, self.other, args, kwargs)
             return [f"is not {self.other}"] if df is not other_df else []
+
+        return check_fn
+
+
+class CheckIsNot(Check):
+    """Ensures that the result is not identical (`is` operator) to `others`."""
+
+    __slots__ = ("others",)
+    others: tuple[str, ...]
+
+    def __init__(self, others: Sequence[str] | None) -> None:
+        if not others:
+            self.others = ()
+        elif isinstance(others, str):
+            self.others = tuple(o.strip() for o in others.split(","))
+        else:
+            self.others = tuple(others)
+
+    @property
+    def is_active(self) -> bool:
+        return bool(self.others)
+
+    def mk_check(
+        self, fn: Callable, args: tuple[Any], kwargs: dict[str, Any]
+    ) -> DataCheckFunctionT:
+        def check_fn(df: pd.DataFrame | pd.Series) -> list[str]:
+            """Check if input is self,other."""
+            return [
+                f"is {other.strip()}"
+                for other, other_df in zip(
+                    self.others,
+                    (
+                        get_df_arg(fn, other.strip(), args, kwargs)
+                        for other in self.others
+                    ),
+                )
+                if other_df is df
+            ]
 
         return check_fn
