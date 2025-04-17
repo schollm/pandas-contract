@@ -11,3 +11,9 @@ lint-uv:
 
 lint-type:
 	uv run pyright src/
+
+docs:  ## Generate docs
+	uv run --group docs "$(MAKE)" -C docs html
+
+clean-docs:
+	rm -rf docs/_out

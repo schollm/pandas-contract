@@ -42,14 +42,7 @@ dev-dependencies = [
     "pytest-mypy>=1.0.0",
     "pyright>=1.1.398",
     "pytest-cov>=6.1.1",
-    "sphinx>=5.3.0",
-    "sphinx-rtd-theme>=2.0.0",
-    "m2r2>=0.3.3.post2",
     "setuptools>=78.1.0",
-    "furo>=2024.8.6",
-    "myst-parser>=3.0.1",
-    "sphinx-autodoc2>=0.5.0",
-    "sphinx-material>=0.0.36",
 ]
 
 [tool.ruff]
@@ -78,6 +71,9 @@ parametrize-names-type = "csv"
     "ARG", # Unused function args -> fixtures nevertheless are functionally relevant...
     "FBT", # Don't care about booleans as positional arguments in tests, e.g. via @pytest.mark.parametrize()
 ]
+"docs/*.py" = [
+    "INP001",  # implicit namepsace
+]
 
 [tool.pytest.ini_options]
 addopts = """
@@ -92,4 +88,12 @@ addopts = """
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[dependency-groups]
+docs = [
+    "myst-parser>=3.0.1",
+    "sphinx>=5.3.0",
+    "sphinx-autodoc2>=0.5.0",
+    "sphinx-rtd-theme>=2.0.0",
+]
 
