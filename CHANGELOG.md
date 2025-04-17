@@ -14,15 +14,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.4.0] - 2025-04-14
 ### Added
-- The decorator `result` got a new attribute `inplace`, wich can take the name  
-  of an input argument. It ensures that the dataframe is changed inplace, i.e. 
+- The decorator `result` got a new attribute `inplace`, wich can take the name
+  of an input argument. It ensures that the dataframe is changed inplace, i.e.
   `res is $(result.inplace)` is true.
 
 ## [0.3.0] - 2025-04-14
 ### Bugfixes
 - Allow multiple pandas contract checkers attached to a single function
 ### Changes
-- By default, be silent. 
+- By default, be silent.
   - This means that if a contract check fails, it will not output anything.
   - You can still use the `raises` and `as_mode`. For tests, its recommended to
     call `set_mode(Modes.RAISES)` within the test setup.
@@ -37,7 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   import pandas as pd
   import pandas_contract as pc
   import pandera as pa
-  
+
   @pc.argument("df", schema=pa.DataFrameSchema(
           {pc.from_arg("group_cols"): pa.Column()}
       )
