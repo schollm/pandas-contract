@@ -8,7 +8,7 @@ from logging import getLogger
 from typing import TYPE_CHECKING, Literal, Union
 
 if TYPE_CHECKING:  # pragma: no cover
-    from collections.abc import Generator, Iterable
+    from collections.abc import Iterable, Iterator
 
 ModesT = Union[
     "Modes",
@@ -29,7 +29,16 @@ _LOG_LEVELS = {
 
 
 class Modes(enum.Enum):
-    """Modes for handling errors."""
+    """Modes for handling errors.
+
+    * **silent** Register the function at import, but do not run check during runtime.
+    * **skip** Do not register the function at import, and do not run check during
+      runtime. When this is set, it's not possible to change the mode later on since we
+      don't even register the function at all.
+    * **trace, debug, info, warn, error, critical** Log the error message at the
+      specified level.
+    * **raise** Raise an exception with the error message.
+    """
 
     SKIP = "skip"
     SILENT = "silent"
@@ -73,8 +82,13 @@ def get_mode() -> Modes:
 
 
 @contextmanager
-def as_mode(mode: ModesT) -> Generator[None, None, None]:
-    """Context manager to temporarily set the global mode for handling errors."""
+def as_mode(mode: ModesT) -> Iterator[None]:
+    """Context manager to temporarily set the global mode for handling errors.
+
+    >>> with as_mode("trace"):
+    >>>     problematic_call(df)
+    >>> ...
+    """
     prev_mode = _MODE
     set_mode(mode)
     try:
@@ -84,7 +98,20 @@ def as_mode(mode: ModesT) -> Generator[None, None, None]:
 
 
 def set_mode(mode: ModesT) -> Modes:
-    """Set the global mode for handling errors."""
+    """Set the global mode for handling errors.
+    This function should be set at initialization of the application.
+
+    Note that if mode == "skip", then once a module has been imported once, the
+    decorator cannot be activated anymore.
+
+    **Example to set the mode to emit a warning log on error**
+
+    >>> set_mode("warn")
+
+    **Example to set the mode to raise an exception on error**
+
+    >>> set_mode("raise")
+    """
     global _MODE  # noqa: PLW0603
     if isinstance(mode, str):
         mode = Modes(mode)
@@ -93,14 +120,31 @@ def set_mode(mode: ModesT) -> Modes:
 
 
 @contextmanager
-def raises() -> Generator[None, None, None]:
-    """Context decorator to raise errors on failed dataframe tests."""
+def raises() -> Iterator[None]:
+    """Context decorator to raise errors on failed dataframe tests.
+
+    >>> @pc.result(same_index_as="df")
+    >>> def foo(df):
+    >>>    return df.reset_index()
+    >>>
+    >>> with raises():
+    >>>    foo(pd.DataFrame({"a": [1]}))
+    """
     with as_mode(Modes.RAISE):
         yield
 
 
 @contextmanager
-def silent() -> Generator[None, None, None]:
-    """Context decorator to silence errors on failed dataframe tests."""
+def silent() -> Iterator[None]:
+    """Context decorator to silence errors on failed dataframe tests.
+
+        >>> @pc.result(same_index_as="df")
+    >>> def foo(df):
+    >>>    return df.reset_index()
+    >>>
+    >>> with silent():  # silence errors
+    >>>     foo(pd.DataFrame({"a": [1]}, index=[10]))
+
+    """
     with as_mode(Modes.SILENT):
         yield
