@@ -135,7 +135,7 @@ class argument:  # noqa: N801
             CheckKeepLength(same_size_as),
             CheckExtends(self.extends, self.schema, self.arg),
         ]
-        self.checks = [check for check in checks if check.is_active]
+        self._checks = [check for check in checks if check.is_active]
 
     def __call__(self, fn: T) -> T:
         if get_mode() == Modes.SKIP:
@@ -153,7 +153,7 @@ class argument:  # noqa: N801
             if (mode := get_mode()).no_handling():
                 return fn(*args, **kwargs)
 
-            checkers = [check.mk_check(orig_fn, args, kwargs) for check in self.checks]
+            checkers = [check.mk_check(orig_fn, args, kwargs) for check in self._checks]
 
             arg = get_fn_arg(orig_fn, self.arg, args, kwargs)
             df = _get_from_key(self.key, arg)
@@ -283,7 +283,7 @@ class result:  # noqa: N801
             CheckExtends(self.extends, self.schema, "return"),
             CheckInplace(self.inplace),
         ]
-        self.checks: list[Check] = [check for check in checks if check.is_active]
+        self._checks: list[Check] = [check for check in checks if check.is_active]
 
     def __call__(self, fn: T) -> T:
         if get_mode() == Modes.SKIP:
@@ -296,7 +296,7 @@ class result:  # noqa: N801
             if (mode := get_mode()).no_handling():
                 return fn(*args, **kwargs)
 
-            checkers = [check.mk_check(orig_fn, args, kwargs) for check in self.checks]
+            checkers = [check.mk_check(orig_fn, args, kwargs) for check in self._checks]
 
             res = fn(*args, **kwargs)
             df = _get_from_key(self.key, res)
