@@ -3,6 +3,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [0.6.0] - 2025-04-17
+### Changes
+- `pa.result.inplace` renamed to `pa.result.is_`.
+### Added
+- Add `pa.result.is_not: str | Sequence[str]` to check if the result is not
+  identical to the given parameters.
+### Bugfixes
+- Fix error message in case the `.extend` check does not get a valid argument. 
+- Many documentation fixes to make docstrings sphinx compatible.
 ## [0.5.0] - 2025-04-15
 ### Changes
 - Add .github/workflow/testing.yml (Internal change)
