@@ -4,7 +4,8 @@ Provide decorators to check functions arguments and return values using pandas D
 The decorators utilize the [pandera.io](https://pandera.readthedocs.io/) library to validate
 data types and constraints of the input arguments and output values of functions.
 
-
+## Documentation
+Full documentation on https://pandas-contract.readthedocs.io/en/latest/
 ## Installation
 ```bash
 pip install pandas-contract
