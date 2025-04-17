@@ -1,3 +1,5 @@
+.PHONY: format test test-src lint lint-uv lint-type docs clean-docs
+
 format:
 	uv run ruff format
 test: test-src lint
