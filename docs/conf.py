@@ -1,24 +1,21 @@
-# Configuration file for the Sphinx documentation builder.
-#
-# This file only contains a selection of the most common options. For a full
-# list see the documentation:
-# https://www.sphinx-doc.org/en/master/usage/configuration.html
+"""Configuration file for the Sphinx documentation builder.
 
-# -- Path setup --------------------------------------------------------------
+This file only contains a selection of the most common options. For a full
+list see the documentation:
+https://www.sphinx-doc.org/en/master/usage/configuration.html
 
-# If extensions (or modules to document with autodoc) are in another directory,
-# add these directories to sys.path here. If the directory is relative to the
-# documentation root, use os.path.abspath to make it absolute, like shown here.
-#
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
+-- Path setup --------------------------------------------------------------
+
+If extensions (or modules to document with autodoc) are in another directory,
+add these directories to sys.path here. If the directory is relative to the
+documentation root, use os.path.abspath to make it absolute, like shown here.
+"""
 
 
 # -- Project information -----------------------------------------------------
 
 project = "pandas-contract"
-copyright = "M. Scholl"
+copyright = "M. Scholl"  # noqa: A001
 author = "M. Scholl"
 
 
@@ -63,9 +60,6 @@ html_static_path = "_out/_static"
 # a list of builtin themes.
 #
 html_theme = "sphinx_rtd_theme"
-# html_theme = "furo"
-# html_theme = "pydata_sphinx_theme" ## Nope
-# html_thee = "sphinx_material"
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".

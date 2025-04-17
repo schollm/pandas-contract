@@ -65,7 +65,9 @@ class argument:  # noqa: N801
 
     >>> @argument(
     >>>     arg="df",
-    >>>     schema=pa.DataFrameSchema({"a": pa.Column(pa.Int), "b": pa.Column(pa.Float)}),
+    >>>     schema=pa.DataFrameSchema(
+    >>>         {"a": pa.Column(pa.Int), "b": pa.Column(pa.Float)}
+    >>>     ),
     >>> )
     >>> def func(df: pd.DataFrame) -> None:
     >>>     ...
@@ -84,8 +86,8 @@ class argument:  # noqa: N801
 
     *All-together*
 
-    Ensure that the input dataframe has a column `"a"` of type int, the same index as df2,
-    and the same size as df3.
+    Ensure that the input dataframe has a column `"a"` of type int, the same index as
+    df2, and the same size as df3.
 
     >>> @argument(
     >>>     arg="dfs",
@@ -203,7 +205,9 @@ class result:  # noqa: N801
     float.*
 
     >>> @result(
-    >>>     schema=pa.DataFrameSchema({"a": pa.Column(pa.Int), "b": pa.Column(pa.Float)})
+    >>>     schema=pa.DataFrameSchema(
+    >>>         {"a": pa.Column(pa.Int), "b": pa.Column(pa.Float)}
+    >>>    )
     >>> )
     >>> def func() -> pd.DataFrame:
     >>>     return pd.DataFrame({"a": [1, 2], "b": [1.0, 2.0]})

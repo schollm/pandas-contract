@@ -12,7 +12,7 @@ import pytest
 from pandas_contract import as_mode, from_arg, result
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
+    from collections.abc import Mapping, Sequence
 
 
 @pytest.mark.parametrize("lazy", [True, False])
