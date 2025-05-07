@@ -138,7 +138,7 @@ def raises() -> Iterator[None]:
 def silent() -> Iterator[None]:
     """Context decorator to silence errors on failed dataframe tests.
 
-        >>> @pc.result(same_index_as="df")
+    >>> @pc.result(same_index_as="df")
     >>> def foo(df):
     >>>    return df.reset_index()
     >>>

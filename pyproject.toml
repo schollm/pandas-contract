@@ -29,7 +29,7 @@ dependencies = [
     "pandera>=0.10.0",
 ]
 [project.urls]
-homepage= "https://github.com/schollm/pandas-contract"
+homepage= "https://pandas-contract.readthedocs.io/en/latest/"
 issues = "https://github.com/schollm/pandas-contract/projects"
 source = "https://github.com/schollm/pandas-contract"
 changelog = "https://github.com/schollm/pandas-contract/blob/main/CHANGELOG.md"

@@ -11,16 +11,19 @@ add these directories to sys.path here. If the directory is relative to the
 documentation root, use os.path.abspath to make it absolute, like shown here.
 """
 
-
 # -- Project information -----------------------------------------------------
+from pathlib import Path
 
+import tomllib
+
+pyproject = tomllib.loads(Path("../pyproject.toml").read_text("utf-8"))
 project = "pandas-contract"
-copyright = "M. Scholl"  # noqa: A001
-author = "M. Scholl"
-
+copyright = "%Y Micha Scholl"  # noqa: A001
+author = "Micha Scholl"
+release = version = pyproject["project"]["version"]
 
 # -- General configuration ---------------------------------------------------
-
+autodoc2_render_plugin = "myst"
 extensions = [
     "sphinx.ext.duration",
     "sphinx.ext.doctest",
@@ -36,6 +39,8 @@ autodoc2_packages = [
 autodoc2_module_all_regexes = [
     r"pandas_contract",
 ]
+autodoc2_hidden_objects = ["inherited", "private"]
+autodoc2_sort_names = True
 autodoc2_output_dir = "_out/apidocs"
 intersphinx_mapping = {
     "rtd": ("https://docs.readthedocs.io/en/stable/", None),
@@ -44,7 +49,7 @@ intersphinx_mapping = {
     "pandera": ("https://pandera.readthedocs.io/en/stable/", None),
 }
 intersphinx_disabled_domains = ["std"]
-
+html_theme_options = {"navigation_depth": 2}
 templates_path = ["_out/_templates"]
 # -- Options for EPUB output
 epub_show_urls = "footnote"

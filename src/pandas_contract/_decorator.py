@@ -39,7 +39,9 @@ class argument:  # noqa: N801
     :param arg: The name of the argument to check. This must correspond to one of the
      arguments of the function.
     :param schema: The schema to validate the input DataFrame.
-        See [pandera](https://pandera.readthedocs.io/).
+        See the `pandera documentation <https://pandera.readthedocs.io/en/stable>`_ for
+        `DataFrameSchema <https://pandera.readthedocs.io/en/stable/dataframe_schemas.html>`_
+        and `SeriesSchema <https://pandera.readthedocs.io/en/stable/series_schemas.html>`_.
     :param head: The number of rows to validate from the head. If None, all rows are
         used for validation.
     :param tail: The number of rows to validate from the tail. If None, all rows are
