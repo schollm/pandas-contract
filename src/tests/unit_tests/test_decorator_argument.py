@@ -82,7 +82,7 @@ def test_same_index_as_failing(
             df=pd.DataFrame([[0]], index=[0]),
             df2=pd.DataFrame([[0]], index=[10]),
         )
-    assert "Index of df2 not equal to output index." in caplog.text
+    assert "Index not equal to index of df2." in caplog.text
 
 
 @pytest.mark.parametrize("same_index_as", ["df3", ["df3"], ["df2", "df3"]])

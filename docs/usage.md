@@ -10,6 +10,9 @@ import pandera as pa
 ```
 :::
 
+```{eval-rst}
+    .. autoclass:: pandas_contract._decorator.argument
+``` 
 ## Check Dataframe structure
 The following defines a function that takes a DataFrame with a column `'x'` of type
 integer as input and returns a DataFrame with the column `'x'` of type string as output.

@@ -1,41 +1,37 @@
-# Installation and Setup
-## Installation
+ # Installation
 ```bash
 (.venv) pip install pandas-contract
 ```
 
-## Setup package
-By default, the `pandas_contract.argument` and `pandas_contract.result`
-are attached to the function, but the checks are not called.
-This is to ensure that production code will not be affected.
+# Setup package
 
-One method, `pa.set_mode` and one context generator, `pa.as_mode` are available to define if and how the checks ar
-run. Both take either a `pa.Modes` enum value or a literal string as an argument.
-The string value must be one of the `pa.Modes` values.
+> ❗**Important** By default, the decorators will be attached to the functions, but
+> **they will not run**. This ensures that production code is not affected
+> 
+> The method {py:meth}`pc.set_mode() <pandas_contract.set_mode>` and the context generator 
+> {py:meth}`pc.as_mode() <pandas_contract.as_mode>` can be used to set the global or context-specific mode.
+> 
+> It is recommended to set the mode once in the main module of your application.
+> For tests, this can be overwritten in the test-setup.
+> 
+> Additionally, for specific runs, the context generators 
+> {py:meth}`pc.raises() <pandas_contract.raises>` and 
+> {py:meth}`pc.silent() <pandas_contract.silent>` can be used to set the mode to
+> `raise` / `silent` for a specific function.
+>
+> ```python
+> import pandas_contract as pc
+> 
+> pc.set_mode("warn")  # print warn messages on standard log for all violations.
+> with pc.as_mode("raise"):  # Within the context, raise an ValueError on violation.
+>     ...
+> ```
 
-Example:
-```python
-from pandas_contract import set_mode, as_mode, Modes
 
-set_mode(Modes.WARN)
-with as_mode(Modes.SILENT):
-    ...
-
-# Raise, use string name of Modes.RAISE
-with as_mode("raise"):
-    ...
+## List of all modes
+The arguments to {py:meth}`pc.set_mode() <pandas_contract.set_mode>` and 
+{py:meth}`pc.as_mode() <pandas_contract.as_mode>` are the keys or string values of 
+{py:obj}`pandas_contract.Modes`
+```{eval-rst}
+  .. autoclass:: pandas_contract.Modes
 ```
-
-### List of all modes
-
-| Modes value | String          | Description                  |
-|-------------|-----------------|------------------------------|
-| `SKIP`      | `"skip"`        | Do not attach the decorator. |
-| `SILENT`    | `"silent"`      | Do not run the checks.       |
-| `TRACE`     | `"trace"`       | Trace level debug            |
-| `DEBUG`     | `"debug"`       | Debug level debug            |
-| `INFO`      | `"info"`        | Info level debug             |
-| `WARN`      | `"warn"`        | Warn level debug             |
-| `ERROR`     | `"error"`       | Error level debug            |
-| `CRITICAL`  | `"critical"`    | Critical level debug         |
-| `RAISE`     | `"raise"`       | Raise an exception           |

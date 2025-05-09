@@ -34,27 +34,19 @@ def my_function(df1, df2, target_col: str) -> pd.DataFrame():
 ```
 The decorators utilize the [pandera.io](https://pandera.readthedocs.io/) library to validate
 data types and constraints of the input arguments and output values of functions.
+
+> ❗**Important** By default, the decorators will be attached to the functions, but
+> **they will not run**. This ensures that production code is not affected
+> See [Setup](setup.md) for more information.
+
 ```{toctree}
-:caption: General
-:maxdepth: 1
-:relative-docs: docs/
+:caption: Index
+:hidden: true
 
 self
+_out/apidocs/index.rst
 setup.md
 usage.md
-```
-
-```{toctree}
-:caption: API
-:maxdepth: 2
-
 public-api.md
-```
-
-```{toctree}
-:caption: Details
-:maxdepth: 1
-:elative-docs: docs/
-
 details.md
 ```

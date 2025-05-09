@@ -21,19 +21,7 @@ pip install pandas-contract
 
 ### Setup
 
-> ❗**Important** By default, the decorators will be attached to the functions, but
-> they will not run. The method `pandas_contract.set_mode` and the context generat **
-> `pandas_contract.as_mode` can be used to set the global or context-specific mode.
->
-> ```python
-> import pandas_contract as pc
->
->
-> pc.set_mode("warn")  # print warn messages on standard log for all violations.
-> with pc.as_mode("raise"):  # Within the context, raise an ValueError on violation.
->     ...
-> ```
-> See [Setup](docs/setup) for more
+See [Setup](docs/setup.md) for first-time setup information.
 
 ### Check Dataframe structure
 The following defines a function that takes a DataFrame with a column `'x'` of type

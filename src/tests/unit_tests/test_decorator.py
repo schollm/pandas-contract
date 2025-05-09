@@ -16,8 +16,8 @@ from pandas_contract import argument, result
     "verify",
     [
         argument(arg="x"),
-        argument(arg="a", same_index_as="x"),
-        argument(arg="a", same_size_as="x"),
+        argument(arg="x", same_index_as="x"),
+        argument(arg="x", same_size_as="x"),
         result(same_index_as="x"),
         result(same_size_as="x"),
     ],
@@ -26,12 +26,10 @@ def test_unknown_arg(verify: argument | result) -> None:
     """Test that the decorator raises an error for an unknown argument."""
     with pytest.raises(
         ValueError,
-        match=(
-            r"my_fn \@argument\(arg='x'\) requires argument 'x' in function signature."
-        ),
+        match=(r"requires argument 'x' in function signature."),
     ):
 
-        @argument(arg="x")
+        @verify
         def my_fn(a: int) -> None:
             pass
 
@@ -105,7 +103,7 @@ class TestComplete:
         df_new = pd.DataFrame(df.to_dict(orient="list"), index=[100, 200])
         with pytest.raises(
             ValueError,
-            match="Argument ds: Index of df not equal to output index.",
+            match="Argument ds: Index not equal to index of df.",
         ):
             self.my_fn(df_new, df2, ds=ds)
 
@@ -138,7 +136,7 @@ class TestComplete:
 
         with pytest.raises(
             ValueError,
-            match="Output: Index of df2 not equal to output index.",
+            match="Output: Index not equal to index of df2.",
         ) as exc_info:
             self.my_fn(df, df2, ds=ds, callback=change_df)
         exc_info.match(" Output: extends df: index differ")
