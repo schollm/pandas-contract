@@ -105,7 +105,7 @@ class TestComplete:
         df_new = pd.DataFrame(df.to_dict(orient="list"), index=[100, 200])
         with pytest.raises(
             ValueError,
-            match="Argument ds: Index of df not equal to output index.",
+            match="Argument ds: Index not equal to index of df.",
         ):
             self.my_fn(df_new, df2, ds=ds)
 
@@ -138,7 +138,7 @@ class TestComplete:
 
         with pytest.raises(
             ValueError,
-            match="Output: Index of df2 not equal to output index.",
+            match="Output: Index not equal to index of df2.",
         ) as exc_info:
             self.my_fn(df, df2, ds=ds, callback=change_df)
         exc_info.match(" Output: extends df: index differ")

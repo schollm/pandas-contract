@@ -23,7 +23,6 @@ author = "Micha Scholl"
 release = version = pyproject["project"]["version"]
 
 # -- General configuration ---------------------------------------------------
-autodoc2_render_plugin = "myst"
 extensions = [
     "sphinx.ext.duration",
     "sphinx.ext.doctest",
@@ -36,6 +35,9 @@ extensions = [
 autodoc2_packages = [
     "../src/pandas_contract",
 ]
+autodoc2_render_plugin = "myst"
+
+
 autodoc2_module_all_regexes = [
     r"pandas_contract",
 ]

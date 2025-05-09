@@ -5,17 +5,13 @@ from dataclasses import dataclass
 from itertools import chain
 from typing import TYPE_CHECKING, Any, Callable, TypeVar, cast
 
-from pandas_contract.mode import Modes, get_mode
-
-from ._checks import (
+from pandas_contract import checks
+from pandas_contract._private_checks import (
     Check,
-    CheckExtends,
-    CheckIs,
-    CheckIsNot,
-    CheckKeepIndex,
-    CheckKeepLength,
     CheckSchema,
 )
+from pandas_contract.mode import Modes, get_mode
+
 from ._lib import ORIGINAL_FUNCTION_ATTRIBUTE, ensure_list, get_fn_arg, has_fn_arg
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -128,7 +124,7 @@ class argument:  # noqa: N801
             [self.extends] if self.extends else []
         )
         self.same_size_as = same_size_as = ensure_list(self.same_size_as)
-        checks: list[Check] = [
+        checks_lst: list[Check] = [
             CheckSchema(
                 self.schema,
                 self.head,
@@ -136,11 +132,11 @@ class argument:  # noqa: N801
                 self.sample,
                 self.random_state,
             ),
-            CheckKeepIndex(same_index_as),
-            CheckKeepLength(same_size_as),
-            CheckExtends(self.extends, self.schema, self.arg),
+            checks.same_index_as(same_index_as),
+            checks.same_length_as(same_size_as),
+            checks.extends(self.extends, self.schema),
         ]
-        self._checks = [check for check in checks if check.is_active]
+        self._checks = [check for check in checks_lst if check.is_active]
 
     def __call__(self, fn: T) -> T:
         if get_mode() == Modes.SKIP:
@@ -278,7 +274,7 @@ class result:  # noqa: N801
     def __post_init__(self) -> None:
         self.same_index_as = same_index_as = ensure_list(self.same_index_as)
         self.same_size_as = same_size_as = ensure_list(self.same_size_as)
-        checks: list[Check] = [
+        checks_lst: list[Check] = [
             CheckSchema(
                 self.schema,
                 self.head,
@@ -286,13 +282,13 @@ class result:  # noqa: N801
                 self.sample,
                 self.random_state,
             ),
-            CheckKeepIndex(same_index_as),
-            CheckKeepLength(same_size_as),
-            CheckExtends(self.extends, self.schema, "return"),
-            CheckIs(self.is_),
-            CheckIsNot(self.is_not),
+            checks.same_index_as(same_index_as),
+            checks.same_length_as(same_size_as),
+            checks.extends(self.extends, self.schema),
+            checks.is_(self.is_),
+            checks.is_not(self.is_not),
         ]
-        self._checks: list[Check] = [check for check in checks if check.is_active]
+        self._checks: list[Check] = [check for check in checks_lst if check.is_active]
 
     def __call__(self, fn: T) -> T:
         if get_mode() == Modes.SKIP:

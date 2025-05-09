@@ -112,7 +112,7 @@ def test_same_index_as__failing() -> None:
     df = pd.DataFrame({"a": [1]})
     with pytest.raises(
         ValueError,
-        match="Index of df not equal to output index",
+        match="Output: Index not equal to index of df\\.",
     ):
         my_fn(df=df)
 

@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, Callable, Protocol, cast
 
 if TYPE_CHECKING:  # pragma: no cover
     import types
-    from collections.abc import Sequence
+    from collections.abc import Iterable, Sequence
 
     import pandas as pd
 
@@ -23,6 +23,15 @@ def ensure_list(value: str | Sequence[str]) -> list[str]:
     """Ensure that the value is a list of strings."""
     if isinstance(value, str):
         return [value]
+    return list(value)
+
+
+def split_or_list(value: str | Iterable[str] | None) -> list[str]:
+    """Split the value by comma and return a list of strings."""
+    if value is None:
+        return []
+    if isinstance(value, str):
+        return [v.strip() for v in value.split(",")]
     return list(value)
 
 
