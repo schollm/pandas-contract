@@ -114,7 +114,8 @@ class extends(Check):  # noqa: N801
 
     *Example*
 
-    >>> @result(schema=pa.DataFrameSchema({"a": pa.Column(int)}), extends="df")
+    >>> import pandas_contract as pc
+    >>> @pc.result(schema=pa.DataFrameSchema({"a": pa.Column(int)}), extends="df")
     >>> def my_fn(df: pd.DataFrame) -> pd.DataFrame:
     >>>     return df.assign(a=1)
 
