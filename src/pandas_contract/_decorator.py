@@ -191,9 +191,9 @@ class result:  # noqa: N801
         i.e. the function changes the dataframe in-place.
 
     **Examples**
+    >>> import pandas_contract as pc
 
     *Ensure that the output dataframe has a column "a" of type int.*
-
     >>> @result(schema=pa.DataFrameSchema({"a": pa.Column(pa.Int)})
     >>> def func() -> pd.DataFrame:
     >>> return pd.DataFrame({"a": [1, 2]})
