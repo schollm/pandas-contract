@@ -81,3 +81,24 @@ class TestArgument:
 def test_result() -> None:
     """Test for result2."""
     result2()
+
+
+@pytest.mark.parametrize(
+    "verify",
+    [
+        argument2("x"),
+        argument2("x", checks.same_index_as("x")),
+        argument2("x", checks.same_length_as("x")),
+        result2(checks.same_index_as("x")),
+        result2(checks.same_length_as("x")),
+    ],
+)
+def test_unknown_arg(verify: argument | result) -> None:
+    """Test that the decorator raises an error for an unknown argument."""
+    with pytest.raises(
+        ValueError,
+        match=(r"my_fn \@.* requires argument 'x' in function signature."),
+    ):
+
+        @verify
+        def my_fn(a: int) -> None: ...

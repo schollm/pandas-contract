@@ -19,6 +19,10 @@ class MyFunctionType(Protocol):  # pragma: no cover
     __qualname__: str
 
 
+UNDEFINED = object()
+"""Mark a parameter as undefined."""
+
+
 def ensure_list(value: str | Sequence[str]) -> list[str]:
     """Ensure that the value is a list of strings."""
     if isinstance(value, str):

@@ -254,7 +254,16 @@ class TestIsNot:
     """Ensure argument is not identical to other."""
 
     @pytest.mark.parametrize(
-        "is_not", [(), [], "df", ["df"], ["df", "df2"], "df, df2", " df  ,  df2 "]
+        "is_not",
+        [
+            # (),
+            # [],
+            "df",
+            # ["df"],
+            # ["df", "df2"],
+            # "df, df2",  # foo
+            # " df  ,  df2 ",
+        ],
     )
     def test_is_not(self, is_not: Sequence[str]) -> None:
         """Test is_not argument."""

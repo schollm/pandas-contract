@@ -1,28 +1,24 @@
 from __future__ import annotations
 
-import functools
 from dataclasses import dataclass
-from itertools import chain
-from typing import TYPE_CHECKING, Any, Callable, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Callable, TypeVar
 
 from pandas_contract import checks
+from pandas_contract._decorator_v2 import argument as argument2
+from pandas_contract._decorator_v2 import result as result2
 from pandas_contract._private_checks import (
     Check,
     CheckSchema,
 )
-from pandas_contract.mode import Modes, get_mode
 
-from ._lib import ORIGINAL_FUNCTION_ATTRIBUTE, ensure_list, get_fn_arg, has_fn_arg
+from ._lib import UNDEFINED as _UNDEFINED
 
 if TYPE_CHECKING:  # pragma: no cover
-    from collections.abc import Iterable, Sequence
+    from collections.abc import Sequence
 
-    import pandas as pd
     import pandera as pa
 
-    from ._lib import MyFunctionType
 
-_UNDEFINED = object()
 """Mark a parameter as undefined."""
 T = TypeVar("T", bound=Callable[..., Any])
 """"Type variable for the function type."""
@@ -120,51 +116,29 @@ class argument:  # noqa: N801
     extends: str | None = None
 
     def __post_init__(self) -> None:
-        self.same_index_as = same_index_as = ensure_list(self.same_index_as) + (
-            [self.extends] if self.extends else []
-        )
-        self.same_size_as = same_size_as = ensure_list(self.same_size_as)
         checks_lst: list[Check] = [
             CheckSchema(
-                self.schema,
-                self.head,
-                self.tail,
-                self.sample,
-                self.random_state,
+                self.schema, self.head, self.tail, self.sample, self.random_state
             ),
-            checks.same_index_as(same_index_as),
-            checks.same_length_as(same_size_as),
+            checks.same_index_as(self.same_index_as),
+            checks.same_length_as(self.same_size_as),
             checks.extends(self.extends, self.schema),
         ]
-        self._checks = [check for check in checks_lst if check.is_active]
 
-    def __call__(self, fn: T) -> T:
-        if get_mode() == Modes.SKIP:
-            return fn
-
-        orig_fn = getattr(fn, ORIGINAL_FUNCTION_ATTRIBUTE, fn)
-        _check_fn_args(
-            f"@argument(arg={self.arg!r})",
-            orig_fn,
-            (self.arg, *self.same_index_as, *self.same_size_as),
+        self._decorator = argument2(
+            self.arg,
+            *(check for check in checks_lst if check.is_active),
+            key=self.key,
+            validate_kwargs={
+                "head": self.head,
+                "tail": self.tail,
+                "sample": self.sample,
+                "random_state": self.random_state,
+            },
         )
 
-        @functools.wraps(fn)
-        def wrapper(*args: Any, **kwargs: Any) -> T:
-            if (mode := get_mode()).no_handling():
-                return fn(*args, **kwargs)
-
-            checkers = [check.mk_check(orig_fn, args, kwargs) for check in self._checks]
-
-            arg = get_fn_arg(orig_fn, self.arg, args, kwargs)
-            df = _get_from_key(self.key, arg)
-            errs = chain.from_iterable(check(df) for check in checkers)
-
-            mode.handle(errs, f"{fn.__name__}: Argument {self.arg}: ")
-            return fn(*args, **kwargs)
-
-        setattr(wrapper, ORIGINAL_FUNCTION_ATTRIBUTE, orig_fn)
-        return cast("T", wrapper)
+    def __call__(self, fn: T) -> T:
+        return self._decorator(fn)
 
 
 @dataclass
@@ -272,69 +246,26 @@ class result:  # noqa: N801
     is_not: str | Sequence[str] = ()
 
     def __post_init__(self) -> None:
-        self.same_index_as = same_index_as = ensure_list(self.same_index_as)
-        self.same_size_as = same_size_as = ensure_list(self.same_size_as)
         checks_lst: list[Check] = [
             CheckSchema(
-                self.schema,
-                self.head,
-                self.tail,
-                self.sample,
-                self.random_state,
+                self.schema, self.head, self.tail, self.sample, self.random_state
             ),
-            checks.same_index_as(same_index_as),
-            checks.same_length_as(same_size_as),
+            checks.same_index_as(self.same_index_as),
+            checks.same_length_as(self.same_size_as),
             checks.extends(self.extends, self.schema),
             checks.is_(self.is_),
             checks.is_not(self.is_not),
         ]
-        self._checks: list[Check] = [check for check in checks_lst if check.is_active]
+        self._decorator = result2(
+            *(check for check in checks_lst if check.is_active),
+            key=self.key,
+            validate_kwargs={
+                "head": self.head,
+                "tail": self.tail,
+                "sample": self.sample,
+                "random_state": self.random_state,
+            },
+        )
 
     def __call__(self, fn: T) -> T:
-        if get_mode() == Modes.SKIP:
-            return fn
-        orig_fn = getattr(fn, ORIGINAL_FUNCTION_ATTRIBUTE, fn)
-        _check_fn_args("result", orig_fn, (*self.same_index_as, *self.same_size_as))
-
-        @functools.wraps(fn)
-        def wrapper(*args: Any, **kwargs: Any) -> Any:
-            if (mode := get_mode()).no_handling():
-                return fn(*args, **kwargs)
-
-            checkers = [check.mk_check(orig_fn, args, kwargs) for check in self._checks]
-
-            res = fn(*args, **kwargs)
-            df = _get_from_key(self.key, res)
-            errs = chain.from_iterable(check(df) for check in checkers)
-            mode.handle(errs, f"{fn.__name__}: Output: ")
-            return res
-
-        setattr(wrapper, ORIGINAL_FUNCTION_ATTRIBUTE, orig_fn)
-        return cast("T", wrapper)
-
-
-def _get_from_key(key: Any, input_: Any) -> pd.DataFrame:
-    """Get the DataFrame from the input and the key.
-
-    If the key is `_UNDEFINED`, return the input.
-    If it's a callable, call it with the input and return its result.
-    Otherwise, return input[key].
-
-    As an edge case, if the actual key is a callable, one has to wrap it with another
-    callable, i.e. key=lambda x: x
-    """
-    if key is _UNDEFINED:
-        return input_
-    if callable(key):
-        return cast("pd.DataFrame", key(input_))
-    return input_[key]
-
-
-def _check_fn_args(prefix: str, fn: MyFunctionType, args: Iterable[str]) -> None:
-    """Check if the function has the required arguments."""
-    if setup_errs := [
-        f"{fn.__qualname__} {prefix} requires argument {arg!r} in function signature."
-        for arg in args
-        if not has_fn_arg(fn, arg)
-    ]:
-        raise ValueError("\n".join(setup_errs))
+        return self._decorator(fn)

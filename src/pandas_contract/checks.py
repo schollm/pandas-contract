@@ -42,7 +42,7 @@ class same_index_as(Check):  # noqa: N801
 
     """
 
-    __slots__ = ("args",)
+    __slots__ = ("all_args", "args")
     args: list[str]
 
     def __init__(self, args: str | Iterable[str] | None, /) -> None:
@@ -52,7 +52,7 @@ class same_index_as(Check):  # noqa: N801
             It can be either a string or an iterable of strings.
             If it is a string, it will be split by commas.
         """
-        self.args = split_or_list(args)
+        self.all_args = self.args = split_or_list(args)
 
     @property
     def is_active(self) -> bool:
@@ -72,9 +72,9 @@ class same_index_as(Check):  # noqa: N801
 
 
 class same_length_as(Check):  # noqa: N801
-    """Check the DataFrame and keep the length."""
+    """Check that the argument has the same length.."""
 
-    __slots__ = ("args",)
+    __slots__ = ("all_args", "args")
     args: list[str]
 
     def __init__(self, same_length_as: str | Iterable[str] | None) -> None:
@@ -84,7 +84,7 @@ class same_length_as(Check):  # noqa: N801
             It can be either a string or an iterable of strings.
             If it is a string, it will be split by commas.
         """
-        self.args = split_or_list(same_length_as)
+        self.all_args = self.args = split_or_list(same_length_as)
 
     @property
     def is_active(self) -> bool:
@@ -121,7 +121,7 @@ class extends(Check):  # noqa: N801
 
     """
 
-    __slots__ = ("arg_name", "extends", "schema")
+    __slots__ = ("all_args", "arg", "extends", "schema")
 
     arg: str
     schema: pa.DataFrameSchema
@@ -137,6 +137,7 @@ class extends(Check):  # noqa: N801
         :param arg:
         :param schema:
         """
+        self.all_args = []
         if arg is None:
             self.arg = ""
             self.schema = cast("pa.DataFrameSchema", None)
@@ -149,6 +150,7 @@ class extends(Check):  # noqa: N801
             )
             raise TypeError(msg)
         self.arg = arg
+        self.all_args = [arg]
         self.schema = schema
 
     @property
@@ -228,6 +230,10 @@ class is_(Check):  # noqa: N801
     arg: str | None
 
     @property
+    def all_args(self) -> list[str]:
+        return [self.arg] if self.arg else []
+
+    @property
     def is_active(self) -> bool:
         """Whether the check is active."""
         return bool(self.arg)
@@ -250,27 +256,28 @@ class is_(Check):  # noqa: N801
 class is_not(Check):  # noqa: N801
     """Ensures that the result is not identical (`is` operator) to `others`."""
 
-    __slots__ = ("arg",)
-    arg: tuple[str, ...]
+    __slots__ = ("all_args", "args")
+    args: tuple[str, ...]
 
-    def __init__(self, arg: str | Iterable[str] | None, /) -> None:
+    def __init__(self, args: str | Iterable[str] | None, /) -> None:
         """Ensure that the result is not identical (`is` operator) to `others`.
 
         :param arg: argument that the result should not be identical to.
             It can be either a string or an iterable of strings.
             If it is a string, it will be split by commas.
         """
-        if arg is None:
-            self.arg = ()
-        elif isinstance(arg, str):
-            self.arg = tuple(o.strip() for o in arg.split(","))
+        if args is None:
+            self.args = ()
+        elif isinstance(args, str):
+            self.args = tuple(o.strip() for o in args.split(","))
         else:
-            self.arg = tuple(arg)
+            self.args = tuple(args)
+        self.all_args = self.args
 
     @property
     def is_active(self) -> bool:
         """Check if the check is active."""
-        return bool(self.arg)
+        return bool(self.args)
 
     def mk_check(
         self, fn: Callable, args: tuple[Any, ...], kwargs: dict[str, Any]
@@ -282,8 +289,11 @@ class is_not(Check):  # noqa: N801
             return [
                 f"is {other.strip()}"
                 for other, other_df in zip(
-                    self.arg,
-                    (get_df_arg(fn, other.strip(), args, kwargs) for other in self.arg),
+                    self.args,
+                    (
+                        get_df_arg(fn, other.strip(), args, kwargs)
+                        for other in self.args
+                    ),
                 )
                 if other_df is df
             ]

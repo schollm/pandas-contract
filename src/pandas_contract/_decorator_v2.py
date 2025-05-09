@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import functools
 from itertools import chain
-from typing import TYPE_CHECKING, Any, Callable, Protocol, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Callable, Protocol, TypedDict, TypeVar, cast
 
 import pandera as pa
 
@@ -10,6 +10,8 @@ import pandas_contract._private_checks as _checks
 from pandas_contract.mode import Modes, get_mode
 
 from ._lib import ORIGINAL_FUNCTION_ATTRIBUTE, get_fn_arg, has_fn_arg
+from ._lib import UNDEFINED as _UNDEFINED
+from ._private_checks import Check
 
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Iterable
@@ -18,11 +20,15 @@ if TYPE_CHECKING:  # pragma: no cover
 
     from ._lib import MyFunctionType
 
-_UNDEFINED = object()
-"""Mark a parameter as undefined."""
-
 _T = TypeVar("_T", bound=Callable[..., Any])
 """"Type variable for the function type."""
+
+
+class _ValidateDictT(TypedDict, total=False):
+    head: int | None
+    tail: int | None
+    sample: int | None
+    random_state: int | None
 
 
 class _WrappedT(Protocol):
@@ -31,15 +37,12 @@ class _WrappedT(Protocol):
     def __call__(self, fn: _T) -> _T: ...
 
 
-def argument(  # noqa: PLR0913
+def argument(
     arg: str,
     /,
     *checks_: _checks.Check | pa.DataFrameSchema | pa.SeriesSchema,
     key: Any = _UNDEFINED,
-    head: int | None = None,
-    tail: int | None = None,
-    sample: int | None = None,
-    random_state: int | None = None,
+    validate_kwargs: _ValidateDictT | None = None,
 ) -> _WrappedT:
     """Check the input DataFrame for required columns using pandera.
 
@@ -55,36 +58,46 @@ def argument(  # noqa: PLR0913
         This can be used if the function takes a tuple or a mapping as input.
         The key can also be an arbitrary function that takes the input arg and has to
         return the dataframe as a check.
-    :param head: The number of rows to validate from the head. If None, all rows are
-        used for validation. Used for pandera schema validation.
-    :param tail: The number of rows to validate from the tail. If None, all rows are
-        used for validation. Used for pandera schema validation.
-    :param sample: The number of rows to validate randomly. If None, all rows are used
-        for validation. Used for pandera schema validation.
-    :param random_state: The random state for the random sampling. Used for pandera
-        schema validation.
+    :param validate_kwargs: Additional Keywords to provide to pandera validate.
+        Valid keys are
 
+        * **head**: The number of rows to validate from the head.  If None, all rows are
+          used for validation. Used for pandera schema validation.
+        * **tail**: The number of rows to validate from the tail. If None, all rows are
+          used for validation. Used for pandera schema validation.
+        * **sample**: The number of rows to validate randomly. If None, all rows are used
+          for validation. Used for pandera schema validation.
+        * **random_state**: The random state for the random sampling. Used for pandera
+          schema validation.
 
-    **Examples**
-    *Ensure that the input dataframe has a column "a" of type int.*
-    >>> from pandas_contract import checks
+    ========
 
-    >>> @argument(arg="df", schema=pa.DataFrameSchema({"a": pa.Column(pa.Int)}))
-    >>> def func(df: pd.DataFrame) -> None:
-    >>>    ...
+    Examples
+    --------
+    Note that all examples use the following preamble:
 
-    *Ensure that input dataframe as a column "a" of type int and "b" of type float.*
+    >>> import pandas as pd
+    >>> import pandera as pa
+    >>> import pandas_contract as pc
+
+    -----------------------------------
+    Ensure columns exists in DataFrame
+    -----------------------------------
+    Ensure that input dataframe as a column "a" of type int and "b" of type float.
 
     >>> @argument(
-    >>>     arg="df",
-    >>>     schema=pa.DataFrameSchema(
+    >>>     "df",
+    >>>     pa.DataFrameSchema(
     >>>         {"a": pa.Column(pa.Int), "b": pa.Column(pa.Float)}
     >>>     ),
     >>> )
     >>> def func(df: pd.DataFrame) -> None:
     >>>     ...
 
-    *Ensure that the dataframes df1 and df2 have the same indices*
+    -------------------------------------
+    Ensure other argument has same index
+    -------------------------------------
+    Ensure that the dataframes df1 and df2 have the same indices.
 
     >>> @argument("df1", checks.same_index_as("df2"))
     >>> def func(df1: pd.DataFrame, df2: pd.DataFrame) -> None:
@@ -120,15 +133,10 @@ def argument(  # noqa: PLR0913
     >>> @argument("ds", pa.SeriesSchema(pa.Int))
     >>> def func(ds: pd.Series) -> None:
     >>>     ...
+
     """
     checks_list: list[_checks.Check] = [
-        _checks.CheckSchema(
-            check,
-            head,
-            tail,
-            sample,
-            random_state,
-        )
+        _checks.CheckSchema(check, **validate_kwargs or {})
         if isinstance(check, (pa.DataFrameSchema, pa.SeriesSchema))
         else check
         for check in checks_
@@ -140,6 +148,7 @@ def argument(  # noqa: PLR0913
             return fn
 
         orig_fn = getattr(fn, ORIGINAL_FUNCTION_ATTRIBUTE, fn)
+        _check_fn_args(f"@argument({arg!r})", orig_fn, _collect_args([arg], checks_))
 
         @functools.wraps(fn)
         def wrapper(*args: Any, **kwargs: Any) -> _T:
@@ -163,10 +172,7 @@ def argument(  # noqa: PLR0913
 def result(
     *checks_: _checks.Check | pa.DataFrameSchema | pa.SeriesSchema,
     key: Any = _UNDEFINED,
-    head: int | None = None,
-    tail: int | None = None,
-    sample: int | None = None,
-    random_state: int | None = None,
+    validate_kwargs: _ValidateDictT | None = None,
 ) -> _WrappedT:
     """Validate a DataFrame result using pandera.
 
@@ -182,14 +188,17 @@ def result(
         This can be used if the function takes a tuple or a mapping as input.
         The key can also be an arbitrary function that takes the input arg and has to
         return the dataframe as a check.
-    :param head: The number of rows to validate from the head. If None, all rows are
-        used for validation. Used for pandera schema validation.
-    :param tail: The number of rows to validate from the tail. If None, all rows are
-        used for validation. Used for pandera schema validation.
-    :param sample: The number of rows to validate randomly. If None, all rows are used
-        for validation. Used for pandera schema validation.
-    :param random_state: The random state for the random sampling. Used for pandera
-        schema validation.
+    :param validate_kwargs: Additional Keywords to provide to pandera validate.
+        Valid keys are
+
+        * **head**: The number of rows to validate from the head.  If None, all rows are
+          used for validation. Used for pandera schema validation.
+        * **tail**: The number of rows to validate from the tail. If None, all rows are
+          used for validation. Used for pandera schema validation.
+        * **sample**: The number of rows to validate randomly. If None, all rows are used
+          for validation. Used for pandera schema validation.
+        * **random_state**: The random state for the random sampling. Used for pandera
+          schema validation.
 
     **Examples**
 
@@ -265,13 +274,7 @@ def result(
     >>>     return df.assign(out=1)
     """
     checks_lst: list[_checks.Check] = [
-        _checks.CheckSchema(
-            check,
-            head,
-            tail,
-            sample,
-            random_state,
-        )
+        _checks.CheckSchema(check, **validate_kwargs or {})
         if isinstance(check, (pa.DataFrameSchema, pa.SeriesSchema))
         else check
         for check in checks_
@@ -284,6 +287,7 @@ def result(
         if get_mode() == Modes.SKIP:
             return fn
         orig_fn = getattr(fn, ORIGINAL_FUNCTION_ATTRIBUTE, fn)
+        _check_fn_args("@result", orig_fn, _collect_args([], checks_))
 
         @functools.wraps(fn)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
@@ -329,3 +333,10 @@ def _check_fn_args(prefix: str, fn: MyFunctionType, args: Iterable[str]) -> None
         if not has_fn_arg(fn, arg)
     ]:
         raise ValueError("\n".join(setup_errs))
+
+
+def _collect_args(args: Iterable[str], checks: Iterable[Check]):
+    yield from args
+    for check in checks:
+        if hasattr(check, "all_args"):
+            yield from check.all_args

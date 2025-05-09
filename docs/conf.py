@@ -36,10 +36,12 @@ autodoc2_packages = [
     "../src/pandas_contract",
 ]
 autodoc2_render_plugin = "myst"
-
-
+autodoc2_sort_names = True
+autodoc2_replace_bases = [("pandas_contract", "pc")]
+autodoc2_class_docstring = "both"
 autodoc2_module_all_regexes = [
-    r"pandas_contract",
+    "pandas_contract",
+    "pandas_contract.checks.*",
 ]
 autodoc2_hidden_objects = ["inherited", "private"]
 autodoc2_sort_names = True

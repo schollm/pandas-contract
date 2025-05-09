@@ -96,5 +96,6 @@ docs = [
     "sphinx>=5.3.0",
     "sphinx-autodoc2>=0.5.0",
     "sphinx-rtd-theme>=2.0.0",
+    "sphinx-autodoc2>=0.5.0",
 ]
 

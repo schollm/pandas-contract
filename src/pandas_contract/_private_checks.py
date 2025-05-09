@@ -19,21 +19,19 @@ DataCheckFunctionT = Callable[[Union[pd.DataFrame, pd.Series]], Iterable[str]]
 
 
 class Check(Protocol):  # pragma: no cover
-    """Check the DataFrame.
+    """Protocol for a DataFrame or Series check class."""
 
-    Each check class provides two functions:
-    is_active: Returns a boolean whether the check is active, based on the
-        init arguments. This is evaluated at initialization time.
-    mk_check: Returns a function that takes a single data-frame and returns a list of
-        errors. This is run when the wrapped function is called.
-    """
+    @property
+    def all_args(self) -> list[str]:
+        """Get a a list of all arguments"""
+        ...
 
     @property
     def is_active(self) -> bool:
         """Whether the check is active.
 
         This is used by the decorator to determine whether the check should be applied
-        at all. is_active can be set as attribute within __(post)init__.
+        at all. It can be set as attribute within ``__init__``.
         """
         ...
 
@@ -58,14 +56,18 @@ class CheckSchema:
     """Check the DataFrame using the schema."""
 
     schema: pa.DataFrameSchema | pa.SeriesSchema | None
-    head: int | None
-    tail: int | None
-    sample: int | None
-    random_state: int | None
+    head: int | None = None
+    tail: int | None = None
+    sample: int | None = None
+    random_state: int | None = None
 
     @property
     def is_active(self) -> bool:
         return self.schema is not None
+
+    @property
+    def all_args(self) -> list[str]:
+        return []
 
     def mk_check(
         self, fn: Callable, args: tuple[Any, ...], kwargs: dict[str, Any]
