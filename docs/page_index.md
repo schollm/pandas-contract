@@ -1,4 +1,3 @@
-Index
 ```{toctree}
 :caption: Index
 :maxdepth: 3
