@@ -2,15 +2,20 @@ from __future__ import annotations
 
 import functools
 from itertools import chain
-from typing import TYPE_CHECKING, Any, Callable, Protocol, TypedDict, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Callable, Protocol, TypeVar, cast
 
 import pandera as pa
 
 import pandas_contract._private_checks as _checks
 from pandas_contract.mode import Modes, get_mode
 
-from ._lib import ORIGINAL_FUNCTION_ATTRIBUTE, get_fn_arg, has_fn_arg
-from ._lib import UNDEFINED as _UNDEFINED
+from ._lib import (
+    ORIGINAL_FUNCTION_ATTRIBUTE,
+    UNDEFINED,
+    ValidateDictT,
+    get_fn_arg,
+    has_fn_arg,
+)
 
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Iterable
@@ -21,13 +26,6 @@ if TYPE_CHECKING:  # pragma: no cover
 
 _T = TypeVar("_T", bound=Callable[..., Any])
 """"Type variable for the function type."""
-
-
-class _ValidateDictT(TypedDict, total=False):
-    head: int | None
-    tail: int | None
-    sample: int | None
-    random_state: int | None
 
 
 class _WrappedT(Protocol):

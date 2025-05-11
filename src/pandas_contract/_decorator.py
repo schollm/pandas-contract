@@ -12,6 +12,7 @@ from pandas_contract._private_checks import (
 )
 
 from ._lib import UNDEFINED as _UNDEFINED
+from ._lib import ValidateDictT
 
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Sequence
@@ -129,12 +130,12 @@ class argument:  # noqa: N801
             self.arg,
             *(check for check in checks_lst if check.is_active),
             key=self.key,
-            validate_kwargs={
-                "head": self.head,
-                "tail": self.tail,
-                "sample": self.sample,
-                "random_state": self.random_state,
-            },
+            validate_kwargs=ValidateDictT(
+                head=self.head,
+                tail=self.tail,
+                sample=self.sample,
+                random_state=self.random_state,
+            ),
         )
 
     def __call__(self, fn: T) -> T:
@@ -259,12 +260,12 @@ class result:  # noqa: N801
         self._decorator = result2(
             *(check for check in checks_lst if check.is_active),
             key=self.key,
-            validate_kwargs={
-                "head": self.head,
-                "tail": self.tail,
-                "sample": self.sample,
-                "random_state": self.random_state,
-            },
+            validate_kwargs=ValidateDictT(
+                head=self.head,
+                tail=self.tail,
+                sample=self.sample,
+                random_state=self.random_state,
+            ),
         )
 
     def __call__(self, fn: T) -> T:

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable, Protocol, cast
+from typing import TYPE_CHECKING, Any, Callable, Protocol, TypedDict, cast
 
 if TYPE_CHECKING:  # pragma: no cover
     import types
@@ -17,6 +17,13 @@ class MyFunctionType(Protocol):  # pragma: no cover
     __defaults__: tuple[Any, ...] | None
     __kwdefaults__: dict[str, Any]
     __qualname__: str
+
+
+class ValidateDictT(TypedDict, total=False):
+    head: int | None
+    tail: int | None
+    sample: int | None
+    random_state: int | None
 
 
 UNDEFINED = object()
