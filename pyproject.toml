@@ -1,6 +1,6 @@
 [project]
 name = "pandas-contract"
-version = "0.6.2"
+version = "0.6.3"
 description = "Define input and output columns for functions working on pandas dataframes."
 readme = "README.md"
 authors = [
@@ -84,6 +84,7 @@ addopts = """
   --cov-report=html:.out/coverage-html
   --cov-report term-missing
   --cov-branch
+  --doctest-modules
 """
 [tool.pyright]
 include = ["src/"]

@@ -37,8 +37,8 @@ class same_index_as(Check):  # noqa: N801
 
     >>> from pandas_contract import result2
     >>> @result2(same_index_as("df2"))
-    >>> def my_fn(df: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
-    >>>     return df.join(df2)
+    ... def my_fn(df: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
+    ...     return df.join(df2)
 
     """
 
@@ -118,8 +118,12 @@ class extends(Check):  # noqa: N801
 
     >>> import pandas_contract as pc
     >>> @pc.result(schema=pa.DataFrameSchema({"a": pa.Column(int)}), extends="df")
-    >>> def my_fn(df: pd.DataFrame) -> pd.DataFrame:
-    >>>     return df.assign(a=1)
+    ... def my_fn(df: pd.DataFrame) -> pd.DataFrame:
+    ...     return df.assign(a=1)
+
+    >>> @pc.result2(pc.checks.extends("df", pa.DataFrameSchema({"a": pa.Column(int)})))
+    ... def my_fn(df: pd.DataFrame) -> pd.DataFrame:
+    ...     return df.assign(a=1)
 
     """
 

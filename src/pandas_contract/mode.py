@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import enum
+import os
 from contextlib import contextmanager
 from logging import getLogger
 from typing import TYPE_CHECKING, Literal, Union
@@ -73,7 +74,7 @@ class Modes(enum.Enum):
         return super().__eq__(other)
 
 
-_MODE: Modes = Modes.SILENT
+_MODE: Modes = Modes(os.getenv("PANDAS_CONTRACT_MODE", "silent"))
 
 
 def get_mode() -> Modes:
@@ -85,9 +86,16 @@ def get_mode() -> Modes:
 def as_mode(mode: ModesT) -> Iterator[None]:
     """Context manager to temporarily set the global mode for handling errors.
 
-    >>> with as_mode("trace"):
-    >>>     problematic_call(df)
-    >>> ...
+    >>> import pandas as pd
+    >>> import pandas_contract as pc
+    >>> @pc.result(same_index_as="df")
+    ... def problematic_call(df):
+    ...    return df.reset_index(drop=True)
+
+    >>> with as_mode("warn"):
+    ...     problematic_call(pd.DataFrame({"a": [1]}, index=[10]))
+       a
+    0  1
     """
     prev_mode = _MODE
     set_mode(mode)
@@ -104,13 +112,11 @@ def set_mode(mode: ModesT) -> Modes:
     Note that if mode == "skip", then once a module has been imported once, the
     decorator cannot be activated anymore.
 
-    **Example to set the mode to emit a warning log on error**
-
-    >>> set_mode("warn")
-
     **Example to set the mode to raise an exception on error**
 
     >>> set_mode("raise")
+    <Modes.RAISE: 'raise'>
+
     """
     global _MODE  # noqa: PLW0603
     if isinstance(mode, str):
@@ -123,12 +129,16 @@ def set_mode(mode: ModesT) -> Modes:
 def raises() -> Iterator[None]:
     """Context decorator to raise errors on failed dataframe tests.
 
+    >>> import pandas_contract as pc
+    >>> import pandas as pd
     >>> @pc.result(same_index_as="df")
-    >>> def foo(df):
-    >>>    return df.reset_index()
+    ... def foo(df):
+    ...    return df.reset_index(drop=True)
     >>>
     >>> with raises():
-    >>>    foo(pd.DataFrame({"a": [1]}))
+    ...    foo(pd.DataFrame({"a": [1]}, index=[10]))
+    Traceback (most recent call last):
+    ValueError: foo: Output: Index not equal to index of df.
     """
     with as_mode(Modes.RAISE):
         yield
@@ -138,13 +148,16 @@ def raises() -> Iterator[None]:
 def silent() -> Iterator[None]:
     """Context decorator to silence errors on failed dataframe tests.
 
+    >>> import pandas as pd
+    >>> import pandas_contract as pc
     >>> @pc.result(same_index_as="df")
-    >>> def foo(df):
-    >>>    return df.reset_index()
+    ... def foo(df):
+    ...    return df.reset_index(drop=True)
     >>>
     >>> with silent():  # silence errors
-    >>>     foo(pd.DataFrame({"a": [1]}, index=[10]))
-
+    ...     foo(pd.DataFrame({"a": [1]}, index=[10]))
+       a
+    0  1
     """
     with as_mode(Modes.SILENT):
         yield

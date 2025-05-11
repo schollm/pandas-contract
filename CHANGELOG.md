@@ -3,10 +3,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [0.6.3] - 2025-05-11
+### Changed
+- Fix examples in docstrings.
+### Added
+- Add docstring tests
+
 ## [0.6.2] - 2025-05-09
 ### Added
 - New decorators `argument2` and `result2` with new API.
 - New module checks with all publicly available checks
+
 ## [0.6.1] - 2025-04-17
 ### Added
 - Documentation is now on [pandas-contract.readthedocs.io/](https://pandas-contract.readthedocs.io/en/latest/)
@@ -19,9 +27,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Bugfixes
 - Fix error message in case the `.extend` check does not get a valid argument. 
 - Many documentation fixes to make docstrings sphinx compatible.
+
 ## [0.5.0] - 2025-04-15
 ### Changes
 - Add .github/workflow/testing.yml (Internal change)
+
 ## [0.5.0] - 2025-04-14
 ### Bugfix
 -  Correct error message in case other type is not correct in the extends check.
