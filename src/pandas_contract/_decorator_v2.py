@@ -65,8 +65,8 @@ def argument(
           used for validation. Used for pandera schema validation.
         * **tail**: The number of rows to validate from the tail. If None, all rows are
           used for validation. Used for pandera schema validation.
-        * **sample**: The number of rows to validate randomly. If None, all rows are used
-          for validation. Used for pandera schema validation.
+        * **sample**: The number of rows to validate randomly. If None, all rows are
+          used for validation. Used for pandera schema validation.
         * **random_state**: The random state for the random sampling. Used for pandera
           schema validation.
 
@@ -195,8 +195,8 @@ def result(
           used for validation. Used for pandera schema validation.
         * **tail**: The number of rows to validate from the tail. If None, all rows are
           used for validation. Used for pandera schema validation.
-        * **sample**: The number of rows to validate randomly. If None, all rows are used
-          for validation. Used for pandera schema validation.
+        * **sample**: The number of rows to validate randomly. If None, all rows are
+          used for validation. Used for pandera schema validation.
         * **random_state**: The random state for the random sampling. Used for pandera
           schema validation.
 
