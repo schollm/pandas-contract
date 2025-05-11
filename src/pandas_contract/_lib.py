@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable, Protocol, cast
+from typing import TYPE_CHECKING, Any, Callable, Protocol, TypedDict, cast
 
 if TYPE_CHECKING:  # pragma: no cover
     import types
-    from collections.abc import Sequence
+    from collections.abc import Iterable, Sequence
 
     import pandas as pd
 
@@ -19,10 +19,30 @@ class MyFunctionType(Protocol):  # pragma: no cover
     __qualname__: str
 
 
+class ValidateDictT(TypedDict, total=False):
+    head: int | None
+    tail: int | None
+    sample: int | None
+    random_state: int | None
+
+
+UNDEFINED = object()
+"""Mark a parameter as undefined."""
+
+
 def ensure_list(value: str | Sequence[str]) -> list[str]:
     """Ensure that the value is a list of strings."""
     if isinstance(value, str):
         return [value]
+    return list(value)
+
+
+def split_or_list(value: str | Iterable[str] | None) -> list[str]:
+    """Split the value by comma and return a list of strings."""
+    if value is None:
+        return []
+    if isinstance(value, str):
+        return [v.strip() for v in value.split(",")]
     return list(value)
 
 

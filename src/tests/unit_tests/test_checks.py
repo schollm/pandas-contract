@@ -8,7 +8,12 @@ import pandas as pd
 import pytest
 from pandera import DataFrameSchema, SeriesSchema
 
-from pandas_contract._checks import CheckExtends, CheckIs, CheckIsNot, CheckSchema
+from pandas_contract._private_checks import CheckSchema
+from pandas_contract.checks import (
+    extends,
+    is_,
+    is_not,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -19,10 +24,9 @@ class TestCheckExtends:
 
     def test_init(self) -> None:
         """Test initialization of CheckExtends."""
-        check = CheckExtends("df", DataFrameSchema(), "foo")
-        assert check.extends == "df"
+        check = extends("df", DataFrameSchema())
+        assert check.arg == "df"
         assert check.schema == DataFrameSchema()
-        assert check.arg_name == "foo"
 
     @pytest.mark.parametrize(
         "schema",
@@ -39,12 +43,12 @@ class TestCheckExtends:
             match="CheckExtends: If extends is set, then schema must be of type "
             "pandera.DataFrameSchema, got",
         ):
-            CheckExtends("df", schema, "foo")
+            extends("df", schema)
 
     @pytest.mark.parametrize("arg, expects", [("df", True), ("", False), (None, False)])
     def test_is_active(self, arg: str | None, expects: bool) -> None:
         """Test is_active property of CheckExtends."""
-        assert CheckExtends(arg, DataFrameSchema(), "foo").is_active == expects
+        assert extends(arg, DataFrameSchema()).is_active == expects
 
     @pytest.mark.parametrize(
         "df_to_be_extend, expect",
@@ -61,30 +65,33 @@ class TestCheckExtends:
     )
     def test_mk_check(self, df_to_be_extend: pd.DataFrame, expect: list[str]) -> None:
         """Test mk_check method of CheckExtends."""
-        check = CheckExtends(extends="df", schema=DataFrameSchema(), arg_name="out_df")
+        check = extends("df", schema=DataFrameSchema())
         out_df = pd.DataFrame({"a": [1]}, index=[0])
         fn = check.mk_check(lambda df: df, (df_to_be_extend,), {})
         assert list(fn(out_df)) == expect
 
     def test_mk_check__invalid_output(self) -> None:
         """Test mk_check method of CheckExtends."""
-        check = CheckExtends("df", DataFrameSchema(), "df2")
+        check = extends("df", DataFrameSchema())
         df = pd.Series([])
         df2 = pd.Series([])
         fn = check.mk_check(lambda df: df, (df,), {})
         assert list(fn(df2)) == [
-            "extends df: df2 not a DataFrame, got <class 'pandas.core.series.Series'>.",
+            "extends df: <input> not a DataFrame, "
+            "got <class 'pandas.core.series.Series'>.",
             "extends df: df not a DataFrame, got <class 'pandas.core.series.Series'>.",
         ]
 
     def test_mk_check__invalid_output__identical_arg(self) -> None:
         """Test mk_check method of CheckExtends."""
-        check = CheckExtends("df", DataFrameSchema(), "df2")
+        check = extends("df2", DataFrameSchema())
         df = pd.Series([])
-        fn = check.mk_check(lambda df: df, (df,), {})
+        fn = check.mk_check(lambda df2, df: df2, (df, df), {})
         assert list(fn(df)) == [
-            "extends df: df2 not a DataFrame, got <class 'pandas.core.series.Series'>.",
-            "extends df: df not a DataFrame, got <class 'pandas.core.series.Series'>.",
+            "extends df2: <input> not a DataFrame, "
+            "got <class 'pandas.core.series.Series'>.",
+            "extends df2: df2 not a DataFrame, got "
+            "<class 'pandas.core.series.Series'>.",
         ]
 
 
@@ -100,12 +107,12 @@ class TestCheckSchema:
         assert res(pd.Series()) == []
 
 
-class TestCheckIs:
+class TestIs:
     """Test cases for CheckIsNot."""
 
     def test(self) -> None:
         """Test for inplace argument."""
-        res = CheckIs(other="df")
+        res = is_("df")
         df = pd.DataFrame(index=[])
         fn = res.mk_check(lambda df: df, (df,), {})
         assert fn(df) == []
@@ -113,7 +120,7 @@ class TestCheckIs:
 
     def test_check_none(self) -> None:
         """Test for inplace argument."""
-        res = CheckIs(other=None)
+        res = is_(None)
         df = pd.DataFrame(index=[])
         fn = res.mk_check(lambda df: df, (df,), {})
         assert fn(df) == []
@@ -129,4 +136,4 @@ class TestCheckIsNot:
     )
     def test_is_active(self, others: Sequence[str], is_active: bool) -> None:
         """Test is_active property of CheckIsNot."""
-        assert CheckIsNot(others=others).is_active == is_active
+        assert is_not(others).is_active == is_active
