@@ -105,7 +105,7 @@ class same_length_as(Check):  # noqa: N801
 
 
 class extends(Check):  # noqa: N801
-    """Ensures resulting dataframe extends another dataframe.
+    """Ensures the resulting DataFrame extends another dataframe.
 
     Check that the resulting dataframe extends another dataframe (provided
     via argument name). It ensures that
@@ -231,6 +231,7 @@ class is_(Check):  # noqa: N801
 
     @property
     def all_args(self) -> list[str]:
+        """Get all arguments used by this check."""
         return [self.arg] if self.arg else []
 
     @property

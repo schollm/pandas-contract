@@ -256,13 +256,13 @@ class TestIsNot:
     @pytest.mark.parametrize(
         "is_not",
         [
-            # (),
-            # [],
+            (),
+            [],
             "df",
-            # ["df"],
-            # ["df", "df2"],
-            # "df, df2",  # foo
-            # " df  ,  df2 ",
+            ["df"],
+            ["df", "df2"],
+            "df, df2",  # foo
+            " df  ,  df2 ",
         ],
     )
     def test_is_not(self, is_not: Sequence[str]) -> None:
