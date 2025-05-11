@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import pandas as pd
 import pandera as pa
 import pytest
 
 from pandas_contract import argument2, checks, result2
-from pandas_contract._decorator_v2 import _WrappedT
+
+if TYPE_CHECKING:
+    from pandas_contract._decorator_v2 import _WrappedT
 
 
 @argument2(
