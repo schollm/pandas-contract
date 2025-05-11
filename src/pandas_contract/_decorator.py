@@ -11,8 +11,7 @@ from pandas_contract._private_checks import (
     CheckSchema,
 )
 
-from ._lib import UNDEFINED as _UNDEFINED
-from ._lib import ValidateDictT
+from ._lib import UNDEFINED, ValidateDictT
 
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Sequence
@@ -113,7 +112,7 @@ class argument:  # noqa: N801
     random_state: int | None = None
     same_index_as: str | Sequence[str] = ()
     same_size_as: str | Sequence[str] = ()
-    key: Any = _UNDEFINED
+    key: Any = UNDEFINED
     extends: str | None = None
 
     def __post_init__(self) -> None:
@@ -241,7 +240,7 @@ class result:  # noqa: N801
     random_state: int | None = None
     same_index_as: str | Sequence[str] = ()
     same_size_as: str | Sequence[str] = ()
-    key: Any = _UNDEFINED
+    key: Any = UNDEFINED
     extends: str | None = None
     is_: str | None = None
     is_not: str | Sequence[str] = ()

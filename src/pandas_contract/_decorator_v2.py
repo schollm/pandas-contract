@@ -38,8 +38,8 @@ def argument(
     arg: str,
     /,
     *checks_: _checks.Check | pa.DataFrameSchema | pa.SeriesSchema,
-    key: Any = _UNDEFINED,
-    validate_kwargs: _ValidateDictT | None = None,
+    key: Any = UNDEFINED,
+    validate_kwargs: ValidateDictT | None = None,
 ) -> _WrappedT:
     """Check the input DataFrame for required columns using pandera.
 
@@ -168,8 +168,8 @@ def argument(
 
 def result(
     *checks_: _checks.Check | pa.DataFrameSchema | pa.SeriesSchema,
-    key: Any = _UNDEFINED,
-    validate_kwargs: _ValidateDictT | None = None,
+    key: Any = UNDEFINED,
+    validate_kwargs: ValidateDictT | None = None,
 ) -> _WrappedT:
     """Validate a DataFrame result using pandera.
 
@@ -308,14 +308,14 @@ def result(
 def _get_from_key(key: Any, input_: Any) -> pd.DataFrame:
     """Get the DataFrame from the input and the key.
 
-    If the key is `_UNDEFINED`, return the input.
+    If the key is `UNDEFINED`, return the input.
     If it's a callable, call it with the input and return its result.
     Otherwise, return input[key].
 
     As an edge case, if the actual key is a callable, one has to wrap it with another
     callable, i.e. key=lambda x: x
     """
-    if key is _UNDEFINED:
+    if key is UNDEFINED:
         return input_
     if callable(key):
         return cast("pd.DataFrame", key(input_))
