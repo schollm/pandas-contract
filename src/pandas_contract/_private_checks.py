@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import copy
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Callable, Protocol, Union, cast
 
@@ -22,8 +22,8 @@ class Check(Protocol):  # pragma: no cover
     """Protocol for a DataFrame or Series check class."""
 
     @property
-    def all_args(self) -> list[str]:
-        """Get a a list of all arguments"""
+    def all_args(self) -> Sequence[str]:
+        """Get a list of all arguments."""
         ...
 
     @property

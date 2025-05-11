@@ -7,6 +7,7 @@ import pandera as pa
 import pytest
 
 from pandas_contract import argument2, checks, result2
+from pandas_contract._decorator_v2 import _WrappedT
 
 
 @argument2(
@@ -93,7 +94,7 @@ def test_result() -> None:
         result2(checks.same_length_as("x")),
     ],
 )
-def test_unknown_arg(verify: argument | result) -> None:
+def test_unknown_arg(verify: _WrappedT) -> None:
     """Test that the decorator raises an error for an unknown argument."""
     with pytest.raises(
         ValueError,

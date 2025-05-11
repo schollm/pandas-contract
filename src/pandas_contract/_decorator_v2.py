@@ -11,7 +11,6 @@ from pandas_contract.mode import Modes, get_mode
 
 from ._lib import ORIGINAL_FUNCTION_ATTRIBUTE, get_fn_arg, has_fn_arg
 from ._lib import UNDEFINED as _UNDEFINED
-from ._private_checks import Check
 
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Iterable
@@ -335,7 +334,7 @@ def _check_fn_args(prefix: str, fn: MyFunctionType, args: Iterable[str]) -> None
         raise ValueError("\n".join(setup_errs))
 
 
-def _collect_args(args: Iterable[str], checks: Iterable[Check]):
+def _collect_args(args: Iterable[str], checks: Iterable[Any]) -> Iterable[str]:
     yield from args
     for check in checks:
         if hasattr(check, "all_args"):

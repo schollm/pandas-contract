@@ -85,6 +85,11 @@ addopts = """
   --cov-report term-missing
   --cov-branch
 """
+[tool.pyright]
+include = ["src/"]
+sttrict = ["src/"]
+reportIncompatibleMethodOverride = "none"
+
 
 [build-system]
 requires = ["hatchling"]

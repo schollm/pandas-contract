@@ -43,6 +43,7 @@ class same_index_as(Check):  # noqa: N801
     """
 
     __slots__ = ("all_args", "args")
+    all_args: list[str]
     args: list[str]
 
     def __init__(self, args: str | Iterable[str] | None, /) -> None:
@@ -75,6 +76,7 @@ class same_length_as(Check):  # noqa: N801
     """Check that the argument has the same length.."""
 
     __slots__ = ("all_args", "args")
+    all_args: list[str]
     args: list[str]
 
     def __init__(self, same_length_as: str | Iterable[str] | None) -> None:
@@ -121,8 +123,8 @@ class extends(Check):  # noqa: N801
 
     """
 
-    __slots__ = ("all_args", "arg", "extends", "schema")
-
+    __slots__ = ("all_args", "arg", "schema")
+    all_args: list[str]
     arg: str
     schema: pa.DataFrameSchema
 
@@ -258,6 +260,7 @@ class is_not(Check):  # noqa: N801
     """Ensures that the result is not identical (`is` operator) to `others`."""
 
     __slots__ = ("all_args", "args")
+    all_args: tuple[str, ...]
     args: tuple[str, ...]
 
     def __init__(self, args: str | Iterable[str] | None, /) -> None:
