@@ -48,35 +48,41 @@ class argument:  # noqa: N801
     :param key: The key of the input to check. If None, the entire input is checked.
     :param extends: Name of argument that this output extends.
 
-    **Examples**
-    *Ensure that the input dataframe has a column "a" of type int.*
+    Examples
+    --------
+    **Common imports for all examples:**
 
-    >>> @argument(arg="df", schema=pa.DataFrameSchema({"a": pa.Column(pa.Int)}))
-    >>> def func(df: pd.DataFrame) -> None:
-    >>>    ...
+    >>> import pandas as pd
+    >>> import pandera as pa
+    >>> import pandas_contract as pc
+
+    *Ensure that the input dataframe has a column "a" of type int.*
+    >>> @argument("df", schema=pa.DataFrameSchema({"a": pa.Column(pa.Int)}))
+    ... def func(df: pd.DataFrame) -> None:
+    ...    ...
 
     *Ensure that input dataframe as a column "a" of type int and "b" of type float.*
 
     >>> @argument(
-    >>>     arg="df",
-    >>>     schema=pa.DataFrameSchema(
-    >>>         {"a": pa.Column(pa.Int), "b": pa.Column(pa.Float)}
-    >>>     ),
-    >>> )
-    >>> def func(df: pd.DataFrame) -> None:
-    >>>     ...
+    ...     "df",
+    ...     schema=pa.DataFrameSchema(
+    ...         {"a": pa.Column(pa.Int), "b": pa.Column(pa.Float)}
+    ...     ),
+    ... )
+    ... def func(df: pd.DataFrame) -> None:
+    ...     ...
 
     *Ensure that the dataframes df1 and df2 have the same indices*
 
-    >>> @argument(arg="df1", same_index_as="df2")
-    >>> def func(df1: pd.DataFrame, df2: pd.DataFrame) -> None:
-    >>>     ...
+    >>> @argument("df1", same_index_as="df2")
+    ... def func(df1: pd.DataFrame, df2: pd.DataFrame) -> None:
+    ...     ...
 
     *Ensure that the dataframes df1 and df2 have the same size*
 
-    >>> @argument(arg="df1", same_size_as="df2")
-    >>> def func(df1: pd.DataFrame, df2: pd.DataFrame) -> None:
-    >>>     ...
+    >>> @argument("df1", same_size_as="df2")
+    ... def func(df1: pd.DataFrame, df2: pd.DataFrame) -> None:
+    ...     ...
 
     *All-together*
 
@@ -84,13 +90,13 @@ class argument:  # noqa: N801
     df2, and the same size as df3.
 
     >>> @argument(
-    >>>     arg="dfs",
-    >>>     schema=pa.DataFrameSchema({"a": pa.Column(pa.Int)}),
-    >>>     same_index_as="df2",
-    >>>     same_size_as="df3",
-    >>> )
-    >>> def func(dfs: pd.DataFrame, df2: pd.DataFrame, df3: pd.DataFrame) -> None:
-    >>>     ...
+    ...     "dfs",
+    ...     schema=pa.DataFrameSchema({"a": pa.Column(pa.Int)}),
+    ...     same_index_as="df2",
+    ...     same_size_as="df3",
+    ... )
+    ... def func(dfs: pd.DataFrame, df2: pd.DataFrame, df3: pd.DataFrame) -> None:
+    ...     ...
 
     *Data Series*
 
@@ -99,9 +105,10 @@ class argument:  # noqa: N801
 
     For example, to ensure that the input series is of type int, one can use:
 
-    >>> @argument(arg="ds", schema=pa.SeriesSchema(pa.Int))
-    >>> def func(ds: pd.Series) -> None:
-    >>>     ...
+    >>> @argument("ds", schema=pa.SeriesSchema(pa.Int))
+    ... def func(ds: pd.Series) -> None:
+    ...     ...
+
     """
 
     arg: str
@@ -165,53 +172,55 @@ class result:  # noqa: N801
         i.e. the function changes the dataframe in-place.
 
     **Examples**
+    >>> import pandas as pd
+    >>> import pandera as pa
     >>> import pandas_contract as pc
 
     *Ensure that the output dataframe has a column "a" of type int.*
-    >>> @result(schema=pa.DataFrameSchema({"a": pa.Column(pa.Int)})
-    >>> def func() -> pd.DataFrame:
-    >>> return pd.DataFrame({"a": [1, 2]})
+    >>> @result(schema=pa.DataFrameSchema({"a": pa.Column(pa.Int)}))
+    ... def func() -> pd.DataFrame:
+    ...     return pd.DataFrame({"a": [1, 2]})
 
 
     *Ensure that the output dataframe has a column "a" of type int and "b" of type
     float.*
 
     >>> @result(
-    >>>     schema=pa.DataFrameSchema(
-    >>>         {"a": pa.Column(pa.Int), "b": pa.Column(pa.Float)}
-    >>>    )
-    >>> )
-    >>> def func() -> pd.DataFrame:
-    >>>     return pd.DataFrame({"a": [1, 2], "b": [1.0, 2.0]})
+    ...     schema=pa.DataFrameSchema(
+    ...         {"a": pa.Column(pa.Int), "b": pa.Column(pa.Float)}
+    ...    )
+    ... )
+    ... def func() -> pd.DataFrame:
+    ...     return pd.DataFrame({"a": [1, 2], "b": [1.0, 2.0]})
 
     **Ensure that the output dataframe has the same index as df.**
 
-    >>> @result(schema=pa.DataFrameSchema({"a": pa.Column(pa.Int)}, same_index_as="df"))
-    >>> def func(df: pd.DataFrame) -> pd.DataFrame:
-    >>>     return df
+    >>> @result(schema=pa.DataFrameSchema({"a": pa.Column(pa.Int)}), same_index_as="df")
+    ... def func(df: pd.DataFrame) -> pd.DataFrame:
+    ...     return df
 
     **Ensure that the output dataframe has the same size as df.**
 
-    >>> @result(schema=pa.DataFrameSchema({"a": pa.Column(pa.Int)}, same_size_as="df"))
-    >>> def func(df: pd.DataFrame) -> pd.DataFrame:
-    >>>     return df
+    >>> @result(schema=pa.DataFrameSchema({"a": pa.Column(pa.Int)}), same_size_as="df")
+    ... def func(df: pd.DataFrame) -> pd.DataFrame:
+    ...     return df
 
     **Ensure same index.**
     Ensure that the output dataframe has the same index as df1 and the same size as df2.
 
     >>> @result(
-    >>>     schema=pa.DataFrameSchema({"a": pa.Column(pa.Int)}),
-    >>>     same_index_as="df1",
-    >>>     same_size_as="df2",
-    >>> )
-    >>> def func(df1: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
-    >>>     return df1
+    ...     schema=pa.DataFrameSchema({"a": pa.Column(pa.Int)}),
+    ...     same_index_as="df1",
+    ...     same_size_as="df2",
+    ... )
+    ... def func(df1: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
+    ...     return df1
 
     **Ensures that the output extends the input schema.**
 
-    >>> @result(extends="df")
-    >>> def func(df: pd.DataFrame) -> pd.DataFrame:
-    >>>     return df.assign(a=1)
+    >>> @result(extends="df", schema=pa.DataFrameSchema({"a": pa.Column(int)}))
+    ... def func(df: pd.DataFrame) -> pd.DataFrame:
+    ...     return df.assign(a=1)
 
     Note that any columns listed the result schema can be modified. To specify a column
     that is returned, but cannot be modified, use the schema argument of the input
@@ -224,13 +233,13 @@ class result:  # noqa: N801
     * The result does not have a column "out" of type int
     * The column 'a' was changed.
 
-    >>> @pc.argument(arg="df", schema=pa.DataFrameSchema({"in": pa.Column(pa.Int)}))
-    >>> @pc.result(
-    >>>     schema=pa.DataFrameSchema({"out": pa.Column(pa.Int)}),
-    >>>     extends="df"
-    >>> )
-    >>> def func(df: pd.DataFrame) -> pd.DataFrame:
-    >>>     return df.assign(out=1)
+    >>> @pc.argument("df", schema=pa.DataFrameSchema({"in": pa.Column(pa.Int)}))
+    ... @pc.result(
+    ...     schema=pa.DataFrameSchema({"out": pa.Column(pa.Int)}),
+    ...     extends="df"
+    ... )
+    ... def func(df: pd.DataFrame) -> pd.DataFrame:
+    ...     return df.assign(out=1)
     """
 
     schema: pa.DataFrameSchema | pa.SeriesSchema | None = None
