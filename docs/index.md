@@ -44,7 +44,6 @@ data types and constraints of the input arguments and output values of functions
 :hidden: true
 
 self
-_out/apidocs/index.rst
 setup.md
 usage.md
 public-api.md
