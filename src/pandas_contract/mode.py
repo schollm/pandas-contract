@@ -32,6 +32,8 @@ _LOG_LEVELS = {
 class Modes(enum.Enum):
     """Modes for handling errors.
 
+    The possible modes are
+
     * **silent** Register the function at import, but do not run check during runtime.
     * **skip** Do not register the function at import, and do not run check during
       runtime. When this is set, it's not possible to change the mode later on since we
@@ -39,6 +41,11 @@ class Modes(enum.Enum):
     * **trace, debug, info, warn, error, critical** Log the error message at the
       specified level.
     * **raise** Raise an exception with the error message.
+
+    Environment
+    -----------
+
+    The environment variable `PANDAS_CONTRACT_MODE` can be used to set the initial mode
     """
 
     SKIP = "skip"

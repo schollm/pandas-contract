@@ -10,7 +10,7 @@
 .. autofunction:: pandas_contract.argument2
 .. autofunction:: pandas_contract.result2
 ```
-### Check functions
+## Check functions
 ```{autodoc2-summary}
 ~pandas_contract.checks.extends
 ~pandas_contract.checks.is_
@@ -24,13 +24,14 @@
     :members:
     :member-order: alphabetical
     :show-inheritance:
+    :exclude-members: mk_check, is_active
 ```
 
 ### Check Protocol
 ```{eval-rst}
 .. autoclass:: pandas_contract._private_checks.Check
     :members:
-    :class-doc-from: both
+    :class-d\oc-from: both
 ```
 
 # Setup handling
@@ -47,18 +48,3 @@ By default, the contract violation will be silenced.
 
 ```
 
-
-
-# Setup handling
-Functions to setup handling of contract violation.
-By default, the contract violation will be silenced.
-
-```{eval-rst}
-  .. autofunction:: pandas_contract.set_mode
-  .. autofunction:: pandas_contract.as_mode
-  .. autofunction:: pandas_contract.silent
-  .. autofunction:: pandas_contract.raises
-  .. autoclass:: pandas_contract.Modes
-  .. autoclass:: pandas_contract.mode.ModesT
-
-```
