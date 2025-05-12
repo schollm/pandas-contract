@@ -41,12 +41,12 @@ def argument(
     key: Any = UNDEFINED,
     validate_kwargs: ValidateDictT | None = None,
 ) -> _WrappedT:
-    """Check the input DataFrame for required columns using pandera.
+    """Check the input DataFrame.
 
-    :param arg: The name of the argument to check. This must correspond to one of the
-     arguments of the function.
-    :param checks_: Additional checks and the pandera schema verification to perform on
-        the DataFrame. For checks, see moduule pandas_contract.checks.
+    :param arg: The name of the argument to check. This must be the name of one of the
+     arguments of the function to be decorated.
+    :param checks_: Additional checks or the pandera schema verification to perform on
+        the DataFrame. For checks, see module :class:`pandas_contract.checks`.
         For pandera, see the
         `pandera documentation <https://pandera.readthedocs.io/en/stable>`_ for
         `DataFrameSchema <https://pandera.readthedocs.io/en/stable/dataframe_schemas.html>`_
@@ -67,7 +67,6 @@ def argument(
         * **random_state**: The random state for the random sampling. Used for pandera
           schema validation.
 
-    ========
 
     Examples
     --------
@@ -173,10 +172,10 @@ def result(
 ) -> _WrappedT:
     """Validate a DataFrame result using pandera.
 
-    The schema is used to validate the output DataFrame of the function.
-
     :param checks_: Additional checks and the pandera schema verification to perform on
-        the DataFrame. For checks, see moduule pandas_contract.checks.
+        the DataFrame. For checks, see module :class:`pandas_contract.checks`.
+
+        If a pandera schema is provided, it is used to validate the output.
         For pandera, see the
         `pandera documentation <https://pandera.readthedocs.io/en/stable>`_ for
         `DataFrameSchema <https://pandera.readthedocs.io/en/stable/dataframe_schemas.html>`_
@@ -197,10 +196,14 @@ def result(
         * **random_state**: The random state for the random sampling. Used for pandera
           schema validation.
 
-    **Examples**
+    Examples
+    --------
+    Note that all examples use the following preamble:
 
-    *Preamble: Import pandas_contract
+    >>> import pandas as pd
+    >>> import pandera as pa
     >>> import pandas_contract as pc
+
 
     *Ensure that the output dataframe has a column "a" of type int.*
 
@@ -274,6 +277,7 @@ def result(
     ... )
     ... def func(df: pd.DataFrame) -> pd.DataFrame:
     ...     return df.assign(out=1)
+
     """
     checks_lst: list[_checks.Check] = [
         _checks.CheckSchema(check, **validate_kwargs or {})
