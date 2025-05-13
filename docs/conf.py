@@ -31,11 +31,13 @@ extensions = [
     "sphinx.ext.intersphinx",
     "myst_parser",
     "autodoc2",
+    # "sphinx_mdinclude",
 ]
 autodoc2_packages = [
     "../src/pandas_contract",
 ]
-autodoc2_render_plugin = "myst"
+pygments_style = "sphinx"
+# autodoc2_render_plugin = "myst"
 autodoc2_sort_names = True
 autodoc2_replace_bases = [("pandas_contract", "pc")]
 autodoc2_class_docstring = "both"
@@ -62,7 +64,7 @@ myst_enable_extensions = ["colon_fence"]
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ["_out", "Thumbs.db", ".DS_Store"]
-html_static_path = ["_out/_static"]
+html_static_path = ["_static"]
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
