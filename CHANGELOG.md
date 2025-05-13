@@ -4,10 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.4] - 2025-05-12
+### Changed
+- Documentation: Fixed multiple entries in TOC
+- Documentation: Document use of PANDAS_CONTRACT_MODE
 ## [0.6.3] - 2025-05-11
 ### Changed
 - Fix examples in docstrings.
 ### Added
+- Add support for environmewnt variable PANDAS_CONTRACT_MODE
 - Add docstring tests
 
 ## [0.6.2] - 2025-05-09

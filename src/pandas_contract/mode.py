@@ -1,4 +1,36 @@
-"""Module for handling errors."""
+"""Module for handling errors.
+
+Functions to set up handling of contract violation.
+By default, the contract violation will be silenced.
+
+.. important::
+
+    By default, the decorators will be attached to the functions, but
+    **they will not run**. This ensures that production code is not affected.
+
+    The method :meth:`~pandas_contract.mode.set_mode` can be used to set the
+    global mode.
+
+    >>> import pandas_contract as pc
+    >>> pc.set_mode("warn") # # doctest: +SKIP print warn messages on standard log.
+
+    Alternatively, the environment variable PANDAS_CONTRACT_MODE can be set to one of
+    the values of
+
+    It is recommended to set the mode once in the main module of your application.
+    For tests, this can be overwritten in the test-setup.
+
+For specific runs, the context generators :meth:`~pandas_contract.mode.as_mode` and the
+short-cuts :meth:`pc.raises() <pandas_contract.mode.raises>` and
+:meth:`pc.silent() <pandas_contract.mode.silent>` can be used to set the mode.
+
+>>> import pandas_contract as pc
+>>> pc.set_mode("warn") # # doctest: +SKIP print warn messages on standard log.
+>>> with pc.as_mode("raise"): # Within the context, raise a ValueError on violation.
+...     ...
+
+
+"""
 
 from __future__ import annotations
 
@@ -32,6 +64,8 @@ _LOG_LEVELS = {
 class Modes(enum.Enum):
     """Modes for handling errors.
 
+    The possible modes are
+
     * **silent** Register the function at import, but do not run check during runtime.
     * **skip** Do not register the function at import, and do not run check during
       runtime. When this is set, it's not possible to change the mode later on since we
@@ -39,6 +73,11 @@ class Modes(enum.Enum):
     * **trace, debug, info, warn, error, critical** Log the error message at the
       specified level.
     * **raise** Raise an exception with the error message.
+
+    Environment
+    -----------
+
+    The environment variable `PANDAS_CONTRACT_MODE` can be used to set the initial mode
     """
 
     SKIP = "skip"

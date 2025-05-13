@@ -28,6 +28,57 @@ _T = TypeVar("_T", bound=Callable[..., Any])
 """"Type variable for the function type."""
 
 
+class KeyT(Protocol):
+    """KeyType protocol, define a lookup key for an argument or the result.
+
+    A key can be used to get a DataFrame or Series from within a more complex argument
+    or return value.
+
+    Its value is either any hashable or a function that takes a single argument as
+    an input and returns a DataFrame/Series.
+
+    Note that `None` is a valid key in a dictionary and hence is not the default value.
+    By default, the value is used as-is.
+
+    >>> import pandas as pd
+    >>> import pandas_contract as pc
+    >>> import pandera as pa
+    >>> @pc.result(pa.SeriesSchema(int), key=1)
+    ... def f1():
+    ...    return "res", pd.Series([1,2,3])
+
+    The key can also be an arbitrary function that takes the input arg and has to
+    return the DataFrame/Series to check.
+
+    This can be used to create a Series, which is then checkable out of non-checkable
+    Data:
+
+    >>> @pc.result(pa.SeriesSchema(int), key=pd.Series)
+    >>> def f1():
+    ...    return [1, 2, 3]
+
+
+    Note, if the DataFrame/Series is wrapped in a mapping where the mapping keys are
+    callables, then *Key* must be wrapped in another function:
+
+    >>> def fn_as_key():
+    ...    ...
+
+    >>> # Get the dataframe from the output item `f1`.
+    >>> # @pc.result(key=f1, schema=pa.DataFrameSchema({"name": pa.String}))  - fail
+    >>> @pc.result(
+    ...     key=lambda res: res[fn_as_key],
+    ...     schema=pa.DataFrameSchema({"name": pa.String}),
+    ... )
+    ... def return_generators():
+    ...     # f1 is a key to a dictionary holding the data frame to be tested.
+    ...     return {
+    ...         fn_as_key: pd.DataFrame([{"name": "f1"}])
+    ...     }
+
+    """
+
+
 class _WrappedT(Protocol):
     """Type for wrapper function."""
 
@@ -38,23 +89,21 @@ def argument(
     arg: str,
     /,
     *checks_: _checks.Check | pa.DataFrameSchema | pa.SeriesSchema,
-    key: Any = UNDEFINED,
+    key: KeyT = UNDEFINED,
     validate_kwargs: ValidateDictT | None = None,
 ) -> _WrappedT:
-    """Check the input DataFrame for required columns using pandera.
+    """Check the input DataFrame.
 
-    :param arg: The name of the argument to check. This must correspond to one of the
-     arguments of the function.
-    :param checks_: Additional checks and the pandera schema verification to perform on
-        the DataFrame. For checks, see moduule pandas_contract.checks.
+    :param arg: The name of the argument to check. This must be the name of one of the
+     arguments of the function to be decorated.
+    :param checks_: Additional checks or the pandera schema verification to perform on
+        the DataFrame. For checks, see module :class:`pandas_contract.checks`.
         For pandera, see the
         `pandera documentation <https://pandera.readthedocs.io/en/stable>`_ for
         `DataFrameSchema <https://pandera.readthedocs.io/en/stable/dataframe_schemas.html>`_
         and `SeriesSchema <https://pandera.readthedocs.io/en/stable/series_schemas.html>`_.
-    :param key: The key of the input to check. If None, the entire input is checked.
-        This can be used if the function takes a tuple or a mapping as input.
-        The key can also be an arbitrary function that takes the input arg and has to
-        return the dataframe as a check.
+    :param key: The key of the input to check. See
+        :class:`~pandas_contract._decorator_v2.KeyT`.
     :param validate_kwargs: Additional Keywords to provide to pandera validate.
         Valid keys are
 
@@ -67,19 +116,19 @@ def argument(
         * **random_state**: The random state for the random sampling. Used for pandera
           schema validation.
 
-    ========
 
     Examples
-    --------
+    ========
+
     Note that all examples use the following preamble:
 
     >>> import pandas as pd
     >>> import pandera as pa
     >>> import pandas_contract as pc
 
+    Ensure columns exist in DataFrame
     -----------------------------------
-    Ensure columns exists in DataFrame
-    -----------------------------------
+
     Ensure that input dataframe as a column "a" of type int and "b" of type float.
 
     >>> @argument(
@@ -91,16 +140,19 @@ def argument(
     ... def func(df: pd.DataFrame) -> None:
     ...     ...
 
-    -------------------------------------
-    Ensure other argument has same index
-    -------------------------------------
-    Ensure that the dataframes df1 and df2 have the same indices.
+
+    Ensure same index
+    -----------------
+    Ensure that the dataframes arguments *df1* and *df2* have the same indices by
+    checking argument *df1* against the argument *df2*.
 
     >>> @argument("df1", pc.checks.same_index_as("df2"))
     ... def func(df1: pd.DataFrame, df2: pd.DataFrame) -> None:
     ...     ...
 
-    *Ensure that the dataframes df1 and df2 have the same size*
+    Ensure same size
+    ----------------
+    Ensure that the dataframe arguments *df1* and *df2* have the same size
 
     >>> @argument("df1", pc.checks.same_length_as("df2"))
     ... def func(df1: pd.DataFrame, df2: pd.DataFrame) -> None:
@@ -173,18 +225,17 @@ def result(
 ) -> _WrappedT:
     """Validate a DataFrame result using pandera.
 
-    The schema is used to validate the output DataFrame of the function.
-
     :param checks_: Additional checks and the pandera schema verification to perform on
-        the DataFrame. For checks, see moduule pandas_contract.checks.
+        the DataFrame. For checks, see module :class:`pandas_contract.checks`.
+
+        If a pandera schema is provided, it is used to validate the output.
         For pandera, see the
         `pandera documentation <https://pandera.readthedocs.io/en/stable>`_ for
         `DataFrameSchema <https://pandera.readthedocs.io/en/stable/dataframe_schemas.html>`_
         and `SeriesSchema <https://pandera.readthedocs.io/en/stable/series_schemas.html>`_.
-    :param key: The key of the input to check. If None, the entire input is checked.
-        This can be used if the function takes a tuple or a mapping as input.
-        The key can also be an arbitrary function that takes the input arg and has to
-        return the dataframe as a check.
+    :param key: The key of the input to check. See
+        :class:`~pandas_contract._decorator_v2.KeyT`.
+
     :param validate_kwargs: Additional Keywords to provide to pandera validate.
         Valid keys are
 
@@ -197,20 +248,27 @@ def result(
         * **random_state**: The random state for the random sampling. Used for pandera
           schema validation.
 
-    **Examples**
 
-    *Preamble: Import pandas_contract
+    Examples
+    ========
+    Note that all examples use the following preamble:
+
+    >>> import pandas as pd
+    >>> import pandera as pa
     >>> import pandas_contract as pc
 
-    *Ensure that the output dataframe has a column "a" of type int.*
+    Output column exists
+    --------------------
+
+    Ensure that the output dataframe has a column "a" of type int.
 
     >>> @result(pa.DataFrameSchema({"a": pa.Column(pa.Int)}))
     ... def func() -> pd.DataFrame:
     ...     return pd.DataFrame({"a": [1, 2]})
 
 
-    *Ensure that the output dataframe has a column "a" of type int and "b" of type
-    float.*
+    Ensure that the output dataframe has a column "a" of type int and "b" of type float
+    -----------------------------------------------------------------------------------
 
     >>> @result(
     ...     pa.DataFrameSchema(
@@ -274,6 +332,7 @@ def result(
     ... )
     ... def func(df: pd.DataFrame) -> pd.DataFrame:
     ...     return df.assign(out=1)
+
     """
     checks_lst: list[_checks.Check] = [
         _checks.CheckSchema(check, **validate_kwargs or {})

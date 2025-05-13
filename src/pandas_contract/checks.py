@@ -31,12 +31,25 @@ class same_index_as(Check):  # noqa: N801
     """Check that the DataFrame index is the same as another DataFrame.
 
     This check ensures that the index of the data-frame is identical to the dataframe of
-    another argument (or a list of arguments).
+    another argument (or a list of arguments). This can be useful for both arguments
+    and results.
 
-    *Example*
+    The argument `arg` can be either a single argument name, a comma-separated list of
+    argument names or an iterable of argument names.
 
-    >>> from pandas_contract import result2
-    >>> @result2(same_index_as("df2"))
+    **Examples**
+
+    >>> import pandas_contract as pc
+    >>> @pc.result2(pc.checks.same_index_as("df, df2"))
+    ... def my_fn(df: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
+    ...     return df.join(df2)
+
+    The following will check the same, but by first ensuring that the indices of the
+    inputs are the same, and then that the resulting index is the same as the input
+    index of df.
+
+    >>> @pc.argument2("df", pc.checks.same_index_as("df2"))
+    ... @pc.result2(pc.checks.same_index_as("df"))
     ... def my_fn(df: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
     ...     return df.join(df2)
 
@@ -73,20 +86,44 @@ class same_index_as(Check):  # noqa: N801
 
 
 class same_length_as(Check):  # noqa: N801
-    """Check that the argument has the same length.."""
+    """Check that the DataFrame length is the same as another DataFrame.
+
+    This check ensures that the lenth of the data-frames are identical.
+    This can be useful for both arguments and results.
+
+    The argument `arg` can be either a single argument name, a comma-separated list of
+    argument names or an iterable of argument names.
+
+    **Examples**
+
+    >>> import pandas_contract as pc
+    >>> @pc.result2(pc.checks.same_length_as("df, df2"))
+    ... def my_fn(df: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
+    ...     return df.join(df2)
+
+    The following will check the same, but by first ensuring that the lengths of the
+    inputs are the same, and then that the resulting length is the same as the input
+    length of df.
+
+    >>> @pc.argument2("df", pc.checks.same_length_as("df2"))
+    ... @pc.result2(pc.checks.same_length_as("df"))
+    ... def my_fn(df: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
+    ...     return df.join(df2)
+
+    """
 
     __slots__ = ("all_args", "args")
     all_args: list[str]
     args: list[str]
 
-    def __init__(self, same_length_as: str | Iterable[str] | None) -> None:
+    def __init__(self, args: str | Iterable[str] | None, /) -> None:
         """Ensure that the result has the same length as another dataframe.
 
         :param same_length_as: argument that the result should have the same length as.
             It can be either a string or an iterable of strings.
             If it is a string, it will be split by commas.
         """
-        self.all_args = self.args = split_or_list(same_length_as)
+        self.all_args = self.args = split_or_list(args)
 
     @property
     def is_active(self) -> bool:
@@ -140,8 +177,8 @@ class extends(Check):  # noqa: N801
     ) -> None:
         """Ensure that the result extends another dataframe.
 
-        :param arg:
-        :param schema:
+        :param arg: Argument that this DataFrame extends.
+        :param schema: Pandera SchemaDefinition.
         """
         self.all_args = []
         if arg is None:
@@ -231,7 +268,24 @@ class _HashErr(NamedTuple):
 
 @dataclass(frozen=True)
 class is_(Check):  # noqa: N801
-    """Ensures that the result is identical (`is` operator) to another dataframe."""
+    """Ensures that the result is identical (`is` operator) to another dataframe.
+
+    This check is most useful for the :class:`@result <pandas_contract.result2>`
+    decorator as it ensures that the output is changed in-place.
+    It is the opposite of the :class:`is_not() <pandas_contract.checks.is_not>` check.
+
+    **Example**
+
+    Ensure that the result is the same object as the input argument `df`, i.e. the
+    function operats in-place.
+
+    >>> import pandas_contract as pc
+    >>> @pc.result2(pc.checks.is_("df"))
+    ... def fn(df):
+    ...    df["x"] = 1  # change df in-place
+    ...    return df
+
+    """
 
     arg: str | None
 
@@ -261,7 +315,20 @@ class is_(Check):  # noqa: N801
 
 
 class is_not(Check):  # noqa: N801
-    """Ensures that the result is not identical (`is` operator) to `others`."""
+    """Ensures that the result is not identical (`is not` operator) to `others`.
+
+    This check is most useful for the :class:`@result <pandas_contract.result2>`
+    decorator as it ensures that the output is not changed in-place.
+    It is the opposite of the :func:`is_() <pandas_contract.checks.is_>` check.
+
+    **Examples**
+
+    >>> import pandas_contract as pc
+    >>> @pc.result2(pc.checks.is_not("df"))
+    ... def fn(df):
+    ...    return df.assign(x=1)  # .assign creates a copy
+
+    """
 
     __slots__ = ("all_args", "args")
     all_args: tuple[str, ...]

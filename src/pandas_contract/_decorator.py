@@ -57,6 +57,7 @@ class argument:  # noqa: N801
     >>> import pandas_contract as pc
 
     *Ensure that the input dataframe has a column "a" of type int.*
+
     >>> @argument("df", schema=pa.DataFrameSchema({"a": pa.Column(pa.Int)}))
     ... def func(df: pd.DataFrame) -> None:
     ...    ...
@@ -171,19 +172,19 @@ class result:  # noqa: N801
         data-frame/series is identical to the given argument (assert fn(df) is df),
         i.e. the function changes the dataframe in-place.
 
-    **Examples**
+    Examples:
+    =========
+
     >>> import pandas as pd
     >>> import pandera as pa
     >>> import pandas_contract as pc
 
-    *Ensure that the output dataframe has a column "a" of type int.*
-    >>> @result(schema=pa.DataFrameSchema({"a": pa.Column(pa.Int)}))
-    ... def func() -> pd.DataFrame:
-    ...     return pd.DataFrame({"a": [1, 2]})
 
+    Ensure column exists
+    --------------------
 
-    *Ensure that the output dataframe has a column "a" of type int and "b" of type
-    float.*
+    Ensure that the output dataframe has a column "a" of type int and "b" of type
+    float.
 
     >>> @result(
     ...     schema=pa.DataFrameSchema(
@@ -193,17 +194,23 @@ class result:  # noqa: N801
     ... def func() -> pd.DataFrame:
     ...     return pd.DataFrame({"a": [1, 2], "b": [1.0, 2.0]})
 
-    **Ensure that the output dataframe has the same index as df.**
+    Ensure equal length
+    -------------------
+    Ensure that the output dataframe has the same size as df.
+
+    >>> @result(schema=pa.DataFrameSchema({"a": pa.Column(pa.Int)}), same_size_as="df")
+    ... def func(df: pd.DataFrame) -> pd.DataFrame:
+    ...     return df
+
+    Ensure same indices
+    --------------------
+
+    Ensure that the output dataframe has the same index as df.
 
     >>> @result(schema=pa.DataFrameSchema({"a": pa.Column(pa.Int)}), same_index_as="df")
     ... def func(df: pd.DataFrame) -> pd.DataFrame:
     ...     return df
 
-    **Ensure that the output dataframe has the same size as df.**
-
-    >>> @result(schema=pa.DataFrameSchema({"a": pa.Column(pa.Int)}), same_size_as="df")
-    ... def func(df: pd.DataFrame) -> pd.DataFrame:
-    ...     return df
 
     **Ensure same index.**
     Ensure that the output dataframe has the same index as df1 and the same size as df2.
@@ -216,7 +223,9 @@ class result:  # noqa: N801
     ... def func(df1: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
     ...     return df1
 
-    **Ensures that the output extends the input schema.**
+    Extends input
+    --------------
+    Ensures that the output extends the input schema.
 
     >>> @result(extends="df", schema=pa.DataFrameSchema({"a": pa.Column(int)}))
     ... def func(df: pd.DataFrame) -> pd.DataFrame:
@@ -240,6 +249,7 @@ class result:  # noqa: N801
     ... )
     ... def func(df: pd.DataFrame) -> pd.DataFrame:
     ...     return df.assign(out=1)
+
     """
 
     schema: pa.DataFrameSchema | pa.SeriesSchema | None = None

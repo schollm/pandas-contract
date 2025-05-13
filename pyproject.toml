@@ -1,6 +1,6 @@
 [project]
 name = "pandas-contract"
-version = "0.6.3"
+version = "0.6.4"
 description = "Define input and output columns for functions working on pandas dataframes."
 readme = "README.md"
 authors = [
@@ -60,6 +60,9 @@ ignore = [
     "EM101", # Exception must not use a string literal, assign to variable first
     "ANN401", # Dynamically typed expressions (typing.Any) are disallowed: This is also applied to *arg, **kwargs.
     "D205", # 1 blank line required between summary line and description: ruff format disagrees.
+    "D407", # We want sub-headings in docstrsings.
+    "D416", # Example(s) is used as headings, so we do not want a column.
+
 ]
 
 [tool.ruff.lint.flake8-pytest-style]
