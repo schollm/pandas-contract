@@ -37,7 +37,6 @@ autodoc2_packages = [
     "../src/pandas_contract",
 ]
 pygments_style = "sphinx"
-# autodoc2_render_plugin = "myst"
 autodoc2_sort_names = True
 autodoc2_replace_bases = [("pandas_contract", "pc")]
 autodoc2_class_docstring = "both"
@@ -46,7 +45,6 @@ autodoc2_module_all_regexes = [
     "pandas_contract.checks.*",
 ]
 autodoc2_hidden_objects = ["inherited", "private"]
-autodoc2_sort_names = True
 autodoc2_output_dir = "_out/apidocs"
 intersphinx_mapping = {
     "rtd": ("https://docs.readthedocs.io/en/stable/", None),
