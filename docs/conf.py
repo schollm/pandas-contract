@@ -26,12 +26,10 @@ release = version = pyproject["project"]["version"]
 extensions = [
     "sphinx.ext.duration",
     "sphinx.ext.doctest",
-    # "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.intersphinx",
     "myst_parser",
     "autodoc2",
-    # "sphinx_mdinclude",
 ]
 autodoc2_packages = [
     "../src/pandas_contract",
