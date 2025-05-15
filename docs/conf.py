@@ -16,7 +16,9 @@ from pathlib import Path
 
 import tomllib
 
-pyproject = tomllib.loads(Path("../pyproject.toml").read_text("utf-8"))
+pyproject = tomllib.loads(
+    (Path(__file__).parents[1] / "pyproject.toml").read_text("utf-8")
+)
 project = "pandas-contract"
 copyright = "%Y Micha Scholl"  # noqa: A001
 author = "Micha Scholl"
