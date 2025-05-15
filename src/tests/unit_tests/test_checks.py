@@ -120,6 +120,23 @@ class TestCheckSchema:
         res = check.mk_check(lambda _: 0, (), {})
         assert res(pd.Series()) == []
 
+    def test_key(self) -> None:
+        """Test mk_check function if schema is None."""
+        check = CheckSchema(
+            schema=DataFrameSchema(
+                {
+                    from_arg("a_col"): pa.Column(),
+                    from_arg("b_col"): pa.Column(),
+                }
+            )
+        )
+        check_fn = check.mk_check(lambda a_col, b_col: 0, ("a", "b"), {})
+        assert list(check_fn(pd.DataFrame(columns=["a", "b"]))) == []
+        errs = list(check_fn(pd.DataFrame(columns=["a", "x"])))
+        assert len(errs) == 1
+        assert "'b'" in str(errs[0])
+        assert isinstance(errs[0], str)
+
 
 class TestIs:
     """Test cases for CheckIsNot."""
