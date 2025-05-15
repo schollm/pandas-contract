@@ -1,12 +1,14 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable, Protocol, TypedDict, cast
+from typing import TYPE_CHECKING, Any, Callable, Protocol, TypedDict, TypeVar, cast
 
 if TYPE_CHECKING:  # pragma: no cover
     import types
     from collections.abc import Iterable, Sequence
 
     import pandas as pd
+
+_T = TypeVar("_T", bound=Callable)
 
 
 class MyFunctionType(Protocol):  # pragma: no cover
@@ -26,8 +28,69 @@ class ValidateDictT(TypedDict, total=False):
     random_state: int | None
 
 
+class KeyT(Protocol):
+    """KeyType protocol, define a lookup key for an argument or the result.
+
+    A key can be used to get a DataFrame or Series from within a more complex argument
+    or return value.
+
+    Its value is either any hashable or a function that takes a single argument as
+    an input and returns a DataFrame/Series.
+
+    Note that `None` is a valid key in a dictionary and hence is not the default value.
+    By default, the value is used as-is.
+
+    >>> import pandas as pd
+    >>> import pandas_contract as pc
+    >>> import pandera as pa
+    >>> @pc.result(pa.SeriesSchema(int), key=1)
+    ... def f1():
+    ...    return "res", pd.Series([1,2,3])
+
+    The key can also be an arbitrary function that takes the input arg and has to
+    return the DataFrame/Series to check.
+
+    This can be used to create a Series, which is then checkable out of non-checkable
+    Data:
+
+    >>> @pc.result(pa.SeriesSchema(int), key=pd.Series)
+    ... def f1():
+    ...    return [1, 2, 3]
+
+
+    Note, if the DataFrame/Series is wrapped in a mapping where the mapping keys are
+    callables, then *Key* must be wrapped in another function:
+
+    >>> def fn_as_key():
+    ...    ...
+
+    >>> # Get the dataframe from the output item `f1`.
+    >>> # @pc.result(key=f1, schema=pa.DataFrameSchema({"name": pa.String}))  - fail
+    >>> @pc.result(
+    ...     pa.DataFrameSchema({"name": pa.Column(str)}),
+    ...     key=lambda res: res[fn_as_key],
+    ... )
+    ... def return_generators():
+    ...     # f1 is a key to a dictionary holding the data frame to be tested.
+    ...     return {
+    ...         fn_as_key: pd.DataFrame([{"name": "f1"}])
+    ...     }
+
+    """
+
+
+class WrappedT(Protocol):
+    """Type for wrapper function."""
+
+    def __call__(self, fn: _T) -> _T: ...
+
+
 UNDEFINED = object()
 """Mark a parameter as undefined."""
+
+ORIGINAL_FUNCTION_ATTRIBUTE = "_pandas_contract_original_function"
+"""Name of attribute to attach to decorated functions."""
+# We need the original function to get the original argument names of the function.
 
 
 def ensure_list(value: str | Sequence[str]) -> list[str]:
@@ -44,9 +107,6 @@ def split_or_list(value: str | Iterable[str] | None) -> list[str]:
     if isinstance(value, str):
         return [v.strip() for v in value.split(",")]
     return list(value)
-
-
-ORIGINAL_FUNCTION_ATTRIBUTE = "_pandas_contract_original_function"
 
 
 def from_arg(arg: str) -> Callable[[MyFunctionType, tuple[Any], dict[str, Any]], Any]:

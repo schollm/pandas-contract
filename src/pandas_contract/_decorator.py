@@ -1,87 +1,92 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Callable, TypeVar
+import warnings
+from typing import TYPE_CHECKING, Any, cast
 
-from pandas_contract import checks
+from pandera.api.base.schema import BaseSchema
+
+from pandas_contract._decorator_v1 import argument as argument1
+from pandas_contract._decorator_v1 import result as result1
 from pandas_contract._decorator_v2 import argument as argument2
 from pandas_contract._decorator_v2 import result as result2
-from pandas_contract._private_checks import (
-    Check,
-    CheckSchema,
-)
 
-from ._lib import UNDEFINED, ValidateDictT
+from ._lib import UNDEFINED, ValidateDictT, WrappedT
 
-if TYPE_CHECKING:  # pragma: no cover
-    from collections.abc import Sequence
-
-    import pandera as pa
+if TYPE_CHECKING:
+    import pandas_contract._private_checks as _checks
 
 
-"""Mark a parameter as undefined."""
-T = TypeVar("T", bound=Callable[..., Any])
-""""Type variable for the function type."""
+def argument(
+    arg: str,
+    /,
+    *checks_: _checks.Check | BaseSchema,
+    key: Any = UNDEFINED,
+    validate_kwargs: ValidateDictT | None = None,
+    **_legacy_args: Any,
+) -> WrappedT:
+    """Check the input DataFrame.
 
-
-@dataclass
-class argument:  # noqa: N801
-    """Decorator to check the input DataFrame for required columns using pandera.
-
-    :param arg: The name of the argument to check. This must correspond to one of the
-     arguments of the function.
-    :param schema: The schema to validate the input DataFrame.
-        See the `pandera documentation <https://pandera.readthedocs.io/en/stable>`_ for
+    :param arg: The name of the argument to check. This must be the name of one of the
+     arguments of the function to be decorated.
+    :param checks_: Additional checks or the pandera schema verification to perform on
+        the DataFrame. For checks, see module :class:`pandas_contract.checks`.
+        For pandera, see the
+        `pandera documentation <https://pandera.readthedocs.io/en/stable>`_ for
         `DataFrameSchema <https://pandera.readthedocs.io/en/stable/dataframe_schemas.html>`_
         and `SeriesSchema <https://pandera.readthedocs.io/en/stable/series_schemas.html>`_.
-    :param head: The number of rows to validate from the head. If None, all rows are
-        used for validation.
-    :param tail: The number of rows to validate from the tail. If None, all rows are
-        used for validation.
-    :param sample: The number of rows to validate randomly. If None, all rows are used
-        for validation.
-    :param random_state: The random state for the random sampling.
-    :param same_index_as: The name of the input argument(s) that should have the same
-        index.
-    :param same_size_as: The name of the input argument(s) that should have the same
-        size.
-    :param key: The key of the input to check. If None, the entire input is checked.
-    :param extends: Name of argument that this output extends.
+    :param key: The key of the input to check. See
+        :class:`~pandas_contract._decorator_v2.KeyT`.
+    :param validate_kwargs: Additional Keywords to provide to pandera validate.
+        Valid keys are
+
+        * **head**: The number of rows to validate from the head.  If None, all rows are
+          used for validation. Used for pandera schema validation.
+        * **tail**: The number of rows to validate from the tail. If None, all rows are
+          used for validation. Used for pandera schema validation.
+        * **sample**: The number of rows to validate randomly. If None, all rows are
+          used for validation. Used for pandera schema validation.
+        * **random_state**: The random state for the random sampling. Used for pandera
+          schema validation.
+
 
     Examples
-    --------
-    **Common imports for all examples:**
+    ========
+
+    Note that all examples use the following preamble:
 
     >>> import pandas as pd
     >>> import pandera as pa
     >>> import pandas_contract as pc
 
-    *Ensure that the input dataframe has a column "a" of type int.*
+    Ensure columns exist in DataFrame
+    -----------------------------------
 
-    >>> @argument("df", schema=pa.DataFrameSchema({"a": pa.Column(pa.Int)}))
-    ... def func(df: pd.DataFrame) -> None:
-    ...    ...
-
-    *Ensure that input dataframe as a column "a" of type int and "b" of type float.*
+    Ensure that input dataframe as a column "a" of type int and "b" of type float.
 
     >>> @argument(
     ...     "df",
-    ...     schema=pa.DataFrameSchema(
+    ...     pa.DataFrameSchema(
     ...         {"a": pa.Column(pa.Int), "b": pa.Column(pa.Float)}
     ...     ),
     ... )
     ... def func(df: pd.DataFrame) -> None:
     ...     ...
 
-    *Ensure that the dataframes df1 and df2 have the same indices*
 
-    >>> @argument("df1", same_index_as="df2")
+    Ensure same index
+    -----------------
+    Ensure that the dataframes arguments *df1* and *df2* have the same indices by
+    checking argument *df1* against the argument *df2*.
+
+    >>> @argument("df1", pc.checks.same_index_as("df2"))
     ... def func(df1: pd.DataFrame, df2: pd.DataFrame) -> None:
     ...     ...
 
-    *Ensure that the dataframes df1 and df2 have the same size*
+    Ensure same size
+    ----------------
+    Ensure that the dataframe arguments *df1* and *df2* have the same size
 
-    >>> @argument("df1", same_size_as="df2")
+    >>> @argument("df1", pc.checks.same_length_as("df2"))
     ... def func(df1: pd.DataFrame, df2: pd.DataFrame) -> None:
     ...     ...
 
@@ -92,9 +97,9 @@ class argument:  # noqa: N801
 
     >>> @argument(
     ...     "dfs",
-    ...     schema=pa.DataFrameSchema({"a": pa.Column(pa.Int)}),
-    ...     same_index_as="df2",
-    ...     same_size_as="df3",
+    ...     pa.DataFrameSchema({"a": pa.Column(pa.Int)}),
+    ...     pc.checks.same_index_as("df2"),
+    ...     pc.checks.same_length_as("df3"),
     ... )
     ... def func(dfs: pd.DataFrame, df2: pd.DataFrame, df3: pd.DataFrame) -> None:
     ...     ...
@@ -106,128 +111,139 @@ class argument:  # noqa: N801
 
     For example, to ensure that the input series is of type int, one can use:
 
-    >>> @argument("ds", schema=pa.SeriesSchema(pa.Int))
+    >>> @argument("ds", pa.SeriesSchema(pa.Int))
     ... def func(ds: pd.Series) -> None:
     ...     ...
 
     """
-
-    arg: str
-    schema: pa.DataFrameSchema | pa.SeriesSchema | None = None
-    head: int | None = None
-    tail: int | None = None
-    sample: int | None = None
-    random_state: int | None = None
-    same_index_as: str | Sequence[str] = ()
-    same_size_as: str | Sequence[str] = ()
-    key: Any = UNDEFINED
-    extends: str | None = None
-
-    def __post_init__(self) -> None:
-        checks_lst: list[Check] = [
-            CheckSchema(
-                self.schema, self.head, self.tail, self.sample, self.random_state
-            ),
-            checks.same_index_as(self.same_index_as),
-            checks.same_length_as(self.same_size_as),
-            checks.extends(self.extends, self.schema),
-        ]
-
-        self._decorator = argument2(
-            self.arg,
-            *(check for check in checks_lst if check.is_active),
-            key=self.key,
-            validate_kwargs=ValidateDictT(
-                head=self.head,
-                tail=self.tail,
-                sample=self.sample,
-                random_state=self.random_state,
-            ),
+    if _legacy_args:
+        warnings.warn(
+            "Deprecated API in use. See doc for new API.",
+            DeprecationWarning,
+            stacklevel=1,
         )
+        schema = _legacy_args.get("schema")
+        if schema is None and len(checks_) == 1 and isinstance(checks_[0], BaseSchema):
+            # schema can be a positional argument - then it has to be the first element
+            # *checks_.
+            schema = cast("BaseSchema", checks_[0])
+            checks_ = checks_[1:]
+            if checks_ or validate_kwargs:
+                raise ValueError("Can not combine v1 and v2 style of arguments")
+        return argument1(
+            arg,
+            schema,
+            key=key,
+            head=_legacy_args.get("head"),
+            tail=_legacy_args.get("tail"),
+            sample=_legacy_args.get("sample"),
+            random_state=_legacy_args.get("random_state"),
+            same_index_as=_legacy_args.get("same_index_as", ()),
+            same_size_as=_legacy_args.get("same_size_as", ()),
+            extends=_legacy_args.get("extends"),
+        )
+    return argument2(
+        arg,
+        *checks_,
+        key=key,
+        validate_kwargs=validate_kwargs,
+    )
 
-    def __call__(self, fn: T) -> T:
-        return self._decorator(fn)
 
-
-@dataclass
-class result:  # noqa: N801
+def result(
+    *checks_: _checks.Check | BaseSchema,
+    key: Any = UNDEFINED,
+    validate_kwargs: ValidateDictT | None = None,
+    **_legacy_args: Any,
+) -> WrappedT:
     """Validate a DataFrame result using pandera.
 
-    The schema is used to validate the output DataFrame of the function.
+    :param checks_: Additional checks and the pandera schema verification to perform on
+        the DataFrame. For checks, see module :class:`pandas_contract.checks`.
 
-    :param schema: The schema to validate the output DataFrame.
-    :param head: The number of rows to validate from the head.
-    :param tail: The number of rows to validate from the tail.
-    :param sample: The number of rows to validate randomly.
-    :param random_state: The random state for the random sampling.
-    :param same_index_as: The name of the input argument(s) that should have the
-        same index.
-    :param same_size_as: The name of the input argument(s) that should have the same
-        size.
-    :param key: The key of the output to check. If None, the entire output is checked.
-        This can be used if the function returns a tuple or a mapping.
-    :param extends: The name of the input argument that the output extends. Only
-        columns defined in the output schema are allowed to be mutated or added.
-    :param is_: Name of argument tha the output is identical to. The resulting
-        data-frame/series is identical to the given argument (assert fn(df) is df),
-        i.e. the function changes the dataframe in-place.
+        If a pandera schema is provided, it is used to validate the output.
+        For pandera, see the
+        `pandera documentation <https://pandera.readthedocs.io/en/stable>`_ for
+        `DataFrameSchema <https://pandera.readthedocs.io/en/stable/dataframe_schemas.html>`_
+        and `SeriesSchema <https://pandera.readthedocs.io/en/stable/series_schemas.html>`_.
+    :param key: The key of the input to check. See
+        :class:`~pandas_contract._decorator_v2.KeyT`.
 
-    Examples:
-    =========
+    :param validate_kwargs: Additional Keywords to provide to pandera validate.
+        Valid keys are
+
+        * **head**: The number of rows to validate from the head.  If None, all rows are
+          used for validation. Used for pandera schema validation.
+        * **tail**: The number of rows to validate from the tail. If None, all rows are
+          used for validation. Used for pandera schema validation.
+        * **sample**: The number of rows to validate randomly. If None, all rows are
+          used for validation. Used for pandera schema validation.
+        * **random_state**: The random state for the random sampling. Used for pandera
+          schema validation.
+
+
+    Examples
+    ========
+    Note that all examples use the following preamble:
 
     >>> import pandas as pd
     >>> import pandera as pa
     >>> import pandas_contract as pc
 
-
-    Ensure column exists
+    Output column exists
     --------------------
 
-    Ensure that the output dataframe has a column "a" of type int and "b" of type
-    float.
+    Ensure that the output dataframe has a column "a" of type int.
+
+    >>> @result(pa.DataFrameSchema({"a": pa.Column(pa.Int)}))
+    ... def func() -> pd.DataFrame:
+    ...     return pd.DataFrame({"a": [1, 2]})
+
+
+    Ensure that the output dataframe has a column "a" of type int and "b" of type float
+    -----------------------------------------------------------------------------------
 
     >>> @result(
-    ...     schema=pa.DataFrameSchema(
+    ...     pa.DataFrameSchema(
     ...         {"a": pa.Column(pa.Int), "b": pa.Column(pa.Float)}
     ...    )
     ... )
     ... def func() -> pd.DataFrame:
     ...     return pd.DataFrame({"a": [1, 2], "b": [1.0, 2.0]})
 
-    Ensure equal length
-    -------------------
-    Ensure that the output dataframe has the same size as df.
+    **Ensure that the output dataframe has the same index as df.**
 
-    >>> @result(schema=pa.DataFrameSchema({"a": pa.Column(pa.Int)}), same_size_as="df")
+    >>> @result(
+    ...     pa.DataFrameSchema({"a": pa.Column(pa.Int)}, pc.checks.same_index_as("df"))
+    ... )
     ... def func(df: pd.DataFrame) -> pd.DataFrame:
     ...     return df
 
-    Ensure same indices
-    --------------------
+    **Ensure that the output dataframe has the same size as df.**
 
-    Ensure that the output dataframe has the same index as df.
-
-    >>> @result(schema=pa.DataFrameSchema({"a": pa.Column(pa.Int)}), same_index_as="df")
+    >>> @result(
+    ...     pa.DataFrameSchema({"a": pa.Column(pa.Int)}),
+    ...     pc.checks.same_length_as("df"),
+    ... )
     ... def func(df: pd.DataFrame) -> pd.DataFrame:
     ...     return df
-
 
     **Ensure same index.**
     Ensure that the output dataframe has the same index as df1 and the same size as df2.
 
     >>> @result(
-    ...     schema=pa.DataFrameSchema({"a": pa.Column(pa.Int)}),
-    ...     same_index_as="df1",
-    ...     same_size_as="df2",
+    ...     pa.DataFrameSchema({"a": pa.Column(pa.Int)}),
+    ...     pc.checks.same_index_as("df1"),
+    ...     pc.checks.same_length_as("df2"),
     ... )
     ... def func(df1: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
     ...     return df1
 
-    Extends input
-    --------------
-    Ensures that the output extends the input schema.
+    **Ensures that the output extends the input schema.**
 
-    >>> @result(extends="df", schema=pa.DataFrameSchema({"a": pa.Column(int)}))
+    >>> @result(
+    ...    pc.checks.extends("df", pa.DataFrameSchema({"b": pa.Column(int)}))
+    ... )
     ... def func(df: pd.DataFrame) -> pd.DataFrame:
     ...     return df.assign(a=1)
 
@@ -242,49 +258,42 @@ class result:  # noqa: N801
     * The result does not have a column "out" of type int
     * The column 'a' was changed.
 
-    >>> @pc.argument("df", schema=pa.DataFrameSchema({"in": pa.Column(pa.Int)}))
-    ... @pc.result(
-    ...     schema=pa.DataFrameSchema({"out": pa.Column(pa.Int)}),
-    ...     extends="df"
+    >>> @argument("df", pa.DataFrameSchema({"in": pa.Column(pa.Int)}))
+    ... @result(
+    ...     pa.DataFrameSchema({"out": pa.Column(pa.Int)}),
+    ...     pc.checks.extends("df", pa.DataFrameSchema({"a": pa.Column(int)})),
     ... )
     ... def func(df: pd.DataFrame) -> pd.DataFrame:
     ...     return df.assign(out=1)
 
     """
-
-    schema: pa.DataFrameSchema | pa.SeriesSchema | None = None
-    head: int | None = None
-    tail: int | None = None
-    sample: int | None = None
-    random_state: int | None = None
-    same_index_as: str | Sequence[str] = ()
-    same_size_as: str | Sequence[str] = ()
-    key: Any = UNDEFINED
-    extends: str | None = None
-    is_: str | None = None
-    is_not: str | Sequence[str] = ()
-
-    def __post_init__(self) -> None:
-        checks_lst: list[Check] = [
-            CheckSchema(
-                self.schema, self.head, self.tail, self.sample, self.random_state
-            ),
-            checks.same_index_as(self.same_index_as),
-            checks.same_length_as(self.same_size_as),
-            checks.extends(self.extends, self.schema),
-            checks.is_(self.is_),
-            checks.is_not(self.is_not),
-        ]
-        self._decorator = result2(
-            *(check for check in checks_lst if check.is_active),
-            key=self.key,
-            validate_kwargs=ValidateDictT(
-                head=self.head,
-                tail=self.tail,
-                sample=self.sample,
-                random_state=self.random_state,
-            ),
+    if _legacy_args:
+        warnings.warn(
+            "Deprecated API in use. See doc for new API.",
+            DeprecationWarning,
+            stacklevel=1,
         )
-
-    def __call__(self, fn: T) -> T:
-        return self._decorator(fn)
+        schema = _legacy_args.get("schema")
+        if schema is None and len(checks_) == 1 and isinstance(checks_[0], BaseSchema):
+            schema = cast("BaseSchema", checks_[0])
+            checks_ = checks_[1:]
+        if checks_ or validate_kwargs:
+            raise ValueError("Can not combine v1 and v2 style of arguments")
+        return result1(
+            schema,
+            key=key,
+            head=_legacy_args.get("head"),
+            tail=_legacy_args.get("tail"),
+            sample=_legacy_args.get("sample"),
+            random_state=_legacy_args.get("random_state"),
+            same_index_as=_legacy_args.get("same_index_as", ()),
+            same_size_as=_legacy_args.get("same_size_as", ()),
+            extends=_legacy_args.get("extends"),
+            is_=_legacy_args.get("is_"),
+            is_not=_legacy_args.get("is_not", ()),
+        )
+    return result2(
+        *checks_,
+        key=key,
+        validate_kwargs=validate_kwargs,
+    )

@@ -129,7 +129,7 @@ def as_mode(mode: ModesT) -> Iterator[None]:
 
     >>> import pandas as pd
     >>> import pandas_contract as pc
-    >>> @pc.result(same_index_as="df")
+    >>> @pc.result(pc.checks.same_index_as("df"))
     ... def problematic_call(df):
     ...    return df.reset_index(drop=True)
 
@@ -172,7 +172,7 @@ def raises() -> Iterator[None]:
 
     >>> import pandas_contract as pc
     >>> import pandas as pd
-    >>> @pc.result(same_index_as="df")
+    >>> @pc.result(pc.checks.same_index_as("df"))
     ... def foo(df):
     ...    return df.reset_index(drop=True)
     >>>
@@ -191,7 +191,7 @@ def silent() -> Iterator[None]:
 
     >>> import pandas as pd
     >>> import pandas_contract as pc
-    >>> @pc.result(same_index_as="df")
+    >>> @pc.result(pc.checks.same_index_as("df"))
     ... def foo(df):
     ...    return df.reset_index(drop=True)
     >>>

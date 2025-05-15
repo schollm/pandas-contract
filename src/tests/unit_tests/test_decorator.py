@@ -9,20 +9,21 @@ import pandera as pa
 import pytest
 from pandas import DataFrame
 
+import pandas_contract as pc
 from pandas_contract import argument, result
 
 
 @pytest.mark.parametrize(
     "verify",
     [
-        argument(arg="x"),
-        argument(arg="x", same_index_as="x"),
-        argument(arg="x", same_size_as="x"),
-        result(same_index_as="x"),
-        result(same_size_as="x"),
+        argument("x"),
+        argument("x", same_index_as="x"),
+        argument("x", same_size_as="x"),
+        result(pc.checks.same_index_as("x")),
+        result(pc.checks.same_length_as("x")),
     ],
 )
-def test_unknown_arg(verify: argument | result) -> None:
+def test_unknown_arg(verify: Callable) -> None:
     """Test that the decorator raises an error for an unknown argument."""
     with pytest.raises(
         ValueError,
@@ -37,16 +38,16 @@ def test_unknown_arg(verify: argument | result) -> None:
 class TestComplete:
     """Test multiple decorators on the same function."""
 
-    @argument(arg="df", schema=pa.DataFrameSchema({"a": pa.Column(int)}))
+    @argument("df", pa.DataFrameSchema({"a": pa.Column(int)}))
     @argument(
-        arg="df2", schema=pa.DataFrameSchema({"b": pa.Column(int)}), same_size_as="df"
+        "df2", pa.DataFrameSchema({"b": pa.Column(int)}), pc.checks.same_length_as("df")
     )
-    @argument("ds", schema=pa.SeriesSchema(pa.Int), same_index_as="df")
+    @argument("ds", pa.SeriesSchema(pa.Int), pc.checks.same_index_as("df"))
     @result(
-        schema=pa.DataFrameSchema({"x": pa.Column(int)}),
-        extends="df",
-        same_index_as="df2",
-        is_="df",
+        pa.DataFrameSchema({"x": pa.Column(int)}),
+        pc.checks.extends("df", modified=pa.DataFrameSchema({"x": pa.Column(int)})),
+        pc.checks.same_index_as("df2"),
+        pc.checks.is_("df"),
     )
     def my_fn(
         self,
@@ -102,8 +103,7 @@ class TestComplete:
         """Change index of one input."""
         df_new = pd.DataFrame(df.to_dict(orient="list"), index=[100, 200])
         with pytest.raises(
-            ValueError,
-            match="Argument ds: Index not equal to index of df.",
+            ValueError, match="Argument ds: Index not equal to index of df."
         ):
             self.my_fn(df_new, df2, ds=ds)
 

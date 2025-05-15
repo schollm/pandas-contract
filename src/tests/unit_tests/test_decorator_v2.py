@@ -8,22 +8,22 @@ import pandas as pd
 import pandera as pa
 import pytest
 
-from pandas_contract import argument2, checks, result2
+from pandas_contract import argument, checks, result
 
 if TYPE_CHECKING:
-    from pandas_contract._decorator_v2 import _WrappedT
+    from pandas_contract._lib import WrappedT
 
 
-@argument2(
+@argument(
     "df",
     checks.same_index_as("df2"),
     checks.same_length_as("df2, df3"),
     checks.extends("df2", modified=pa.DataFrameSchema({"a": pa.Column(int)})),
 )
-@result2()
+@result()
 def foo(df: pd.DataFrame, df2: pd.DataFrame, df3: pd.DataFrame) -> pd.DataFrame:
     """Test function for other tests."""
-    return df
+    return df.assign(a=1)
 
 
 class TestArgument:
@@ -31,7 +31,7 @@ class TestArgument:
 
     def test(self) -> None:
         """Base case."""
-        df = pd.DataFrame(index=[1, 2])
+        df = pd.DataFrame({"a": 1}, index=[1, 2])
         foo(df, df2=df, df3=df)
 
     def test_same_index(self) -> None:
@@ -69,7 +69,7 @@ class TestArgument:
     def test_key(self) -> None:
         """Test key."""
 
-        @argument2("dfs", pa.DataFrameSchema({"a_col": pa.Column(int)}), key=1)
+        @argument("dfs", pa.DataFrameSchema({"a_col": pa.Column(int)}), key=1)
         def foo_int(dfs: list[pd.DataFrame]) -> None:
             pass
 
@@ -84,21 +84,21 @@ class TestArgument:
 
 
 def test_result() -> None:
-    """Test for result2."""
-    result2()
+    """Test for result."""
+    result()
 
 
 @pytest.mark.parametrize(
     "verify",
     [
-        argument2("x"),
-        argument2("x", checks.same_index_as("x")),
-        argument2("x", checks.same_length_as("x")),
-        result2(checks.same_index_as("x")),
-        result2(checks.same_length_as("x")),
+        argument("x"),
+        argument("x", checks.same_index_as("x")),
+        argument("x", checks.same_length_as("x")),
+        result(checks.same_index_as("x")),
+        result(checks.same_length_as("x")),
     ],
 )
-def test_unknown_arg(verify: _WrappedT) -> None:
+def test_unknown_arg(verify: WrappedT) -> None:
     """Test that the decorator raises an error for an unknown argument."""
     with pytest.raises(
         ValueError,
