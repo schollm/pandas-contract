@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING, Any, Callable, NamedTuple, Union, cast
 
 import pandas as pd
 import pandera as pa
+from pandera import DataFrameSchema
 
 from pandas_contract._lib import get_df_arg, split_or_list
 from pandas_contract._private_checks import Check, CheckSchema
@@ -48,7 +49,7 @@ class same_index_as(Check):  # noqa: N801
     **Examples**
 
     >>> import pandas_contract as pc
-    >>> @pc.result2(pc.checks.same_index_as("df, df2"))
+    >>> @pc.result(pc.checks.same_index_as("df, df2"))
     ... def my_fn(df: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
     ...     return df.join(df2)
 
@@ -56,8 +57,8 @@ class same_index_as(Check):  # noqa: N801
     inputs are the same, and then that the resulting index is the same as the input
     index of df.
 
-    >>> @pc.argument2("df", pc.checks.same_index_as("df2"))
-    ... @pc.result2(pc.checks.same_index_as("df"))
+    >>> @pc.argument("df", pc.checks.same_index_as("df2"))
+    ... @pc.result(pc.checks.same_index_as("df"))
     ... def my_fn(df: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
     ...     return df.join(df2)
 
@@ -104,7 +105,7 @@ class same_length_as(Check):  # noqa: N801
     **Examples**
 
     >>> import pandas_contract as pc
-    >>> @pc.result2(pc.checks.same_length_as("df, df2"))
+    >>> @pc.result(pc.checks.same_length_as("df, df2"))
     ... def my_fn(df: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
     ...     return df.join(df2)
 
@@ -112,8 +113,8 @@ class same_length_as(Check):  # noqa: N801
     inputs are the same, and then that the resulting length is the same as the input
     length of df.
 
-    >>> @pc.argument2("df", pc.checks.same_length_as("df2"))
-    ... @pc.result2(pc.checks.same_length_as("df"))
+    >>> @pc.argument("df", pc.checks.same_length_as("df2"))
+    ... @pc.result(pc.checks.same_length_as("df"))
     ... def my_fn(df: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
     ...     return df.join(df2)
 
@@ -158,13 +159,14 @@ class extends(Check):  # noqa: N801
     b) Any other columns have not been modified.
 
     **Example**
+    Simple example, output must set a column `"x"`
 
     >>> import pandas_contract as pc
     >>> @pc.result(pc.checks.extends("df", pa.DataFrameSchema({"x": pa.Column(int)})))
     ... def my_fn(df: pd.DataFrame) -> pd.DataFrame:
     ...     return df.assign(x=1)
 
-    *Require and add a column"
+    **Require and add a column"*
     Define a function that requires a column "a" and adds a column "x" to the data frame
 
     >>> import pandas_contract as pc
@@ -179,6 +181,25 @@ class extends(Check):  # noqa: N801
     >>> my_fn(pd.DataFrame({"y": [1]}))
     Traceback (most recent call last):
     ValueError: my_fn: Argument df: ...
+
+    **Provide column from argument**
+
+    Define a function that adds a column `x_col` to the DataFrame.
+
+    >>> import pandas_contract as pc
+    >>> @pc.result(
+    ...    pc.checks.extends(
+    ...        "df",
+    ...        pa.DataFrameSchema({pc.from_arg("col"): pa.Column(int)}),
+    ...     )
+    ... )
+    ... def my_fn(df, col="x"):
+    ...   return df.assign(**{col: 1})
+    >>> my_fn(pd.DataFrame(index=[0]))
+       x
+    0  1
+
+
     """
 
     __slots__ = ("args", "modified")
@@ -221,7 +242,8 @@ class extends(Check):  # noqa: N801
         """Check the DataFrame and keep the index."""
         arg = self.args[0]
         df_extends = get_df_arg(fn, arg, args, kwargs)
-        hash_other = self._get_hash(df_extends)
+        modified_cols = self._get_modified_columns(fn, args, kwargs)
+        hash_other = self._get_hash(df_extends, modified_cols)
         check_modified = self.modified.mk_check(fn, args, kwargs)
 
         def check(df: pd.DataFrame | pd.Series) -> Iterable[str]:
@@ -230,7 +252,7 @@ class extends(Check):  # noqa: N801
             prefix = f"extends {arg}: "
             yield from (f"{prefix}{err}" for err in check_modified(df))
 
-            hash_self = self._get_hash(df)
+            hash_self = self._get_hash(df, modified_cols)
             if isinstance(hash_self, _HashErr) or isinstance(hash_other, _HashErr):
                 if isinstance(hash_self, _HashErr):
                     yield f"{prefix}<input> {hash_self.err}"
@@ -257,17 +279,17 @@ class extends(Check):  # noqa: N801
 
         return check
 
-    def _get_hash(self, df: Any) -> _HashErr | _HashDf:
+    def _get_modified_columns(self, fn, args, kwargs) -> list[Hashable]:
+        if self.modified.schema is None:
+            return []
+        if not hasattr(self.modified.schema, "columns"):
+            return []
+        parsed = cast("DataFrameSchema", self.modified.parse_schema(fn, args, kwargs))
+        return list(parsed.columns)
+
+    def _get_hash(self, df: Any, modified_cols: list[Hashable]) -> _HashErr | _HashDf:
         if not isinstance(df, pd.DataFrame):
             return _HashErr(f"not a DataFrame, got {type(df).__qualname__}.")
-        modified_cols = {
-            *(
-                ()
-                if self.modified.schema is None
-                else cast("pa.DataFrameSchema", self.modified.schema).columns
-            )
-        }
-
         df_hash = df[[c for c in df if c not in modified_cols]]
         return _HashDf(
             type=pd.DataFrame,
@@ -295,7 +317,7 @@ class _HashErr(NamedTuple):
 class is_(Check):  # noqa: N801
     """Ensures that the result is identical (`is` operator) to another dataframe.
 
-    This check is most useful for the :class:`@result <pandas_contract.result2>`
+    This check is most useful for the :class:`@result <pandas_contract.result>`
     decorator as it ensures that the output is changed in-place.
     It is the opposite of the :class:`is_not() <pandas_contract.checks.is_not>` check.
 
@@ -305,7 +327,7 @@ class is_(Check):  # noqa: N801
     function operats in-place.
 
     >>> import pandas_contract as pc
-    >>> @pc.result2(pc.checks.is_("df"))
+    >>> @pc.result(pc.checks.is_("df"))
     ... def fn(df):
     ...    df["x"] = 1  # change df in-place
     ...    return df
@@ -339,14 +361,14 @@ class is_(Check):  # noqa: N801
 class is_not(Check):  # noqa: N801
     """Ensures that the result is not identical (`is not` operator) to `others`.
 
-    This check is most useful for the :class:`@result <pandas_contract.result2>`
+    This check is most useful for the :class:`@result <pandas_contract.result>`
     decorator as it ensures that the output is not changed in-place.
     It is the opposite of the :func:`is_() <pandas_contract.checks.is_>` check.
 
     **Examples**
 
     >>> import pandas_contract as pc
-    >>> @pc.result2(pc.checks.is_not("df"))
+    >>> @pc.result(pc.checks.is_not("df"))
     ... def fn(df):
     ...    return df.assign(x=1)  # .assign creates a copy
 
