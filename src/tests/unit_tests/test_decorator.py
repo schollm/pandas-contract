@@ -17,8 +17,6 @@ from pandas_contract import argument, result
     "verify",
     [
         argument("x"),
-        argument("x", same_index_as="x"),
-        argument("x", same_size_as="x"),
         result(pc.checks.same_index_as("x")),
         result(pc.checks.same_length_as("x")),
     ],

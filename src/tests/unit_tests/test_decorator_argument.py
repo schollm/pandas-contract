@@ -8,7 +8,7 @@ import pandas as pd
 import pandera as pa
 import pytest
 
-from pandas_contract import argument, as_mode, from_arg
+from pandas_contract import argument, as_mode, checks, from_arg
 
 MaybeListT = Union[list[str], str]
 
@@ -16,7 +16,7 @@ MaybeListT = Union[list[str], str]
 def test() -> None:
     """Test argument decorator."""
 
-    @argument("df", schema=pa.DataFrameSchema({"a": pa.Column(int)}))
+    @argument("df", pa.DataFrameSchema({"a": pa.Column(int)}))
     def my_fn(df: pd.DataFrame) -> int:
         return len(df)
 
@@ -36,7 +36,7 @@ def test_very_simple() -> None:
 def test_fail(caplog: pytest.LogCaptureFixture) -> None:
     """Test argument decorator failing."""
 
-    @argument("df", schema=pa.DataFrameSchema({"a": pa.Column(int)}))
+    @argument("df", pa.DataFrameSchema({"a": pa.Column(int)}))
     def my_fn(df: pd.DataFrame) -> int:
         return len(df)
 
@@ -52,8 +52,8 @@ def test_same_index_as(same_index_as: list[str] | str) -> None:
 
     @argument(
         "df",
-        schema=pa.DataFrameSchema({"a": pa.Column(int)}),
-        same_index_as=same_index_as,
+        pa.DataFrameSchema({"a": pa.Column(int)}),
+        checks.same_index_as(same_index_as),
     )
     def my_fn(df: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
         return df
@@ -71,8 +71,8 @@ def test_same_index_as_failing(
 
     @argument(
         "df",
-        schema=pa.DataFrameSchema({"a": pa.Column(int)}),
-        same_index_as=same_index_as,
+        pa.DataFrameSchema({"a": pa.Column(int)}),
+        checks.same_index_as(same_index_as),
     )
     def my_fn(df: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
         return df
@@ -94,8 +94,8 @@ def test_same_index_as__no_such_argument(
 
         @argument(
             "df",
-            schema=pa.DataFrameSchema({"a": pa.Column(int)}),
-            same_index_as=same_index_as,
+            pa.DataFrameSchema({"a": pa.Column(int)}),
+            checks.same_index_as(same_index_as),
         )
         def my_fn(df: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
             return df
@@ -106,7 +106,7 @@ def test_series() -> None:
 
     @argument(
         "ds",
-        schema=pa.SeriesSchema(int, name="a", nullable=False),
+        pa.SeriesSchema(int, name="a", nullable=False),
     )
     def my_fn(ds: pd.Series) -> int:
         return len(ds)
@@ -118,9 +118,7 @@ def test_extends() -> None:
     """Test extends argument."""
 
     @argument(
-        "df",
-        schema=pa.DataFrameSchema({"a": pa.Column(int)}),
-        extends="df2",
+        "df", checks.extends("df2", modified=pa.DataFrameSchema({"a": pa.Column(int)}))
     )
     def my_fn(df: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
         return df
@@ -135,8 +133,8 @@ def test_extends__fails() -> None:
 
     @argument(
         "df",
-        schema=pa.DataFrameSchema({"a": pa.Column(int)}),
-        extends="df2",
+        pa.DataFrameSchema({"a": pa.Column(int)}),
+        checks.extends("df2", modified=None),
     )
     def my_fn(df: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
         return df
@@ -160,7 +158,7 @@ def test_series_fail(ds_: pd.Series, expected_err: str) -> None:
 
     @argument(
         "ds",
-        schema=pa.SeriesSchema(float, name="a", nullable=False),
+        pa.SeriesSchema(float, name="a", nullable=False),
     )
     def my_fn(ds: pd.Series) -> int:
         return len(ds)
@@ -176,7 +174,7 @@ class TestFromArg:
     def test(self) -> None:
         """Test from_arg function."""
 
-        @argument("df", schema=pa.DataFrameSchema({from_arg("a_col"): pa.Column(int)}))
+        @argument("df", pa.DataFrameSchema({from_arg("a_col"): pa.Column(int)}))
         def my_fn(df: pd.DataFrame, a_col: str) -> int:
             """Test function."""
             return len(df[a_col])
@@ -186,7 +184,7 @@ class TestFromArg:
     def test_unknown_arg(self) -> None:
         """Test from_arg function failing."""
 
-        @argument("df", schema=pa.DataFrameSchema({from_arg("x_col"): pa.Column(int)}))
+        @argument("df", pa.DataFrameSchema({from_arg("x_col"): pa.Column(int)}))
         def my_fn(df: pd.DataFrame, a_col: str) -> int:
             """Test function."""
             return len(df[a_col])
@@ -198,7 +196,7 @@ class TestFromArg:
         """Test from_arg function failing."""
         with pytest.raises(ValueError, match=r"requires argument 'xxx'"):
 
-            @argument("df", same_index_as="xxx")
+            @argument("df", checks.same_index_as("xxx"))
             def my_fn(df: pd.DataFrame) -> int:
                 """Test function."""
                 return len(df)
@@ -208,7 +206,7 @@ def test_no_handling__in_setup() -> None:
     """Test the no-handling mode."""
     with as_mode("skip"):
 
-        @argument("ds", schema=pa.SeriesSchema(int))
+        @argument("ds", pa.SeriesSchema(int))
         def my_fn(ds: pd.Series) -> None:
             return
 
@@ -218,7 +216,7 @@ def test_no_handling__in_setup() -> None:
 def test_no_handling__in_call() -> None:
     """Test the no-handling mode."""
 
-    @argument("ds", schema=pa.SeriesSchema(int))
+    @argument("ds", pa.SeriesSchema(int))
     def my_fn(ds: pd.Series) -> None:
         return
 
