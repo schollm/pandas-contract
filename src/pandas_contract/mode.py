@@ -12,7 +12,8 @@ By default, the contract violation will be silenced.
     global mode.
 
     >>> import pandas_contract as pc
-    >>> pc.set_mode("warn") # # doctest: +SKIP print warn messages on standard log.
+    >>> # print warn messages on standard log.
+    >>> pc.set_mode("warn") # doctest: +SKIP
 
     Alternatively, the environment variable PANDAS_CONTRACT_MODE can be set to one of
     the values of
@@ -25,9 +26,10 @@ short-cuts :meth:`pc.raises() <pandas_contract.mode.raises>` and
 :meth:`pc.silent() <pandas_contract.mode.silent>` can be used to set the mode.
 
 >>> import pandas_contract as pc
->>> pc.set_mode("warn") # # doctest: +SKIP print warn messages on standard log.
+>>> # print warn messages on standard log.
+>>> pc.set_mode("warn") # # doctest: +SKIP
 >>> with pc.as_mode("raise"): # Within the context, raise a ValueError on violation.
-...     ...
+...     pass
 
 
 """
