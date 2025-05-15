@@ -33,7 +33,6 @@ class TestCheckExtends:
         "schema",
         [
             SeriesSchema(),
-            None,
             [1, 2],
         ],
     )
@@ -91,6 +90,20 @@ class TestCheckExtends:
             "extends df2: Backend DataFrameSchema not applicable to Series",
             "extends df2: <input> not a DataFrame, got Series.",
             "extends df2: df2 not a DataFrame, got Series.",
+        ]
+
+    def test_modified_is_none(self):
+        check = extends("df", modified=None)
+        df = pd.DataFrame({"a": [1]})
+        fn = check.mk_check(lambda df: _, (df,), {})
+        assert list(fn(df)) == []
+
+    def test_modified_is_none__add_column(self):
+        check = extends("df", modified=None)
+        df = pd.DataFrame({"a": [1]})
+        fn = check.mk_check(lambda df: _, (df,), {})
+        assert list(fn(df.assign(x=1))) == [
+            "extends df: Columns differ: ['a', 'x'] != ['a']"
         ]
 
 

@@ -201,7 +201,7 @@ class extends(Check):  # noqa: N801
             self.args = ()
             return
 
-        if not isinstance(modified, pa.DataFrameSchema):
+        if modified is not None and not isinstance(modified, pa.DataFrameSchema):
             msg = (
                 f"CheckExtends: If modified is set, then it must be of type "
                 f"pandera.DataFrameSchema, got {type(modified)}."
@@ -260,14 +260,15 @@ class extends(Check):  # noqa: N801
     def _get_hash(self, df: Any) -> _HashErr | _HashDf:
         if not isinstance(df, pd.DataFrame):
             return _HashErr(f"not a DataFrame, got {type(df).__qualname__}.")
+        modified_cols = {
+            *(
+                ()
+                if self.modified.schema is None
+                else cast("pa.DataFrameSchema", self.modified.schema).columns
+            )
+        }
 
-        df_hash = df[
-            [
-                c
-                for c in df
-                if c not in cast("pa.DataFrameSchema", self.modified.schema).columns
-            ]
-        ]
+        df_hash = df[[c for c in df if c not in modified_cols]]
         return _HashDf(
             type=pd.DataFrame,
             index_=hash(df.index.to_numpy().tobytes()),
