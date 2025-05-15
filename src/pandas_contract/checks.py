@@ -46,7 +46,8 @@ class same_index_as(Check):  # noqa: N801
     The argument `arg` can be either a single argument name, a comma-separated list of
     argument names or an iterable of argument names.
 
-    **Examples**
+    **Example**
+    Simple example, checking that the result has the same index as both df1 and df2
 
     >>> import pandas_contract as pc
     >>> @pc.result(pc.checks.same_index_as("df, df2"))
@@ -102,7 +103,7 @@ class same_length_as(Check):  # noqa: N801
     The argument `arg` can be either a single argument name, a comma-separated list of
     argument names or an iterable of argument names.
 
-    **Examples**
+    **Example** Simple check that the result length is the same as both df1 and df2.
 
     >>> import pandas_contract as pc
     >>> @pc.result(pc.checks.same_length_as("df, df2"))
@@ -166,7 +167,7 @@ class extends(Check):  # noqa: N801
     ... def my_fn(df: pd.DataFrame) -> pd.DataFrame:
     ...     return df.assign(x=1)
 
-    **Require and add a column"*
+    **Example**
     Define a function that requires a column "a" and adds a column "x" to the data frame
 
     >>> import pandas_contract as pc
@@ -182,8 +183,7 @@ class extends(Check):  # noqa: N801
     Traceback (most recent call last):
     ValueError: my_fn: Argument df: ...
 
-    **Provide column from argument**
-
+    **Example**
     Define a function that adds a column `x_col` to the DataFrame.
 
     >>> import pandas_contract as pc
@@ -324,7 +324,6 @@ class is_(Check):  # noqa: N801
     It is the opposite of the :class:`is_not() <pandas_contract.checks.is_not>` check.
 
     **Example**
-
     Ensure that the result is the same object as the input argument `df`, i.e. the
     function operats in-place.
 
@@ -367,7 +366,8 @@ class is_not(Check):  # noqa: N801
     decorator as it ensures that the output is not changed in-place.
     It is the opposite of the :func:`is_() <pandas_contract.checks.is_>` check.
 
-    **Examples**
+    **Example**
+    Simple example, ensure that a copy is created.
 
     >>> import pandas_contract as pc
     >>> @pc.result(pc.checks.is_not("df"))
