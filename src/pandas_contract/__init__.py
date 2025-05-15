@@ -1,7 +1,7 @@
 """pandas_contract: Ensure pandas dataframe fit the expectations of the function."""
 
 from . import checks
-from ._decorator_v2 import argument, result
+from ._decorator import argument, result
 from ._lib import from_arg
 from .mode import Modes, as_mode, get_mode, raises, set_mode, silent
 
