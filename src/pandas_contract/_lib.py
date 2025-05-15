@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, Callable, Protocol, TypedDict, TypeVar, c
 
 if TYPE_CHECKING:  # pragma: no cover
     import types
-    from collections.abc import Iterable, Sequence
+    from collections.abc import Iterable
 
     import pandas as pd
 
@@ -91,13 +91,6 @@ UNDEFINED = object()
 ORIGINAL_FUNCTION_ATTRIBUTE = "_pandas_contract_original_function"
 """Name of attribute to attach to decorated functions."""
 # We need the original function to get the original argument names of the function.
-
-
-def ensure_list(value: str | Sequence[str]) -> list[str]:
-    """Ensure that the value is a list of strings."""
-    if isinstance(value, str):
-        return [value]
-    return list(value)
 
 
 def split_or_list(value: str | Iterable[str] | None) -> list[str]:
