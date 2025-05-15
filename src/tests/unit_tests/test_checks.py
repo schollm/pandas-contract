@@ -5,9 +5,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 import pandas as pd
+import pandera as pa
 import pytest
 from pandera import DataFrameSchema, SeriesSchema
 
+from pandas_contract import from_arg, result
 from pandas_contract._private_checks import CheckSchema
 from pandas_contract.checks import (
     extends,
@@ -69,6 +71,28 @@ class TestCheckExtends:
         out_df = pd.DataFrame({"a": [1]}, index=[0])
         fn = check.mk_check(lambda df: df, (df_to_be_extend,), {})
         assert list(fn(out_df)) == expect
+
+    def test_callable_key_in_modified(self):
+        @result(extends("df", DataFrameSchema({from_arg("col"): pa.Column(int)})))
+        def my_fn(df, col="x"):
+            return df.assign(**{col: 1})
+
+        my_fn(pd.DataFrame(index=[0]))
+
+    def test_callable_key_in_modified__failure(self) -> None:
+        """Test with argument key=callable()"""
+
+        @result(extends("df", DataFrameSchema({lambda *_: "x": pa.Column(int)})))
+        def my_fn(df):
+            return df.assign(other=1)
+
+        with pytest.raises(ValueError, match="extends df:") as exc:
+            my_fn(pd.DataFrame(index=[0], columns=["aa"]))
+        # match from modified schema check: We expect x from col argument
+        exc.match(r"column \'x\' not in dataframe")
+        # match from origina (df minus modififed columns) data check: We expect no
+        # columns outside of modified to get changed
+        exc.match(r"Columns differ: .*\['aa', 'other'\] != \['aa'\]")
 
     def test_mk_check__invalid_output(self) -> None:
         """Test mk_check method of CheckExtends."""
