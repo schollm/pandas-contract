@@ -4,7 +4,7 @@ format:
 	uv run ruff format
 test: test-src lint
 test-src:
-	uv run pytest src/tests
+	uv run pytest src/
 
 lint: lint-uv lint-type
 lint-uv:
