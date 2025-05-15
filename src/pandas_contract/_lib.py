@@ -95,7 +95,7 @@ ORIGINAL_FUNCTION_ATTRIBUTE = "_pandas_contract_original_function"
 
 def split_or_list(value: str | Iterable[str] | None) -> list[str]:
     """Split the value by comma and return a list of strings."""
-    if value is None:
+    if not value:
         return []
     if isinstance(value, str):
         return [v.strip() for v in value.split(",")]
