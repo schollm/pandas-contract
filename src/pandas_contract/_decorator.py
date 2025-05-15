@@ -73,8 +73,8 @@ def argument(
     ...     ...
 
 
-    Ensure same index
-    -----------------
+    Ensure same index on both DataFrames
+    ------------------------------------
     Ensure that the dataframes arguments *df1* and *df2* have the same indices by
     checking argument *df1* against the argument *df2*.
 

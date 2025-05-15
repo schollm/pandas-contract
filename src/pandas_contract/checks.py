@@ -64,7 +64,7 @@ class same_index_as(Check):  # noqa: N801
     def __init__(self, args: str | Iterable[str] | None, /) -> None:
         """Ensure that the result has the same index as another dataframe.
 
-        :param args: argument that the result should have the same index as.
+        :param args: Argument that the result should have the same index as.
             It can be either a string or an iterable of strings.
             If it is a string, it will be split by commas.
         """
@@ -121,7 +121,7 @@ class same_length_as(Check):  # noqa: N801
     def __init__(self, args: str | Iterable[str] | None, /) -> None:
         """Ensure that the result has the same length as another dataframe.
 
-        :param same_length_as: argument that the result should have the same length as.
+        :param same_length_as: Argument that the result should have the same length as.
             It can be either a string or an iterable of strings.
             If it is a string, it will be split by commas.
         """
@@ -360,7 +360,7 @@ class is_not(Check):  # noqa: N801
     def __init__(self, args: str | Iterable[str] | None, /) -> None:
         """Ensure that the result is not identical (`is` operator) to `others`.
 
-        :param arg: argument that the result should not be identical to.
+        :param args: Argument that the result should not be identical to.
             It can be either a string or an iterable of strings.
             If it is a string, it will be split by commas.
         """
