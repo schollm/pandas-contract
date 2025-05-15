@@ -16,7 +16,7 @@ MaybeListT = Union[list[str], str]
 def test() -> None:
     """Test argument decorator."""
 
-    @argument(arg="df", schema=pa.DataFrameSchema({"a": pa.Column(int)}))
+    @argument("df", schema=pa.DataFrameSchema({"a": pa.Column(int)}))
     def my_fn(df: pd.DataFrame) -> int:
         return len(df)
 
@@ -26,7 +26,7 @@ def test() -> None:
 def test_very_simple() -> None:
     """Test argument decorator."""
 
-    @argument(arg="df")
+    @argument("df")
     def my_fn(df: pd.DataFrame) -> int:
         return len(df)
 
@@ -36,7 +36,7 @@ def test_very_simple() -> None:
 def test_fail(caplog: pytest.LogCaptureFixture) -> None:
     """Test argument decorator failing."""
 
-    @argument(arg="df", schema=pa.DataFrameSchema({"a": pa.Column(int)}))
+    @argument("df", schema=pa.DataFrameSchema({"a": pa.Column(int)}))
     def my_fn(df: pd.DataFrame) -> int:
         return len(df)
 
@@ -51,7 +51,7 @@ def test_same_index_as(same_index_as: list[str] | str) -> None:
     """Test same_index_as argument."""
 
     @argument(
-        arg="df",
+        "df",
         schema=pa.DataFrameSchema({"a": pa.Column(int)}),
         same_index_as=same_index_as,
     )
@@ -70,7 +70,7 @@ def test_same_index_as_failing(
     """Test same_index_as argument failing."""
 
     @argument(
-        arg="df",
+        "df",
         schema=pa.DataFrameSchema({"a": pa.Column(int)}),
         same_index_as=same_index_as,
     )
@@ -93,7 +93,7 @@ def test_same_index_as__no_such_argument(
     with pytest.raises(ValueError, match="requires argument 'df3'"):
 
         @argument(
-            arg="df",
+            "df",
             schema=pa.DataFrameSchema({"a": pa.Column(int)}),
             same_index_as=same_index_as,
         )
@@ -105,7 +105,7 @@ def test_series() -> None:
     """Test argument decorator with a Series."""
 
     @argument(
-        arg="ds",
+        "ds",
         schema=pa.SeriesSchema(int, name="a", nullable=False),
     )
     def my_fn(ds: pd.Series) -> int:
@@ -118,7 +118,7 @@ def test_extends() -> None:
     """Test extends argument."""
 
     @argument(
-        arg="df",
+        "df",
         schema=pa.DataFrameSchema({"a": pa.Column(int)}),
         extends="df2",
     )
@@ -134,7 +134,7 @@ def test_extends__fails() -> None:
     """Test extends argument."""
 
     @argument(
-        arg="df",
+        "df",
         schema=pa.DataFrameSchema({"a": pa.Column(int)}),
         extends="df2",
     )
@@ -159,7 +159,7 @@ def test_series_fail(ds_: pd.Series, expected_err: str) -> None:
     """Test argument decorator with a Series."""
 
     @argument(
-        arg="ds",
+        "ds",
         schema=pa.SeriesSchema(float, name="a", nullable=False),
     )
     def my_fn(ds: pd.Series) -> int:
@@ -176,9 +176,7 @@ class TestFromArg:
     def test(self) -> None:
         """Test from_arg function."""
 
-        @argument(
-            arg="df", schema=pa.DataFrameSchema({from_arg("a_col"): pa.Column(int)})
-        )
+        @argument("df", schema=pa.DataFrameSchema({from_arg("a_col"): pa.Column(int)}))
         def my_fn(df: pd.DataFrame, a_col: str) -> int:
             """Test function."""
             return len(df[a_col])
@@ -188,9 +186,7 @@ class TestFromArg:
     def test_unknown_arg(self) -> None:
         """Test from_arg function failing."""
 
-        @argument(
-            arg="df", schema=pa.DataFrameSchema({from_arg("x_col"): pa.Column(int)})
-        )
+        @argument("df", schema=pa.DataFrameSchema({from_arg("x_col"): pa.Column(int)}))
         def my_fn(df: pd.DataFrame, a_col: str) -> int:
             """Test function."""
             return len(df[a_col])
@@ -202,7 +198,7 @@ class TestFromArg:
         """Test from_arg function failing."""
         with pytest.raises(ValueError, match=r"requires argument 'xxx'"):
 
-            @argument(arg="df", same_index_as="xxx")
+            @argument("df", same_index_as="xxx")
             def my_fn(df: pd.DataFrame) -> int:
                 """Test function."""
                 return len(df)
@@ -212,7 +208,7 @@ def test_no_handling__in_setup() -> None:
     """Test the no-handling mode."""
     with as_mode("skip"):
 
-        @argument(arg="ds", schema=pa.SeriesSchema(int))
+        @argument("ds", schema=pa.SeriesSchema(int))
         def my_fn(ds: pd.Series) -> None:
             return
 
@@ -222,7 +218,7 @@ def test_no_handling__in_setup() -> None:
 def test_no_handling__in_call() -> None:
     """Test the no-handling mode."""
 
-    @argument(arg="ds", schema=pa.SeriesSchema(int))
+    @argument("ds", schema=pa.SeriesSchema(int))
     def my_fn(ds: pd.Series) -> None:
         return
 
