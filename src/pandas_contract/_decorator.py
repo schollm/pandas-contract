@@ -25,6 +25,7 @@ if TYPE_CHECKING:  # pragma: no cover
     import pandas as pd
 
     from ._lib import MyFunctionType
+    from ._private_checks import Check
 
 _T = TypeVar("_T", bound=Callable[..., Any])
 """"Type variable for the function type."""
@@ -142,7 +143,9 @@ def argument(
             return fn
 
         orig_fn = getattr(fn, ORIGINAL_FUNCTION_ATTRIBUTE, fn)
-        _check_fn_args(f"@argument({arg!r})", orig_fn, _collect_args([arg], checks_))
+        _check_fn_args(
+            f"@argument({arg!r})", orig_fn, _collect_args([arg], checks_clean)
+        )
 
         @functools.wraps(fn)
         def wrapper(*args: Any, **kwargs: Any) -> _T:
@@ -293,7 +296,7 @@ def result(
         if get_mode() == Modes.SKIP:
             return fn
         orig_fn = getattr(fn, ORIGINAL_FUNCTION_ATTRIBUTE, fn)
-        _check_fn_args("@result", orig_fn, _collect_args([], checks_))
+        _check_fn_args("@result", orig_fn, _collect_args([], clean_checks))
 
         @functools.wraps(fn)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
@@ -341,7 +344,10 @@ def _check_fn_args(prefix: str, fn: MyFunctionType, args: Iterable[str]) -> None
         raise ValueError("\n".join(setup_errs))
 
 
-def _collect_args(args: Iterable[str], checks: Iterable[Any]) -> Iterable[str]:
+def _collect_args(args: Iterable[str], checks: Iterable[Check]) -> Iterable[str]:
+    """Get a list of all required argument that are required by the checks and also add
+    extra args via args.
+    """
     yield from args
     for check in checks:
-        yield from getattr(check, "args", ())
+        yield from check.args
