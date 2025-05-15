@@ -52,7 +52,7 @@ class Check(Protocol):  # pragma: no cover
 
 
 @dataclass(frozen=True)  # type: ignore[call-overload]
-class CheckSchema:
+class CheckSchema(Check):
     """Check the DataFrame using the schema."""
 
     schema: BaseSchema | None
