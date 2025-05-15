@@ -32,7 +32,7 @@ Decorators to check functions arguments and return values using pandas DataFrame
   def my_function(df1, df2, target_col: str) -> pd.DataFrame():
       ...
 
-The decorators use the `pandera.io <https://pandera.readthedocs.io/>`_` library to validate
+The decorators use the `pandera.io <https://pandera.readthedocs.io/>`_ library to validate
 data types and constraints of the input arguments and output values of functions.
 
 Installation
