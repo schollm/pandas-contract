@@ -56,5 +56,7 @@ Setup package
 
     self
     public-api
+    public-api-check
     module-mode
+    migration.md
     details
