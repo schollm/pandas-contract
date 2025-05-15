@@ -3,9 +3,10 @@ from __future__ import annotations
 import copy
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Callable, Protocol, Union
+from typing import TYPE_CHECKING, Any, Callable, Protocol, Union, cast
 
 import pandas as pd
+import pandera as pa
 import pandera.errors as pa_errors
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -116,12 +117,12 @@ class CheckSchema(Check):
             raise RuntimeError(
                 "schema: Schema must be provided (This should never happen)."
             )
-        schema = self.schema
+        schema = cast("pa.DataFrameSchema", self.schema)
         for col in list(getattr(schema, "columns", {})):
             # col in ist to get a copy of schema.columns
             if callable(col):
                 if schema is self.schema:  # lazy copy
-                    schema = copy.deepcopy(self.schema)
+                    schema = copy.deepcopy(schema)
                 col_arg = col(fn, args, kwargs)
                 col_schema = schema.columns.pop(col)
                 for col_val in col_arg if isinstance(col_arg, list) else [col_arg]:

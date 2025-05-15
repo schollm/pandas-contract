@@ -72,18 +72,20 @@ class TestCheckExtends:
         fn = check.mk_check(lambda df: df, (df_to_be_extend,), {})
         assert list(fn(out_df)) == expect
 
-    def test_callable_key_in_modified(self):
+    def test_callable_key_in_modified(self) -> None:
+        """Let extends.modified schema have a callable key."""
+
         @result(extends("df", DataFrameSchema({from_arg("col"): pa.Column(int)})))
-        def my_fn(df, col="x"):
+        def my_fn(df: pd.DataFrame, col: str = "x") -> pd.DataFrame:
             return df.assign(**{col: 1})
 
         my_fn(pd.DataFrame(index=[0]))
 
     def test_callable_key_in_modified__failure(self) -> None:
-        """Test with argument key=callable()"""
+        """Test with argument key=callable()."""
 
         @result(extends("df", DataFrameSchema({lambda *_: "x": pa.Column(int)})))
-        def my_fn(df):
+        def my_fn(df: pd.DataFrame) -> pd.DataFrame:
             return df.assign(other=1)
 
         with pytest.raises(ValueError, match="extends df:") as exc:

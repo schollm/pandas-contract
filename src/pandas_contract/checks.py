@@ -279,7 +279,9 @@ class extends(Check):  # noqa: N801
 
         return check
 
-    def _get_modified_columns(self, fn, args, kwargs) -> list[Hashable]:
+    def _get_modified_columns(
+        self, fn: Callable, args: Any, kwargs: Any
+    ) -> list[Hashable]:
         if self.modified.schema is None:
             return []
         if not hasattr(self.modified.schema, "columns"):
