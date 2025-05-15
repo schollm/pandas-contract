@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import functools
 from itertools import chain
-from typing import TYPE_CHECKING, Any, Callable, Protocol, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Callable, TypeVar, cast
 
-import pandera as pa
+from pandera.api.base.schema import BaseSchema
 
 import pandas_contract._private_checks as _checks
 from pandas_contract.mode import Modes, get_mode
@@ -12,7 +12,9 @@ from pandas_contract.mode import Modes, get_mode
 from ._lib import (
     ORIGINAL_FUNCTION_ATTRIBUTE,
     UNDEFINED,
+    KeyT,
     ValidateDictT,
+    WrappedT,
     get_fn_arg,
     has_fn_arg,
 )
@@ -28,70 +30,13 @@ _T = TypeVar("_T", bound=Callable[..., Any])
 """"Type variable for the function type."""
 
 
-class KeyT(Protocol):
-    """KeyType protocol, define a lookup key for an argument or the result.
-
-    A key can be used to get a DataFrame or Series from within a more complex argument
-    or return value.
-
-    Its value is either any hashable or a function that takes a single argument as
-    an input and returns a DataFrame/Series.
-
-    Note that `None` is a valid key in a dictionary and hence is not the default value.
-    By default, the value is used as-is.
-
-    >>> import pandas as pd
-    >>> import pandas_contract as pc
-    >>> import pandera as pa
-    >>> @pc.result(pa.SeriesSchema(int), key=1)
-    ... def f1():
-    ...    return "res", pd.Series([1,2,3])
-
-    The key can also be an arbitrary function that takes the input arg and has to
-    return the DataFrame/Series to check.
-
-    This can be used to create a Series, which is then checkable out of non-checkable
-    Data:
-
-    >>> @pc.result(pa.SeriesSchema(int), key=pd.Series)
-    >>> def f1():
-    ...    return [1, 2, 3]
-
-
-    Note, if the DataFrame/Series is wrapped in a mapping where the mapping keys are
-    callables, then *Key* must be wrapped in another function:
-
-    >>> def fn_as_key():
-    ...    ...
-
-    >>> # Get the dataframe from the output item `f1`.
-    >>> # @pc.result(key=f1, schema=pa.DataFrameSchema({"name": pa.String}))  - fail
-    >>> @pc.result(
-    ...     key=lambda res: res[fn_as_key],
-    ...     schema=pa.DataFrameSchema({"name": pa.String}),
-    ... )
-    ... def return_generators():
-    ...     # f1 is a key to a dictionary holding the data frame to be tested.
-    ...     return {
-    ...         fn_as_key: pd.DataFrame([{"name": "f1"}])
-    ...     }
-
-    """
-
-
-class _WrappedT(Protocol):
-    """Type for wrapper function."""
-
-    def __call__(self, fn: _T) -> _T: ...
-
-
 def argument(
     arg: str,
     /,
-    *checks_: _checks.Check | pa.DataFrameSchema | pa.SeriesSchema,
+    *checks_: _checks.Check | BaseSchema,
     key: KeyT = UNDEFINED,
     validate_kwargs: ValidateDictT | None = None,
-) -> _WrappedT:
+) -> WrappedT:
     """Check the input DataFrame.
 
     :param arg: The name of the argument to check. This must be the name of one of the
@@ -186,7 +131,7 @@ def argument(
     """
     checks_list: list[_checks.Check] = [
         _checks.CheckSchema(check, **validate_kwargs or {})
-        if isinstance(check, (pa.DataFrameSchema, pa.SeriesSchema))
+        if isinstance(check, BaseSchema)
         else check
         for check in checks_
     ]
@@ -219,10 +164,10 @@ def argument(
 
 
 def result(
-    *checks_: _checks.Check | pa.DataFrameSchema | pa.SeriesSchema,
+    *checks_: _checks.Check | BaseSchema,
     key: Any = UNDEFINED,
     validate_kwargs: ValidateDictT | None = None,
-) -> _WrappedT:
+) -> WrappedT:
     """Validate a DataFrame result using pandera.
 
     :param checks_: Additional checks and the pandera schema verification to perform on
@@ -309,7 +254,7 @@ def result(
     **Ensures that the output extends the input schema.**
 
     >>> @result(
-    ...    pc.checks.extends("df", schema=pa.DataFrameSchema({"b": pa.Column(int)}))
+    ...    pc.checks.extends("df", modified=pa.DataFrameSchema({"b": pa.Column(int)}))
     ... )
     ... def func(df: pd.DataFrame) -> pd.DataFrame:
     ...     return df.assign(a=1)
@@ -328,7 +273,7 @@ def result(
     >>> @argument("df", pa.DataFrameSchema({"in": pa.Column(pa.Int)}))
     ... @result(
     ...     pa.DataFrameSchema({"out": pa.Column(pa.Int)}),
-    ...     pc.checks.extends("df", schema=pa.DataFrameSchema({"a": pa.Column(int)})),
+    ...     pc.checks.extends("df", modified=pa.DataFrameSchema({"a": pa.Column(int)})),
     ... )
     ... def func(df: pd.DataFrame) -> pd.DataFrame:
     ...     return df.assign(out=1)
@@ -336,7 +281,7 @@ def result(
     """
     checks_lst: list[_checks.Check] = [
         _checks.CheckSchema(check, **validate_kwargs or {})
-        if isinstance(check, (pa.DataFrameSchema, pa.SeriesSchema))
+        if isinstance(check, BaseSchema)
         else check
         for check in checks_
     ]

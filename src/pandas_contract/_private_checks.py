@@ -55,7 +55,7 @@ class Check(Protocol):  # pragma: no cover
 class CheckSchema:
     """Check the DataFrame using the schema."""
 
-    schema: pa.DataFrameSchema | pa.SeriesSchema | None
+    schema: BaseSchema | None
     head: int | None = None
     tail: int | None = None
     sample: int | None = None
@@ -75,9 +75,10 @@ class CheckSchema:
         if self.schema is None:
             return cast("DataCheckFunctionT", lambda _: [])
 
-        def check(df: pd.DataFrame | pd.Series) -> list[str]:
+        def check(df: pd.DataFrame | pd.Series) -> Iterable[str]:
             try:
-                self._parse_schema(self.schema, fn, args, kwargs).validate(
+                parsed_schema = self._parse_schema(self.schema, fn, args, kwargs)
+                parsed_schema.validate(
                     df,
                     head=self.head,
                     tail=self.tail,
@@ -88,7 +89,12 @@ class CheckSchema:
                 )
 
             except (pa_errors.SchemaErrors, pa_errors.SchemaError) as exc:
-                return list(exc.args)
+                return exc.args
+            except pa_errors.BackendNotFoundError:
+                return [
+                    f"Backend {type(self.schema).__qualname__} not applicable to"
+                    f" {type(df).__qualname__}"
+                ]
             else:
                 return []
 

@@ -24,9 +24,10 @@ class TestCheckExtends:
 
     def test_init(self) -> None:
         """Test initialization of CheckExtends."""
-        check = extends("df", DataFrameSchema())
+        modified = DataFrameSchema()
+        check = extends("df", modified=modified)
         assert check.arg == "df"
-        assert check.schema == DataFrameSchema()
+        assert check.modified.schema is modified
 
     @pytest.mark.parametrize(
         "schema",
@@ -40,7 +41,7 @@ class TestCheckExtends:
         """Test initialization of CheckExtends."""
         with pytest.raises(
             TypeError,
-            match="CheckExtends: If extends is set, then schema must be of type "
+            match="CheckExtends: If modified is set, then it must be of type "
             "pandera.DataFrameSchema, got",
         ):
             extends("df", schema)
@@ -60,26 +61,25 @@ class TestCheckExtends:
                 ["extends df: Columns differ: ['a'] != ['b']"],
             ),
             (pd.DataFrame({"a": [1]}, index=[1]), ["extends df: index differ"]),
-            (1, ["extends df: df not a DataFrame, got <class 'int'>."]),
+            (1, ["extends df: df not a DataFrame, got int."]),
         ],
     )
     def test_mk_check(self, df_to_be_extend: pd.DataFrame, expect: list[str]) -> None:
         """Test mk_check method of CheckExtends."""
-        check = extends("df", schema=DataFrameSchema())
+        check = extends("df", modified=DataFrameSchema())
         out_df = pd.DataFrame({"a": [1]}, index=[0])
         fn = check.mk_check(lambda df: df, (df_to_be_extend,), {})
         assert list(fn(out_df)) == expect
 
     def test_mk_check__invalid_output(self) -> None:
         """Test mk_check method of CheckExtends."""
-        check = extends("df", DataFrameSchema())
-        df = pd.Series([])
+        check = extends("df", modified=DataFrameSchema())
+        df = pd.DataFrame([])
         df2 = pd.Series([])
         fn = check.mk_check(lambda df: df, (df,), {})
         assert list(fn(df2)) == [
-            "extends df: <input> not a DataFrame, "
-            "got <class 'pandas.core.series.Series'>.",
-            "extends df: df not a DataFrame, got <class 'pandas.core.series.Series'>.",
+            "extends df: Backend DataFrameSchema not applicable to Series",
+            "extends df: <input> not a DataFrame, got Series.",
         ]
 
     def test_mk_check__invalid_output__identical_arg(self) -> None:
@@ -88,10 +88,9 @@ class TestCheckExtends:
         df = pd.Series([])
         fn = check.mk_check(lambda df2, df: df2, (df, df), {})
         assert list(fn(df)) == [
-            "extends df2: <input> not a DataFrame, "
-            "got <class 'pandas.core.series.Series'>.",
-            "extends df2: df2 not a DataFrame, got "
-            "<class 'pandas.core.series.Series'>.",
+            "extends df2: Backend DataFrameSchema not applicable to Series",
+            "extends df2: <input> not a DataFrame, got Series.",
+            "extends df2: df2 not a DataFrame, got Series.",
         ]
 
 
