@@ -55,7 +55,6 @@ Setup package
     :hidden:
 
     self
-    usage.md
     public-api
     module-mode
     details
