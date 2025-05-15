@@ -79,7 +79,7 @@ class KeyT(Protocol):
     """
 
 
-class WrappedT(Protocol):
+class WrappedT(Protocol):  # pragma: no cover
     """Type for wrapper function."""
 
     def __call__(self, fn: _T) -> _T: ...

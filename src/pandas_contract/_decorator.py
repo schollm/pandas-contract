@@ -12,7 +12,7 @@ from pandas_contract._decorator_v2 import result as result2
 
 from ._lib import UNDEFINED, ValidateDictT, WrappedT
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     import pandas_contract._private_checks as _checks
 
 
