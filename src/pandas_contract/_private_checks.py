@@ -22,7 +22,7 @@ class Check(Protocol):  # pragma: no cover
     """Protocol for a DataFrame or Series check class."""
 
     @property
-    def all_args(self) -> Sequence[str]:
+    def args(self) -> Sequence[str]:
         """Get a list of all arguments."""
         ...
 
@@ -66,7 +66,7 @@ class CheckSchema:
         return self.schema is not None
 
     @property
-    def all_args(self) -> list[str]:
+    def args(self) -> list[str]:
         return []
 
     def mk_check(

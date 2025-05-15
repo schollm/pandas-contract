@@ -26,7 +26,7 @@ class TestCheckExtends:
         """Test initialization of CheckExtends."""
         modified = DataFrameSchema()
         check = extends("df", modified=modified)
-        assert check.arg == "df"
+        assert check.args == ("df",)
         assert check.modified.schema is modified
 
     @pytest.mark.parametrize(

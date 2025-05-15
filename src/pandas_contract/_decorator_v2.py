@@ -344,5 +344,4 @@ def _check_fn_args(prefix: str, fn: MyFunctionType, args: Iterable[str]) -> None
 def _collect_args(args: Iterable[str], checks: Iterable[Any]) -> Iterable[str]:
     yield from args
     for check in checks:
-        if hasattr(check, "all_args"):
-            yield from check.all_args
+        yield from getattr(check, "args", ())
