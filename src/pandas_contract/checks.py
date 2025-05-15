@@ -228,13 +228,13 @@ class extends(Check):  # noqa: N801
                 f"pandera.DataFrameSchema, got {type(modified)}."
             )
             raise TypeError(msg)
-        self.args = (arg,)
+        self.args = (arg,) if arg else ()
         self.modified = CheckSchema(modified)
 
     @property
     def is_active(self) -> bool:
         """Whether the check is active."""
-        return bool(self.args and self.args[0])
+        return bool(self.args)
 
     def mk_check(
         self, fn: Callable, args: tuple[Any, ...], kwargs: dict[str, Any]
@@ -283,8 +283,6 @@ class extends(Check):  # noqa: N801
         self, fn: Callable, args: Any, kwargs: Any
     ) -> list[Hashable]:
         if self.modified.schema is None:
-            return []
-        if not hasattr(self.modified.schema, "columns"):
             return []
         parsed = cast("DataFrameSchema", self.modified.parse_schema(fn, args, kwargs))
         return list(parsed.columns)
