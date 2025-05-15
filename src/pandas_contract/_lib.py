@@ -98,7 +98,7 @@ def split_or_list(value: str | Iterable[str] | None) -> list[str]:
     if not value:
         return []
     if isinstance(value, str):
-        return [v.strip() for v in value.split(",")]
+        return [v.strip() for v in value.split(",") if v.strip()]
     return list(value)
 
 

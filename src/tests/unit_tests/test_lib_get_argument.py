@@ -1,12 +1,29 @@
 """Test _lib functions."""
 
-from typing import NoReturn
+from typing import Any, NoReturn
 
 import pytest
 
-from pandas_contract._lib import MyFunctionType, get_fn_arg, has_fn_arg
+from pandas_contract._lib import MyFunctionType, get_fn_arg, has_fn_arg, split_or_list
 
 DEFAULT = 2
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        ("df", ["df"]),
+        ("df, df2", ["df", "df2"]),
+        (None, []),
+        ("", []),
+        ([], []),
+        ((), []),
+        (["df", "df2"], ["df", "df2"]),
+    ],
+)
+def test_split_or_list(value: Any, expected: list[str]) -> None:
+    """Test split_or_list."""
+    assert split_or_list(value) == expected
 
 
 def fn(a: int, b: int) -> NoReturn:
