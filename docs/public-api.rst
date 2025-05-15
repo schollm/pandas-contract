@@ -1,13 +1,7 @@
 Decorators
-==========
+=============
 .. autofunction:: pandas_contract.argument
 .. autofunction:: pandas_contract.result
-.. autofunction:: pandas_contract.from_arg
-
-Decorators V2
-=============
-.. autofunction:: pandas_contract.argument2
-.. autofunction:: pandas_contract.result2
 .. autoclass:: pandas_contract._decorator_v2.KeyT
 
 Check functions
@@ -31,4 +25,3 @@ Check Protocol
 .. autoclass:: pandas_contract._private_checks.Check
     :members:
     :class-doc-from: both
-
