@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from dataclasses import dataclass
 from itertools import zip_longest
 from typing import TYPE_CHECKING, Any, Callable, NamedTuple, Union, cast
 
@@ -57,8 +56,7 @@ class same_index_as(Check):  # noqa: N801
 
     """
 
-    __slots__ = ("all_args", "args")
-    all_args: list[str]
+    __slots__ = ("args",)
     args: list[str]
 
     def __init__(self, args: str | Iterable[str] | None, /) -> None:
@@ -68,7 +66,7 @@ class same_index_as(Check):  # noqa: N801
             It can be either a string or an iterable of strings.
             If it is a string, it will be split by commas.
         """
-        self.all_args = self.args = split_or_list(args)
+        self.args = split_or_list(args)
 
     @property
     def is_active(self) -> bool:
@@ -114,8 +112,7 @@ class same_length_as(Check):  # noqa: N801
 
     """
 
-    __slots__ = ("all_args", "args")
-    all_args: list[str]
+    __slots__ = ("args",)
     args: list[str]
 
     def __init__(self, args: str | Iterable[str] | None, /) -> None:
@@ -125,7 +122,7 @@ class same_length_as(Check):  # noqa: N801
             It can be either a string or an iterable of strings.
             If it is a string, it will be split by commas.
         """
-        self.all_args = self.args = split_or_list(args)
+        self.args = split_or_list(args)
 
     @property
     def is_active(self) -> bool:
@@ -177,9 +174,8 @@ class extends(Check):  # noqa: N801
     ValueError: my_fn: Argument df: ...
     """
 
-    __slots__ = ("all_args", "arg", "modified")
-    all_args: list[str]
-    arg: str
+    __slots__ = ("args", "modified")
+    args: tuple[str, ...]
     modified: CheckSchema
 
     def __init__(
@@ -191,12 +187,11 @@ class extends(Check):  # noqa: N801
         """Ensure that the result extends another dataframe.
 
         :param arg: Argument that this DataFrame extends.
-        :param schema: Pandera SchemaDefinition.
+        :param modified: Pandera SchemaDefinition.
         """
-        self.all_args = []
         if arg is None:
-            self.arg = ""
             self.modified = cast("CheckSchema", None)
+            self.args = ()
             return
 
         if not isinstance(modified, pa.DataFrameSchema):
@@ -205,27 +200,27 @@ class extends(Check):  # noqa: N801
                 f"pandera.DataFrameSchema, got {type(modified)}."
             )
             raise TypeError(msg)
-        self.arg = arg
-        self.all_args = [arg]
+        self.args = (arg,)
         self.modified = CheckSchema(modified)
 
     @property
     def is_active(self) -> bool:
         """Whether the check is active."""
-        return bool(self.arg)
+        return bool(self.args and self.args[0])
 
     def mk_check(
         self, fn: Callable, args: tuple[Any, ...], kwargs: dict[str, Any]
     ) -> DataCheckFunctionT:
         """Check the DataFrame and keep the index."""
-        df_extends = get_df_arg(fn, self.arg, args, kwargs)
+        arg = self.args[0]
+        df_extends = get_df_arg(fn, arg, args, kwargs)
         hash_other = self._get_hash(df_extends)
         check_modified = self.modified.mk_check(fn, args, kwargs)
 
         def check(df: pd.DataFrame | pd.Series) -> Iterable[str]:
             """Check the DataFrame and keep the index."""
             # Ensure the modified columns are correct
-            prefix = f"extends {self.arg}: "
+            prefix = f"extends {arg}: "
             yield from (f"{prefix}{err}" for err in check_modified(df))
 
             hash_self = self._get_hash(df)
@@ -233,7 +228,7 @@ class extends(Check):  # noqa: N801
                 if isinstance(hash_self, _HashErr):
                     yield f"{prefix}<input> {hash_self.err}"
                 if isinstance(hash_other, _HashErr):
-                    yield f"{prefix}{self.arg} {hash_other.err}"
+                    yield f"{prefix}{arg} {hash_other.err}"
                 return
             if hash_self == hash_other:
                 return  # early exit
@@ -289,7 +284,6 @@ class _HashErr(NamedTuple):
     err: str
 
 
-@dataclass(frozen=True)
 class is_(Check):  # noqa: N801
     """Ensures that the result is identical (`is` operator) to another dataframe.
 
@@ -310,31 +304,28 @@ class is_(Check):  # noqa: N801
 
     """
 
-    arg: str | None
+    __slots__ = ("args", "is_active")
+    args: tuple[str, ...]
+    is_active: bool
 
-    @property
-    def all_args(self) -> list[str]:
-        """Get all arguments used by this check."""
-        return [self.arg] if self.arg else []
+    def __init__(self, arg: str | None) -> None:
+        """Ensure result is identical to another DataFrame.
 
-    @property
-    def is_active(self) -> bool:
-        """Whether the check is active."""
-        return bool(self.arg)
+        :param arg: Name of argument of the decorated function that contains the other
+            DataFrame.
+        """
+        self.args = (arg,) if arg else ()
+        self.is_active = bool(self.args)
 
     def mk_check(
         self, fn: Callable, args: tuple[Any], kwargs: dict[str, Any]
     ) -> DataCheckFunctionT:
         """Create a check function."""
-
-        def check_fn(df: pd.DataFrame | pd.Series) -> list[str]:
-            """Check if input is self,other."""
-            if self.arg is None:
-                return []
-            other_df = get_df_arg(fn, self.arg, args, kwargs)
-            return [f"is not {self.arg}"] if df is not other_df else []
-
-        return check_fn
+        return lambda df: (
+            f"is not {arg_name}"
+            for arg_name in self.args
+            if df is not get_df_arg(fn, arg_name, args, kwargs)
+        )
 
 
 class is_not(Check):  # noqa: N801
@@ -353,9 +344,9 @@ class is_not(Check):  # noqa: N801
 
     """
 
-    __slots__ = ("all_args", "args")
-    all_args: tuple[str, ...]
+    __slots__ = ("args", "is_active")
     args: tuple[str, ...]
+    is_active: bool
 
     def __init__(self, args: str | Iterable[str] | None, /) -> None:
         """Ensure that the result is not identical (`is` operator) to `others`.
@@ -370,30 +361,14 @@ class is_not(Check):  # noqa: N801
             self.args = tuple(o.strip() for o in args.split(","))
         else:
             self.args = tuple(args)
-        self.all_args = self.args
-
-    @property
-    def is_active(self) -> bool:
-        """Check if the check is active."""
-        return bool(self.args)
+        self.is_active = bool(self.args)
 
     def mk_check(
         self, fn: Callable, args: tuple[Any, ...], kwargs: dict[str, Any]
     ) -> DataCheckFunctionT:
         """Create the check function."""
-
-        def check_fn(df: pd.DataFrame | pd.Series) -> list[str]:
-            """Check if input is self,other."""
-            return [
-                f"is {other.strip()}"
-                for other, other_df in zip(
-                    self.args,
-                    (
-                        get_df_arg(fn, other.strip(), args, kwargs)
-                        for other in self.args
-                    ),
-                )
-                if other_df is df
-            ]
-
-        return check_fn
+        return lambda df: (
+            f"is {other}"
+            for other in self.args
+            if get_df_arg(fn, other.strip(), args, kwargs) is df
+        )
