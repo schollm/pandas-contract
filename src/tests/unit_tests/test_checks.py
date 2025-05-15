@@ -114,16 +114,16 @@ class TestIs:
         res = is_("df")
         df = pd.DataFrame(index=[])
         fn = res.mk_check(lambda df: df, (df,), {})
-        assert fn(df) == []
-        assert fn(df.copy()) == ["is not df"]
+        assert list(fn(df)) == []
+        assert list(fn(df.copy())) == ["is not df"]
 
     def test_check_none(self) -> None:
         """Test for inplace argument."""
         res = is_(None)
         df = pd.DataFrame(index=[])
         fn = res.mk_check(lambda df: df, (df,), {})
-        assert fn(df) == []
-        assert fn(df.copy()) == []
+        assert list(fn(df)) == []
+        assert list(fn(df.copy())) == []
 
 
 class TestCheckIsNot:
@@ -136,3 +136,10 @@ class TestCheckIsNot:
     def test_is_active(self, others: Sequence[str], is_active: bool) -> None:
         """Test is_active property of CheckIsNot."""
         assert is_not(others).is_active == is_active
+
+    def test_check(self) -> None:
+        """Test is_not.mk_check."""
+        df = pd.DataFrame()
+        check_fn = is_not("df").mk_check(lambda df: None, (df,), {})
+        assert list(check_fn(df.copy())) == []
+        assert list(check_fn(df)) == ["is df"]

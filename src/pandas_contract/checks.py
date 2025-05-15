@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from dataclasses import dataclass
 from itertools import zip_longest
 from typing import TYPE_CHECKING, Any, Callable, NamedTuple, Union, cast
 
@@ -285,7 +284,6 @@ class _HashErr(NamedTuple):
     err: str
 
 
-@dataclass(frozen=True)
 class is_(Check):  # noqa: N801
     """Ensures that the result is identical (`is` operator) to another dataframe.
 
@@ -306,31 +304,28 @@ class is_(Check):  # noqa: N801
 
     """
 
-    arg: str | None
+    __slots__ = ("args", "is_active")
+    args: tuple[str, ...]
+    is_active: bool
 
-    @property
-    def args(self) -> list[str]:
-        """Get all arguments used by this check."""
-        return [self.arg] if self.arg else []
+    def __init__(self, arg: str | None) -> None:
+        """Ensure result is identical to another DataFrame.
 
-    @property
-    def is_active(self) -> bool:
-        """Whether the check is active."""
-        return bool(self.arg)
+        :param arg: Name of argument of the decorated function that contains the other
+            DataFrame.
+        """
+        self.args = (arg,) if arg else ()
+        self.is_active = bool(self.args)
 
     def mk_check(
         self, fn: Callable, args: tuple[Any], kwargs: dict[str, Any]
     ) -> DataCheckFunctionT:
         """Create a check function."""
-
-        def check_fn(df: pd.DataFrame | pd.Series) -> list[str]:
-            """Check if input is self,other."""
-            if self.arg is None:
-                return []
-            other_df = get_df_arg(fn, self.arg, args, kwargs)
-            return [f"is not {self.arg}"] if df is not other_df else []
-
-        return check_fn
+        return lambda df: (
+            f"is not {arg_name}"
+            for arg_name in self.args
+            if df is not get_df_arg(fn, arg_name, args, kwargs)
+        )
 
 
 class is_not(Check):  # noqa: N801
@@ -349,8 +344,9 @@ class is_not(Check):  # noqa: N801
 
     """
 
-    __slots__ = ("args",)
+    __slots__ = ("args", "is_active")
     args: tuple[str, ...]
+    is_active: bool
 
     def __init__(self, args: str | Iterable[str] | None, /) -> None:
         """Ensure that the result is not identical (`is` operator) to `others`.
@@ -365,29 +361,14 @@ class is_not(Check):  # noqa: N801
             self.args = tuple(o.strip() for o in args.split(","))
         else:
             self.args = tuple(args)
-
-    @property
-    def is_active(self) -> bool:
-        """Check if the check is active."""
-        return bool(self.args)
+        self.is_active = bool(self.args)
 
     def mk_check(
         self, fn: Callable, args: tuple[Any, ...], kwargs: dict[str, Any]
     ) -> DataCheckFunctionT:
         """Create the check function."""
-
-        def check_fn(df: pd.DataFrame | pd.Series) -> list[str]:
-            """Check if input is self,other."""
-            return [
-                f"is {other.strip()}"
-                for other, other_df in zip(
-                    self.args,
-                    (
-                        get_df_arg(fn, other.strip(), args, kwargs)
-                        for other in self.args
-                    ),
-                )
-                if other_df is df
-            ]
-
-        return check_fn
+        return lambda df: (
+            f"is {other}"
+            for other in self.args
+            if get_df_arg(fn, other.strip(), args, kwargs) is df
+        )
