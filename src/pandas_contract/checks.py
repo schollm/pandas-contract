@@ -11,10 +11,12 @@ import pandas as pd
 import pandera as pa
 
 from pandas_contract._lib import get_df_arg, split_or_list
-from pandas_contract._private_checks import Check
+from pandas_contract._private_checks import Check, CheckSchema
 
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Hashable
+
+    from pandera.api.base.schema import BaseSchema
 
 __all__ = [
     "extends",
@@ -148,32 +150,43 @@ class extends(Check):  # noqa: N801
 
     Check that the resulting dataframe extends another dataframe (provided
     via argument name). It ensures that
-    a) only the columns are added that are also provided in `schema` and
+    a) only the columns are added that are also provided in `modified` and
     b) Any other columns have not been modified.
 
     *Example*
 
     >>> import pandas_contract as pc
-    >>> @pc.result(schema=pa.DataFrameSchema({"a": pa.Column(int)}), extends="df")
+    >>> @pc.result(pc.checks.extends("df", pa.DataFrameSchema({"x": pa.Column(int)})))
     ... def my_fn(df: pd.DataFrame) -> pd.DataFrame:
-    ...     return df.assign(a=1)
+    ...     return df.assign(x=1)
 
-    >>> @pc.result2(pc.checks.extends("df", pa.DataFrameSchema({"a": pa.Column(int)})))
-    ... def my_fn(df: pd.DataFrame) -> pd.DataFrame:
-    ...     return df.assign(a=1)
+    **Define a function that requires a column "a" and adds a column "x"
+     to the data frame**
 
+    >>> import pandas_contract as pc
+    >>> @pc.argument("df", pa.DataFrameSchema({"a": pa.Column()}))
+    ... @pc.result(pc.checks.extends("df", pa.DataFrameSchema({"x": pa.Column(int)})))
+    ... def my_fn(df):
+    ...   return df.assign(x=df["a"] + 1)
+    >>> my_fn(pd.DataFrame({"a": [1]}))
+       a  x
+    0  1  2
+
+    >>> my_fn(pd.DataFrame({"y": [1]}))
+    Traceback (most recent call last):
+    ValueError: my_fn: Argument df: ...
     """
 
-    __slots__ = ("all_args", "arg", "schema")
+    __slots__ = ("all_args", "arg", "modified")
     all_args: list[str]
     arg: str
-    schema: pa.DataFrameSchema
+    modified: CheckSchema
 
     def __init__(
         self,
         arg: str | None,
         /,
-        schema: pa.SeriesSchema | pa.DataFrameSchema | None,
+        modified: BaseSchema | None,
     ) -> None:
         """Ensure that the result extends another dataframe.
 
@@ -183,18 +196,18 @@ class extends(Check):  # noqa: N801
         self.all_args = []
         if arg is None:
             self.arg = ""
-            self.schema = cast("pa.DataFrameSchema", None)
+            self.modified = cast("CheckSchema", None)
             return
 
-        if not isinstance(schema, pa.DataFrameSchema):
+        if not isinstance(modified, pa.DataFrameSchema):
             msg = (
-                f"CheckExtends: If extends is set, then schema must be of type "
-                f"pandera.DataFrameSchema, got {type(schema)}."
+                f"CheckExtends: If modified is set, then it must be of type "
+                f"pandera.DataFrameSchema, got {type(modified)}."
             )
             raise TypeError(msg)
         self.arg = arg
         self.all_args = [arg]
-        self.schema = schema
+        self.modified = CheckSchema(modified)
 
     @property
     def is_active(self) -> bool:
@@ -207,11 +220,15 @@ class extends(Check):  # noqa: N801
         """Check the DataFrame and keep the index."""
         df_extends = get_df_arg(fn, self.arg, args, kwargs)
         hash_other = self._get_hash(df_extends)
+        check_modified = self.modified.mk_check(fn, args, kwargs)
 
         def check(df: pd.DataFrame | pd.Series) -> Iterable[str]:
             """Check the DataFrame and keep the index."""
-            hash_self = self._get_hash(df)
+            # Ensure the modified columns are correct
             prefix = f"extends {self.arg}: "
+            yield from (f"{prefix}{err}" for err in check_modified(df))
+
+            hash_self = self._get_hash(df)
             if isinstance(hash_self, _HashErr) or isinstance(hash_other, _HashErr):
                 if isinstance(hash_self, _HashErr):
                     yield f"{prefix}<input> {hash_self.err}"
@@ -240,9 +257,15 @@ class extends(Check):  # noqa: N801
 
     def _get_hash(self, df: Any) -> _HashErr | _HashDf:
         if not isinstance(df, pd.DataFrame):
-            return _HashErr(f"not a DataFrame, got {type(df)}.")
+            return _HashErr(f"not a DataFrame, got {type(df).__qualname__}.")
 
-        df_hash = df[[c for c in df if c not in self.schema.columns]]
+        df_hash = df[
+            [
+                c
+                for c in df
+                if c not in cast("pa.DataFrameSchema", self.modified.schema).columns
+            ]
+        ]
         return _HashDf(
             type=pd.DataFrame,
             index_=hash(df.index.to_numpy().tobytes()),

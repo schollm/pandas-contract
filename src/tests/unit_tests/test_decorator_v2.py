@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     "df",
     checks.same_index_as("df2"),
     checks.same_length_as("df2, df3"),
-    checks.extends("df2", schema=pa.DataFrameSchema({"a": pa.Column(int)})),
+    checks.extends("df2", modified=pa.DataFrameSchema({"a": pa.Column(int)})),
 )
 @result2()
 def foo(df: pd.DataFrame, df2: pd.DataFrame, df3: pd.DataFrame) -> pd.DataFrame:
