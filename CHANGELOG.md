@@ -3,6 +3,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [0.7.0] - 2025-05-15
+### Changes
+- pandas_contract.argument first argument is positional only (aligned with argument2)
+- pandas_contract.argument/result V1 checks are keyword only.
+- Rename checks.extends second argument from schema to modified.
+- Improve error message in case of Pandera not able to find the correct schema to check the provided Series/DataFrame.
+- Remove V1 documentation
+- checks.is_not is a normal class instead of a dataclass.
+### Added
+- pandas_contract.argument/result is compatible with both v1 and v2 API.
+- pandera schemas can be any BaseSchema.
 
 ## [0.6.4] - 2025-05-12
 ### Changed
