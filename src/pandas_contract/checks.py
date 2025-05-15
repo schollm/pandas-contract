@@ -1,4 +1,11 @@
-"""Pandas Check functions."""
+"""Pandas Check functions.
+
+Check functions for DataFrames and Series that are not handled by Pandera checks.
+
+This involves checks against multiple arguments, i.e., ensure that the length or indices
+of two arguments match, or that an argument is changed in-place (or a copy is created).
+
+"""
 
 from __future__ import annotations
 
@@ -150,15 +157,15 @@ class extends(Check):  # noqa: N801
     a) only the columns are added that are also provided in `modified` and
     b) Any other columns have not been modified.
 
-    *Example*
+    **Example**
 
     >>> import pandas_contract as pc
     >>> @pc.result(pc.checks.extends("df", pa.DataFrameSchema({"x": pa.Column(int)})))
     ... def my_fn(df: pd.DataFrame) -> pd.DataFrame:
     ...     return df.assign(x=1)
 
-    **Define a function that requires a column "a" and adds a column "x"
-     to the data frame**
+    *Require and add a column"
+    Define a function that requires a column "a" and adds a column "x" to the data frame
 
     >>> import pandas_contract as pc
     >>> @pc.argument("df", pa.DataFrameSchema({"a": pa.Column()}))
