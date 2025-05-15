@@ -345,7 +345,7 @@ class is_not(Check):  # noqa: N801
     """
 
     __slots__ = ("args", "is_active")
-    args: tuple[str, ...]
+    args: list[str]
     is_active: bool
 
     def __init__(self, args: str | Iterable[str] | None, /) -> None:
@@ -355,12 +355,7 @@ class is_not(Check):  # noqa: N801
             It can be either a string or an iterable of strings.
             If it is a string, it will be split by commas.
         """
-        if args is None:
-            self.args = ()
-        elif isinstance(args, str):
-            self.args = tuple(o.strip() for o in args.split(","))
-        else:
-            self.args = tuple(args)
+        self.args = split_or_list(args)
         self.is_active = bool(self.args)
 
     def mk_check(
