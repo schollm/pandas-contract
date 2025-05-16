@@ -3,8 +3,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [0.7.1] - 2025-05-16
+## Added
+- Add migration guide [docs/migration.md](project:migration.md) to migrate to version 0.7.0 and prepare for 0.8.0
+- Shorten README.md, most moved to [pandas-contract docs](https://pandas-contract.readthedocs.io/en/stable/details.html)
+- Add more documentation
+
 ## [0.7.0] - 2025-05-15
-See [docs/migration.md](project:migration.md) to migrate to this version and prepare for 0.8.0.
 ### Changes
 - pandas_contract.argument first argument is positional only (aligned with argument2)
 - pandas_contract.argument/result V1 checks are keyword only.
