@@ -3,7 +3,7 @@ from __future__ import annotations
 import copy
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Callable, Protocol, Union, cast
+from typing import TYPE_CHECKING, Any, Callable, Protocol, Union
 
 import pandas as pd
 import pandera as pa
@@ -73,7 +73,7 @@ class CheckSchema(Check):
         self, fn: Callable, args: tuple[Any, ...], kwargs: dict[str, Any]
     ) -> DataCheckFunctionT:
         if self.schema is None:
-            return cast("DataCheckFunctionT", lambda _: [])
+            return lambda _: []
 
         def check(df: pd.DataFrame | pd.Series) -> Iterable[str]:
             try:
