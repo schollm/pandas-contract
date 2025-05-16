@@ -5,9 +5,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 import pandas as pd
+import pandera as pa
 import pytest
 from pandera import DataFrameSchema, SeriesSchema
 
+from pandas_contract import from_arg, result
 from pandas_contract._private_checks import CheckSchema
 from pandas_contract.checks import (
     extends,
@@ -70,6 +72,30 @@ class TestCheckExtends:
         fn = check.mk_check(lambda df: df, (df_to_be_extend,), {})
         assert list(fn(out_df)) == expect
 
+    def test_callable_key_in_modified(self) -> None:
+        """Let extends.modified schema have a callable key."""
+
+        @result(extends("df", DataFrameSchema({from_arg("col"): pa.Column(int)})))
+        def my_fn(df: pd.DataFrame, col: str = "x") -> pd.DataFrame:
+            return df.assign(**{col: 1})
+
+        my_fn(pd.DataFrame(index=[0]))
+
+    def test_callable_key_in_modified__failure(self) -> None:
+        """Test with argument key=callable()."""
+
+        @result(extends("df", DataFrameSchema({lambda *_: "x": pa.Column(int)})))
+        def my_fn(df: pd.DataFrame) -> pd.DataFrame:
+            return df.assign(other=1)
+
+        with pytest.raises(ValueError, match="extends df:") as exc:
+            my_fn(pd.DataFrame(index=[0], columns=["aa"]))
+        # match from modified schema check: We expect x from col argument
+        exc.match(r"column \'x\' not in dataframe")
+        # match from origina (df minus modififed columns) data check: We expect no
+        # columns outside of modified to get changed
+        exc.match(r"Columns differ: .*\['aa', 'other'\] != \['aa'\]")
+
     def test_mk_check__invalid_output(self) -> None:
         """Test mk_check method of CheckExtends."""
         check = extends("df", modified=DataFrameSchema())
@@ -119,6 +145,23 @@ class TestCheckSchema:
         )
         res = check.mk_check(lambda _: 0, (), {})
         assert res(pd.Series()) == []
+
+    def test_key(self) -> None:
+        """Test mk_check function if schema is None."""
+        check = CheckSchema(
+            schema=DataFrameSchema(
+                {
+                    from_arg("a_col"): pa.Column(),
+                    from_arg("b_col"): pa.Column(),
+                }
+            )
+        )
+        check_fn = check.mk_check(lambda a_col, b_col: 0, ("a", "b"), {})
+        assert list(check_fn(pd.DataFrame(columns=["a", "b"]))) == []
+        errs = list(check_fn(pd.DataFrame(columns=["a", "x"])))
+        assert len(errs) == 1
+        assert "'b'" in str(errs[0])
+        assert isinstance(errs[0], str)
 
 
 class TestIs:

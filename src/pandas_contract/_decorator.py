@@ -1,28 +1,42 @@
 from __future__ import annotations
 
-import warnings
-from typing import TYPE_CHECKING, Any, cast
+import functools
+from itertools import chain
+from typing import TYPE_CHECKING, Any, Callable, TypeVar, cast
 
 from pandera.api.base.schema import BaseSchema
 
-from pandas_contract._decorator_v1 import argument as argument1
-from pandas_contract._decorator_v1 import result as result1
-from pandas_contract._decorator_v2 import argument as argument2
-from pandas_contract._decorator_v2 import result as result2
+import pandas_contract._private_checks as _checks
+from pandas_contract.mode import Modes, get_mode
 
-from ._lib import UNDEFINED, ValidateDictT, WrappedT
+from ._lib import (
+    ORIGINAL_FUNCTION_ATTRIBUTE,
+    UNDEFINED,
+    KeyT,
+    ValidateDictT,
+    WrappedT,
+    get_fn_arg,
+    has_fn_arg,
+)
 
 if TYPE_CHECKING:  # pragma: no cover
-    import pandas_contract._private_checks as _checks
+    from collections.abc import Iterable
+
+    import pandas as pd
+
+    from ._lib import MyFunctionType
+    from ._private_checks import Check
+
+_T = TypeVar("_T", bound=Callable[..., Any])
+""""Type variable for the function type."""
 
 
 def argument(
     arg: str,
     /,
     *checks_: _checks.Check | BaseSchema,
-    key: Any = UNDEFINED,
+    key: KeyT = UNDEFINED,
     validate_kwargs: ValidateDictT | None = None,
-    **_legacy_args: Any,
 ) -> WrappedT:
     """Check the input DataFrame.
 
@@ -73,8 +87,8 @@ def argument(
     ...     ...
 
 
-    Ensure same index on both DataFrames
-    ------------------------------------
+    Ensure same index
+    -----------------
     Ensure that the dataframes arguments *df1* and *df2* have the same indices by
     checking argument *df1* against the argument *df2*.
 
@@ -116,45 +130,46 @@ def argument(
     ...     ...
 
     """
-    if _legacy_args:
-        warnings.warn(
-            "Deprecated API in use. See doc for new API.",
-            DeprecationWarning,
-            stacklevel=1,
+    checks_list: list[_checks.Check] = [
+        _checks.CheckSchema(check, **validate_kwargs or {})
+        if isinstance(check, BaseSchema)
+        else check
+        for check in checks_
+    ]
+    checks_clean = [check for check in checks_list if check.is_active]
+
+    def wrapped(fn: _T) -> _T:
+        if get_mode() == Modes.SKIP:
+            return fn
+
+        orig_fn = getattr(fn, ORIGINAL_FUNCTION_ATTRIBUTE, fn)
+        _check_fn_args(
+            f"@argument({arg!r})", orig_fn, _collect_args([arg], checks_clean)
         )
-        schema = _legacy_args.get("schema")
-        if schema is None and len(checks_) == 1 and isinstance(checks_[0], BaseSchema):
-            # schema can be a positional argument - then it has to be the first element
-            # *checks_.
-            schema = cast("BaseSchema", checks_[0])
-            checks_ = checks_[1:]
-            if checks_ or validate_kwargs:
-                raise ValueError("Can not combine v1 and v2 style of arguments")
-        return argument1(
-            arg,
-            schema,
-            key=key,
-            head=_legacy_args.get("head"),
-            tail=_legacy_args.get("tail"),
-            sample=_legacy_args.get("sample"),
-            random_state=_legacy_args.get("random_state"),
-            same_index_as=_legacy_args.get("same_index_as", ()),
-            same_size_as=_legacy_args.get("same_size_as", ()),
-            extends=_legacy_args.get("extends"),
-        )
-    return argument2(
-        arg,
-        *checks_,
-        key=key,
-        validate_kwargs=validate_kwargs,
-    )
+
+        @functools.wraps(fn)
+        def wrapper(*args: Any, **kwargs: Any) -> _T:
+            if (mode := get_mode()).no_handling():
+                return fn(*args, **kwargs)
+
+            checkers = [check.mk_check(orig_fn, args, kwargs) for check in checks_clean]
+            arg_value = get_fn_arg(orig_fn, arg, args, kwargs)
+            df = _get_from_key(key, arg_value)
+            errs = chain.from_iterable(check(df) for check in checkers)
+
+            mode.handle(errs, f"{fn.__name__}: Argument {arg}: ")
+            return fn(*args, **kwargs)
+
+        setattr(wrapper, ORIGINAL_FUNCTION_ATTRIBUTE, orig_fn)
+        return cast("_T", wrapper)
+
+    return wrapped
 
 
 def result(
     *checks_: _checks.Check | BaseSchema,
     key: Any = UNDEFINED,
     validate_kwargs: ValidateDictT | None = None,
-    **_legacy_args: Any,
 ) -> WrappedT:
     """Validate a DataFrame result using pandera.
 
@@ -242,7 +257,7 @@ def result(
     **Ensures that the output extends the input schema.**
 
     >>> @result(
-    ...    pc.checks.extends("df", pa.DataFrameSchema({"b": pa.Column(int)}))
+    ...    pc.checks.extends("df", modified=pa.DataFrameSchema({"b": pa.Column(int)}))
     ... )
     ... def func(df: pd.DataFrame) -> pd.DataFrame:
     ...     return df.assign(a=1)
@@ -261,39 +276,78 @@ def result(
     >>> @argument("df", pa.DataFrameSchema({"in": pa.Column(pa.Int)}))
     ... @result(
     ...     pa.DataFrameSchema({"out": pa.Column(pa.Int)}),
-    ...     pc.checks.extends("df", pa.DataFrameSchema({"a": pa.Column(int)})),
+    ...     pc.checks.extends("df", modified=pa.DataFrameSchema({"a": pa.Column(int)})),
     ... )
     ... def func(df: pd.DataFrame) -> pd.DataFrame:
     ...     return df.assign(out=1)
 
     """
-    if _legacy_args:
-        warnings.warn(
-            "Deprecated API in use. See doc for new API.",
-            DeprecationWarning,
-            stacklevel=1,
-        )
-        schema = _legacy_args.get("schema")
-        if schema is None and len(checks_) == 1 and isinstance(checks_[0], BaseSchema):
-            schema = cast("BaseSchema", checks_[0])
-            checks_ = checks_[1:]
-        if checks_ or validate_kwargs:
-            raise ValueError("Can not combine v1 and v2 style of arguments")
-        return result1(
-            schema,
-            key=key,
-            head=_legacy_args.get("head"),
-            tail=_legacy_args.get("tail"),
-            sample=_legacy_args.get("sample"),
-            random_state=_legacy_args.get("random_state"),
-            same_index_as=_legacy_args.get("same_index_as", ()),
-            same_size_as=_legacy_args.get("same_size_as", ()),
-            extends=_legacy_args.get("extends"),
-            is_=_legacy_args.get("is_"),
-            is_not=_legacy_args.get("is_not", ()),
-        )
-    return result2(
-        *checks_,
-        key=key,
-        validate_kwargs=validate_kwargs,
-    )
+    checks_lst: list[_checks.Check] = [
+        _checks.CheckSchema(check, **validate_kwargs or {})
+        if isinstance(check, BaseSchema)
+        else check
+        for check in checks_
+    ]
+    clean_checks: list[_checks.Check] = [
+        check for check in checks_lst if check.is_active
+    ]
+
+    def wrapped(fn: _T) -> _T:
+        if get_mode() == Modes.SKIP:
+            return fn
+        orig_fn = getattr(fn, ORIGINAL_FUNCTION_ATTRIBUTE, fn)
+        _check_fn_args("@result", orig_fn, _collect_args([], clean_checks))
+
+        @functools.wraps(fn)
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
+            if (mode := get_mode()).no_handling():
+                return fn(*args, **kwargs)
+
+            checkers = [check.mk_check(orig_fn, args, kwargs) for check in clean_checks]
+
+            res = fn(*args, **kwargs)
+            df = _get_from_key(key, res)
+            errs = chain.from_iterable(check(df) for check in checkers)
+            mode.handle(errs, f"{fn.__name__}: Output: ")
+            return res
+
+        setattr(wrapper, ORIGINAL_FUNCTION_ATTRIBUTE, orig_fn)
+        return cast("_T", wrapper)
+
+    return wrapped
+
+
+def _get_from_key(key: Any, input_: Any) -> pd.DataFrame:
+    """Get the DataFrame from the input and the key.
+
+    If the key is `UNDEFINED`, return the input.
+    If it's a callable, call it with the input and return its result.
+    Otherwise, return input[key].
+
+    As an edge case, if the actual key is a callable, one has to wrap it with another
+    callable, i.e. key=lambda x: x
+    """
+    if key is UNDEFINED:
+        return input_
+    if callable(key):
+        return cast("pd.DataFrame", key(input_))
+    return input_[key]
+
+
+def _check_fn_args(prefix: str, fn: MyFunctionType, args: Iterable[str]) -> None:
+    """Check if the function has the required arguments."""
+    if setup_errs := [
+        f"{fn.__qualname__} {prefix} requires argument {arg!r} in function signature."
+        for arg in args
+        if not has_fn_arg(fn, arg)
+    ]:
+        raise ValueError("\n".join(setup_errs))
+
+
+def _collect_args(args: Iterable[str], checks: Iterable[Check]) -> Iterable[str]:
+    """Get a list of all required argument that are required by the checks and also add
+    extra args via args.
+    """
+    yield from args
+    for check in checks:
+        yield from check.args
