@@ -121,8 +121,12 @@ def from_arg(arg: str) -> Callable[[MyFunctionType, tuple[Any], dict[str, Any]],
 
     **Example**
 
+    >>> import pandas as pd
+    >>> import pandas_contract as pc
+    >>> import pandera as pa
+
     >>> @pc.argument("df", pa.DataFrameSchema({pc.from_arg("col"): pa.Column()}))
-    >>> @pc.result(pa.DataFrameSchema({pc.from_arg("col"): pa.String}))
+    ... @pc.result(pa.DataFrameSchema({pc.from_arg("col"): pa.Column(str)}))
     ... def col_to_string(df: pd.DataFrame, col: str) -> pd.DataFrame:
     ...     return df.assign(**{col: df[col].astype(str)})
 
@@ -130,7 +134,7 @@ def from_arg(arg: str) -> Callable[[MyFunctionType, tuple[Any], dict[str, Any]],
     The decorator also supports multiple columns from the function argument.
 
     >>> @pc.argument("df", pa.DataFrameSchema({pc.from_arg("cols"): pa.Column()}))
-    >>> @pc.result(pa.DataFrameSchema({pc.from_arg("cols"): pa.String}))
+    ... @pc.result(pa.DataFrameSchema({pc.from_arg("cols"): pa.Column(str)}))
     ... def cols_to_string(df: pd.DataFrame, cols: list[str]) -> pd.DataFrame:
     ...     return df.assign(**{col: df[col].astype(str) for col in cols})
     """
