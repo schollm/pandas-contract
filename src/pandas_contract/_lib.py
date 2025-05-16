@@ -98,7 +98,7 @@ def split_or_list(value: str | Iterable[str] | None) -> list[str]:
     if not value:
         return []
     if isinstance(value, str):
-        return [v.strip() for v in value.split(",")]
+        return [v.strip() for v in value.split(",") if v.strip()]
     return list(value)
 
 
@@ -106,13 +106,43 @@ def from_arg(arg: str) -> Callable[[MyFunctionType, tuple[Any], dict[str, Any]],
     """Get the named argument from the function call via a call-back.
 
     Returns a call-back function that can be used to get the named argument from the
-    function call.
+    function call. In combination with pandas_contract integration of pandera, it can
+    be used to speciy required columns that come from a function argument.
+
+    It will inspect all arguments provided to the function as well as the default
+    values.
+
+    :arg arg: Name of function argument. The value of the argument must be either
+        a valid column (i.e. a Hashable) or a list of hashables. If it's a list,
+        multiple coluns checks will be created, one for each item.
+
+    :returns: A function for meth:`pandas_contract._private_checks.SchemaCheck`
+        that extracts the values from the argument at runtime-time. Its inteface is
+
+    **Example**
+
+    >>> @pc.argument("df", pa.DataFrameSchema({pc.from_arg("col"): pa.Column()}))
+    >>> @pc.result(pa.DataFrameSchema({pc.from_arg("col"): pa.String}))
+    ... def col_to_string(df: pd.DataFrame, col: str) -> pd.DataFrame:
+    ...     return df.assign(**{col: df[col].astype(str)})
+
+    **Multiple columns in function argument**
+    The decorator also supports multiple columns from the function argument.
+
+    >>> @pc.argument("df", pa.DataFrameSchema({pc.from_arg("cols"): pa.Column()}))
+    >>> @pc.result(pa.DataFrameSchema({pc.from_arg("cols"): pa.String}))
+    ... def cols_to_string(df: pd.DataFrame, cols: list[str]) -> pd.DataFrame:
+    ...     return df.assign(**{col: df[col].astype(str) for col in cols})
     """
 
     def wrapper(
         fn: MyFunctionType, args: tuple[Any, ...], kwargs: dict[str, Any]
     ) -> object:
-        """Get the named argument from the function call."""
+        """Get the value of the named argument from the function call.
+        :arg fn: Function that contains the argument `arg`
+        :arg args: Positional arguments provided to the function.
+        :arg kwargs: Keyword arguments provided to the function.
+        """
         fn = getattr(fn, ORIGINAL_FUNCTION_ATTRIBUTE, fn)
         return get_fn_arg(fn, arg, args, kwargs)
 
