@@ -109,7 +109,8 @@ def from_arg(arg: str) -> Callable[[MyFunctionType, tuple[Any], dict[str, Any]],
     function call. In combination with pandas_contract integration of pandera, it can
     be used to speciy required columns that come from a function argument.
 
-    It will inspect all arguments provided to the function as well as the default values.
+    It will inspect all arguments provided to the function as well as the default
+    values.
 
     :arg arg: Name of function argument. The value of the argument must be either
         a valid column (i.e. a Hashable) or a list of hashables. If it's a list,
