@@ -57,9 +57,9 @@ jobs:
             python-version: "3.10"
           - os: "ubuntu-latest"
             python-version: "3.11"
-            coverage: true
           - os: "ubuntu-latest"
             python-version: "3.13"
+            coverage: true
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
