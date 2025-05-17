@@ -396,9 +396,6 @@ class is_not(Check):  # noqa: N801
 class removed(Check):  # noqa: N801
     """Ensure given columns are removed.
 
-    :arg columns: List of columns that must not exist in the DataFrame. They can also
-        be dynamically created via :meth:`~pandas_contract.from_arg`.
-
     **Example** Mark drop_x as dropping column x
 
     >>> import pandas_contract as pc
@@ -423,12 +420,19 @@ class removed(Check):  # noqa: N801
     is_active: bool
 
     def __init__(self, columns: list[Any]) -> None:
+        """Ensure given columns are removed.
+
+        :arg columns: List of columns that must not exist in the DataFrame. They can
+            also be dynamically created via :meth:`~pandas_contract.from_arg`.
+
+        """
         self.columns = set(columns)
         self.is_active = bool(columns)
 
     def mk_check(
         self, fn: MyFunctionType, args: tuple, kwargs: dict[str, Any]
     ) -> DataCheckFunctionT:
+        """Check function factory for removed."""
         return lambda df: (
             f"Column {col!r} still exists in DataFrame"
             for col in self._get_columns(fn, args, kwargs)
