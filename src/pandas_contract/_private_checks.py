@@ -19,7 +19,14 @@ DataCheckFunctionT = Callable[[Union[pd.DataFrame, pd.Series]], Iterable[str]]
 
 
 class Check(Protocol):  # pragma: no cover
-    """Protocol for a DataFrame or Series check class."""
+    """Protocol for a DataFrame or Series check class.
+
+    This is the base for all pandas_decorator.checks.
+
+    In order to create a new check, the attributes args and is_active as well as the
+    method mk_check must be implemented. Note that args and is_active can be either
+    implemented as properties or attributes.
+    """
 
     @property
     def args(self) -> Sequence[str]:
@@ -38,15 +45,20 @@ class Check(Protocol):  # pragma: no cover
     def mk_check(
         self, fn: MyFunctionType, args: tuple, kwargs: dict[str, Any]
     ) -> DataCheckFunctionT:
-        """Create a check function.
+        """Check function factory.
 
-        The check function takes a single data-frame and return a list of errors as
-        a strings.
+        This method is called at run-time to create a check based on the decorated
+        function and its arguments.
+
+        The returned function of type :class:DataCheckFunctionT must take a single
+        DataFrame/DataSeries/object and returns a iterable of strings.
+        The iterable's strings each represent an error, signifying a failed check.
 
         :param fn: The function for which the check is created.
         :param args: The positional arguments of the function.
         :param kwargs: The keyword arguments of the function.
-        :return: A function that takes a single data-frame and returns a list of errors.
+        :return: A function that takes a single data-frame and returns an iterable of
+            errors.
         """
         ...
 
