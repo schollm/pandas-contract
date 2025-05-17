@@ -1,10 +1,14 @@
 Check functions
 ---------------
+
+Documentation for the :class:`pandas_contract.checks` module.
+
 .. automodule:: pandas_contract.checks
     :members:
     :member-order: alphabetical
     :show-inheritance:
     :exclude-members: mk_check, is_active, args
+    :special-members: __init__
 
 Check Protocol
 ~~~~~~~~~~~~~~
