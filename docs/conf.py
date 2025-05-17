@@ -11,6 +11,8 @@ add these directories to sys.path here. If the directory is relative to the
 documentation root, use os.path.abspath to make it absolute, like shown here.
 """
 
+from __future__ import annotations
+
 # -- Project information -----------------------------------------------------
 from pathlib import Path
 
@@ -24,12 +26,26 @@ copyright = "%Y Micha Scholl"  # noqa: A001
 author = "Micha Scholl"
 release = version = pyproject["project"]["version"]
 
+
+def linkcode_resolve(domain: str, info: dict[str, str]) -> str | None:
+    """Get URL for documented method/class."""
+    if domain != "py":
+        return None
+    if not info["module"]:
+        return None
+    filename = info["module"].replace(".", "/")
+    if filename == "pandas_contract":
+        filename = "pandas_contract/__init__"
+    return f"https://github.com/schollm/pandas-contract/tree/main/src/{filename}.py"
+
+
 # -- General configuration ---------------------------------------------------
 extensions = [
     "sphinx.ext.duration",
     "sphinx.ext.doctest",
     "sphinx.ext.autosummary",
     "sphinx.ext.intersphinx",
+    "sphinx.ext.linkcode",
     "myst_parser",
     "autodoc2",
 ]
