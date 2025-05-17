@@ -15,6 +15,7 @@ from pandas_contract.checks import (
     extends,
     is_,
     is_not,
+    removed,
 )
 
 if TYPE_CHECKING:
@@ -201,3 +202,38 @@ class TestCheckIsNot:
         check_fn = is_not("df").mk_check(lambda df: None, (df,), {})
         assert list(check_fn(df.copy())) == []
         assert list(check_fn(df)) == ["is df"]
+
+
+class TestCheckRemove:
+    """Test for checks.remove."""
+
+    def test(self) -> None:
+        """Base test."""
+        fn = removed(["x"]).mk_check(lambda: 0, (), {})
+        assert list(fn(pd.DataFrame(columns=["a"]))) == []
+
+    def test_from_arg__single(self) -> None:
+        """Test with column from_arg."""
+        fn = removed([from_arg("arg")]).mk_check(lambda arg: 0, ("x",), {})
+        assert list(fn(pd.DataFrame(columns=["x"]))) == [
+            "Column 'x' still exists in DataFrame"
+        ]
+
+    def test_from_arg__multipe(self) -> None:
+        """Test with column from_arg."""
+        fn = removed([from_arg("arg")]).mk_check(lambda arg: 0, (["x", "y"],), {})
+        assert list(fn(pd.DataFrame(columns=["x"]))) == [
+            "Column 'x' still exists in DataFrame"
+        ]
+
+    def test_failing(self) -> None:
+        """Test failing test."""
+        fn = removed(["x"]).mk_check(lambda: 0, (), {})
+        assert list(fn(pd.DataFrame(columns=["x"]))) == [
+            "Column 'x' still exists in DataFrame"
+        ]
+
+    @pytest.mark.parametrize("columns, is_active", [([], False), (["x"], True)])
+    def test_is_active(self, columns: list[str], is_active: bool) -> None:
+        """Test .is_active if columns exist."""
+        assert removed(columns).is_active == is_active

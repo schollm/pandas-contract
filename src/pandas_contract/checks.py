@@ -17,7 +17,7 @@ import pandas as pd
 import pandera as pa
 from pandera import DataFrameSchema
 
-from pandas_contract._lib import get_df_arg, split_or_list
+from pandas_contract._lib import MyFunctionType, get_df_arg, split_or_list
 from pandas_contract._private_checks import Check, CheckSchema
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -397,3 +397,62 @@ class is_not(Check):  # noqa: N801
             for other in self.args
             if get_df_arg(fn, other.strip(), args, kwargs) is df
         )
+
+
+class removed(Check):  # noqa: N801
+    """Ensure given columns are removed.
+
+    :arg columns: List of columns that must not exist in the DataFrame. They can also
+        be dynamically created via meth:`pandas_contract.from_arg`.
+
+    **Example** Mark drop_x as dropping column x
+
+    >>> import pandas_contract as pc
+    >>> @pc.result(pc.checks.removed(["x"]))
+    ... def drop_x(df: pd.DataFrame):
+    ...    return df.drop(columns=["x"])
+
+    **Example** Mark drop_cols as dropping columns from arg
+
+    >>> @pc.result(pc.checks.removed([pc.from_arg("cols")]))
+    ... def drop_cols(df: pd.DataFrame, cols: list[str]):
+    ...    return df.drop(columns=cols)
+    >>> drop_cols(pd.DataFrame([[0, 1, 2]], columns=["a", "b", "c"]), cols=["a", "b"])
+       c
+    0  2
+
+
+
+    """
+
+    __slots__ = ("columns", "is_active")
+
+    args: tuple[str, ...] = ()
+    columns: set[Any]
+    is_active: bool
+
+    def __init__(self, columns: list[Any]) -> None:
+        self.columns = set(columns)
+        self.is_active = bool(columns)
+
+    def mk_check(
+        self, fn: MyFunctionType, args: tuple, kwargs: dict[str, Any]
+    ) -> DataCheckFunctionT:
+        return lambda df: (
+            f"Column {col!r} still exists in DataFrame"
+            for col in self._get_columns(fn, args, kwargs)
+            if col in df
+        )
+
+    def _get_columns(
+        self, fn: MyFunctionType, arg: tuple, kwargs: dict[str, Any]
+    ) -> Iterable[Hashable]:
+        for col in self.columns:
+            if callable(col):
+                col_from_fn = col(fn, arg, kwargs)
+                if isinstance(col_from_fn, list):
+                    yield from col_from_fn
+                else:
+                    yield col_from_fn
+            else:
+                yield col
