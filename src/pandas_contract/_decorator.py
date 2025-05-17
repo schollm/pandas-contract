@@ -136,7 +136,6 @@ def argument(
         else check
         for check in checks_
     ]
-    checks_clean = [check for check in checks_list if check.is_active]
 
     def wrapped(fn: _T) -> _T:
         if get_mode() == Modes.SKIP:
@@ -144,7 +143,7 @@ def argument(
 
         orig_fn = getattr(fn, ORIGINAL_FUNCTION_ATTRIBUTE, fn)
         _check_fn_args(
-            f"@argument({arg!r})", orig_fn, _collect_args([arg], checks_clean)
+            f"@argument({arg!r})", orig_fn, _collect_args([arg], checks_list)
         )
 
         @functools.wraps(fn)
@@ -152,7 +151,7 @@ def argument(
             if (mode := get_mode()).no_handling():
                 return fn(*args, **kwargs)
 
-            checkers = [check.mk_check(orig_fn, args, kwargs) for check in checks_clean]
+            checkers = [check.mk_check(orig_fn, args, kwargs) for check in checks_list]
             arg_value = get_fn_arg(orig_fn, arg, args, kwargs)
             df = _get_from_key(key, arg_value)
             errs = chain.from_iterable(check(df) for check in checkers)
@@ -288,22 +287,19 @@ def result(
         else check
         for check in checks_
     ]
-    clean_checks: list[_checks.Check] = [
-        check for check in checks_lst if check.is_active
-    ]
 
     def wrapped(fn: _T) -> _T:
         if get_mode() == Modes.SKIP:
             return fn
         orig_fn = getattr(fn, ORIGINAL_FUNCTION_ATTRIBUTE, fn)
-        _check_fn_args("@result", orig_fn, _collect_args([], clean_checks))
+        _check_fn_args("@result", orig_fn, _collect_args([], checks_lst))
 
         @functools.wraps(fn)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
             if (mode := get_mode()).no_handling():
                 return fn(*args, **kwargs)
 
-            checkers = [check.mk_check(orig_fn, args, kwargs) for check in clean_checks]
+            checkers = [check.mk_check(orig_fn, args, kwargs) for check in checks_lst]
 
             res = fn(*args, **kwargs)
             df = _get_from_key(key, res)
