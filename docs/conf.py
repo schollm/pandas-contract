@@ -36,6 +36,8 @@ extensions = [
 autodoc2_packages = [
     "../src/pandas_contract",
 ]
+add_module_names = True
+
 pygments_style = "sphinx"
 autodoc2_sort_names = True
 autodoc2_replace_bases = [("pandas_contract", "pc")]
