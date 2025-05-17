@@ -412,7 +412,7 @@ class removed(Check):  # noqa: N801
     ... def drop_x(df: pd.DataFrame):
     ...    return df.drop(columns=["x"])
 
-    **Example** Mark drop_cols as dropping columns from arg
+    **Example** Mark drop_cols as dropping columns from function argument `arg`.
 
     >>> @pc.result(pc.checks.removed([pc.from_arg("cols")]))
     ... def drop_cols(df: pd.DataFrame, cols: list[str]):
@@ -420,9 +420,6 @@ class removed(Check):  # noqa: N801
     >>> drop_cols(pd.DataFrame([[0, 1, 2]], columns=["a", "b", "c"]), cols=["a", "b"])
        c
     0  2
-
-
-
     """
 
     __slots__ = ("columns", "is_active")
