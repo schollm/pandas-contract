@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import pandas as pd
 import pandera as pa
@@ -17,9 +17,6 @@ from pandas_contract.checks import (
     is_not,
     removed,
 )
-
-if TYPE_CHECKING:
-    from collections.abc import Sequence
 
 
 class TestCheckExtends:
@@ -47,11 +44,6 @@ class TestCheckExtends:
             "pandera.DataFrameSchema, got",
         ):
             extends("df", schema)
-
-    @pytest.mark.parametrize("arg, expects", [("df", True), ("", False), (None, False)])
-    def test_is_active(self, arg: str | None, expects: bool) -> None:
-        """Test is_active property of CheckExtends."""
-        assert extends(arg, DataFrameSchema()).is_active == expects
 
     @pytest.mark.parametrize(
         "df_to_be_extend, expect",
@@ -188,14 +180,6 @@ class TestIs:
 class TestCheckIsNot:
     """Test cases for CheckIsNot."""
 
-    @pytest.mark.parametrize(
-        "others, is_active",
-        [("df", True), (["df"], True), (["df", "df2"], True), ([], False)],
-    )
-    def test_is_active(self, others: Sequence[str], is_active: bool) -> None:
-        """Test is_active property of CheckIsNot."""
-        assert is_not(others).is_active == is_active
-
     def test_check(self) -> None:
         """Test is_not.mk_check."""
         df = pd.DataFrame()
@@ -232,8 +216,3 @@ class TestCheckRemove:
         assert list(fn(pd.DataFrame(columns=["x"]))) == [
             "Column 'x' still exists in DataFrame"
         ]
-
-    @pytest.mark.parametrize("columns, is_active", [([], False), (["x"], True)])
-    def test_is_active(self, columns: list[str], is_active: bool) -> None:
-        """Test .is_active if columns exist."""
-        assert removed(columns).is_active == is_active

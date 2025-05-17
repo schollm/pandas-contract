@@ -23,23 +23,14 @@ class Check(Protocol):  # pragma: no cover
 
     This is the base for all pandas_decorator.checks.
 
-    In order to create a new check, the attributes args and is_active as well as the
-    method mk_check must be implemented. Note that args and is_active can be either
+    In order to create a new check, the attribute args as well as the
+    method mk_check must be implemented. Note that arg can be either
     implemented as properties or attributes.
     """
 
     @property
     def args(self) -> Sequence[str]:
         """Get a list of all arguments."""
-        ...
-
-    @property
-    def is_active(self) -> bool:
-        """Whether the check is active.
-
-        This is used by the decorator to determine whether the check should be applied
-        at all. It can be set as attribute within ``__init__``.
-        """
         ...
 
     def mk_check(
@@ -72,10 +63,6 @@ class CheckSchema(Check):
     tail: int | None = None
     sample: int | None = None
     random_state: int | None = None
-
-    @property
-    def is_active(self) -> bool:
-        return self.schema is not None
 
     @property
     def args(self) -> list[str]:

@@ -71,11 +71,6 @@ class same_index_as(Check):  # noqa: N801
         """
         self.args = split_or_list(args)
 
-    @property
-    def is_active(self) -> bool:
-        """Whether the check is active."""
-        return bool(self.args)
-
     def mk_check(
         self, fn: Callable, args: tuple[Any, ...], kwargs: dict[str, Any]
     ) -> DataCheckFunctionT:
@@ -126,11 +121,6 @@ class same_length_as(Check):  # noqa: N801
             If it is a string, it will be split by commas.
         """
         self.args = split_or_list(args)
-
-    @property
-    def is_active(self) -> bool:
-        """Whether the check is active."""
-        return bool(self.args)
 
     def mk_check(
         self, fn: Callable, args: tuple[Any, ...], kwargs: dict[str, Any]
@@ -224,11 +214,6 @@ class extends(Check):  # noqa: N801
             raise TypeError(msg)
         self.args = (arg,) if arg else ()
         self.modified = CheckSchema(modified)
-
-    @property
-    def is_active(self) -> bool:
-        """Whether the check is active."""
-        return bool(self.args)
 
     def mk_check(
         self, fn: Callable, args: tuple[Any, ...], kwargs: dict[str, Any]
@@ -327,9 +312,8 @@ class is_(Check):  # noqa: N801
 
     """
 
-    __slots__ = ("args", "is_active")
+    __slots__ = ("args",)
     args: tuple[str, ...]
-    is_active: bool
 
     def __init__(self, arg: str | None) -> None:
         """Ensure result is identical to another DataFrame.
@@ -338,7 +322,6 @@ class is_(Check):  # noqa: N801
             DataFrame.
         """
         self.args = (arg,) if arg else ()
-        self.is_active = bool(self.args)
 
     def mk_check(
         self, fn: Callable, args: tuple[Any], kwargs: dict[str, Any]
@@ -368,9 +351,8 @@ class is_not(Check):  # noqa: N801
 
     """
 
-    __slots__ = ("args", "is_active")
+    __slots__ = ("args",)
     args: list[str]
-    is_active: bool
 
     def __init__(self, args: str | Iterable[str] | None, /) -> None:
         """Ensure that the result is not identical (`is` operator) to `others`.
@@ -380,7 +362,6 @@ class is_not(Check):  # noqa: N801
             If it is a string, it will be split by commas.
         """
         self.args = split_or_list(args)
-        self.is_active = bool(self.args)
 
     def mk_check(
         self, fn: Callable, args: tuple[Any, ...], kwargs: dict[str, Any]
@@ -413,11 +394,10 @@ class removed(Check):  # noqa: N801
     0  2
     """
 
-    __slots__ = ("columns", "is_active")
+    __slots__ = ("columns",)
 
     args: tuple[str, ...] = ()
     columns: set[Any]
-    is_active: bool
 
     def __init__(self, columns: list[Any]) -> None:
         """Ensure given columns are removed.
@@ -427,7 +407,6 @@ class removed(Check):  # noqa: N801
 
         """
         self.columns = set(columns)
-        self.is_active = bool(columns)
 
     def mk_check(
         self, fn: MyFunctionType, args: tuple, kwargs: dict[str, Any]

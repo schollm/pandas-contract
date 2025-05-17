@@ -7,7 +7,7 @@ Documentation for the :class:`pandas_contract.checks` module.
     :members:
     :member-order: alphabetical
     :show-inheritance:
-    :exclude-members: mk_check, is_active, args
+    :exclude-members: mk_check, args
     :special-members: __init__
 
 Check Protocol
