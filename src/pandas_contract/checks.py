@@ -25,13 +25,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
     from pandera.api.base.schema import BaseSchema
 
-__all__ = [
-    "extends",
-    "is_",
-    "is_not",
-    "same_index_as",
-    "same_length_as",
-]
+__all__ = ["extends", "is_", "is_not", "removed", "same_index_as", "same_length_as"]
 
 DataCheckFunctionT = Callable[[Union[pd.DataFrame, pd.Series]], Iterable[str]]
 
@@ -403,7 +397,7 @@ class removed(Check):  # noqa: N801
     """Ensure given columns are removed.
 
     :arg columns: List of columns that must not exist in the DataFrame. They can also
-        be dynamically created via meth:`pandas_contract.from_arg`.
+        be dynamically created via :meth:`~pandas_contract.from_arg`.
 
     **Example** Mark drop_x as dropping column x
 
