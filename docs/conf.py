@@ -24,12 +24,25 @@ copyright = "%Y Micha Scholl"  # noqa: A001
 author = "Micha Scholl"
 release = version = pyproject["project"]["version"]
 
+
+def linkcode_resolve(domain, info):
+    if domain != "py":
+        return None
+    if not info["module"]:
+        return None
+    filename = info["module"].replace(".", "/")
+    if filename == "pandas_contract":
+        filename = "pandas_contract/__init__"
+    return "https://github.com/schollm/pandas-contract/tree/main/src/%s.py" % filename
+
+
 # -- General configuration ---------------------------------------------------
 extensions = [
     "sphinx.ext.duration",
     "sphinx.ext.doctest",
     "sphinx.ext.autosummary",
     "sphinx.ext.intersphinx",
+    "sphinx.ext.linkcode",
     "myst_parser",
     "autodoc2",
 ]
