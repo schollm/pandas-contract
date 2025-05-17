@@ -58,5 +58,6 @@ Setup package
     public-api
     public-api-check
     module-mode
+    development.md
     migration.md
     details
