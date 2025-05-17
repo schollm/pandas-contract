@@ -4,7 +4,7 @@ Check functions
     :members:
     :member-order: alphabetical
     :show-inheritance:
-    :exclude-members: mk_check, is_active, all_args
+    :exclude-members: mk_check, is_active, args
 
 Check Protocol
 ~~~~~~~~~~~~~~
