@@ -143,7 +143,7 @@ def argument(
             if (mode := get_mode()).no_handling():
                 return fn(*args, **kwargs)
 
-            checkers = [check.mk_check(orig_fn, args, kwargs) for check in checks_list]
+            checkers = [check(orig_fn, args, kwargs) for check in checks_list]
             arg_value = get_fn_arg(orig_fn, arg, args, kwargs)
             df = _get_from_key(key, arg_value)
             errs = chain.from_iterable(check(df) for check in checkers)
@@ -290,7 +290,7 @@ def result(
             if (mode := get_mode()).no_handling():
                 return fn(*args, **kwargs)
 
-            checkers = [check.mk_check(orig_fn, args, kwargs) for check in checks_lst]
+            checkers = [check(orig_fn, args, kwargs) for check in checks_lst]
 
             res = fn(*args, **kwargs)
             df = _get_from_key(key, res)

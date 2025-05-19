@@ -62,7 +62,7 @@ class TestCheckExtends:
         """Test mk_check method of CheckExtends."""
         check = extends("df", modified=DataFrameSchema())
         out_df = pd.DataFrame({"a": [1]}, index=[0])
-        fn = check.mk_check(lambda df: df, (df_to_be_extend,), {})
+        fn = check(lambda df: df, (df_to_be_extend,), {})
         assert list(fn(out_df)) == expect
 
     def test_callable_key_in_modified(self) -> None:
@@ -94,7 +94,7 @@ class TestCheckExtends:
         check = extends("df", modified=DataFrameSchema())
         df = pd.DataFrame([])
         df2 = pd.Series([])
-        fn = check.mk_check(lambda df: df, (df,), {})
+        fn = check(lambda df: df, (df,), {})
         assert list(fn(df2)) == [
             "extends df: Backend DataFrameSchema not applicable to Series",
             "extends df: <input> not a DataFrame, got Series.",
@@ -104,7 +104,7 @@ class TestCheckExtends:
         """Test mk_check method of CheckExtends."""
         check = extends("df2", DataFrameSchema())
         df = pd.Series([])
-        fn = check.mk_check(lambda df2, df: df2, (df, df), {})
+        fn = check(lambda df2, df: df2, (df, df), {})
         assert list(fn(df)) == [
             "extends df2: Backend DataFrameSchema not applicable to Series",
             "extends df2: <input> not a DataFrame, got Series.",
@@ -115,14 +115,14 @@ class TestCheckExtends:
         """Test for extends(modified=None)."""
         check = extends("df", modified=None)
         df = pd.DataFrame({"a": [1]})
-        fn = check.mk_check(lambda df: None, (df,), {})
+        fn = check(lambda df: None, (df,), {})
         assert list(fn(df)) == []
 
     def test_modified_is_none__add_column(self) -> None:
         """Test for extends(modified=None) and new column is added."""
         check = extends("df", modified=None)
         df = pd.DataFrame({"a": [1]})
-        fn = check.mk_check(lambda df: None, (df,), {})
+        fn = check(lambda df: None, (df,), {})
         assert list(fn(df.assign(x=1))) == [
             "extends df: Columns differ: ['a', 'x'] != ['a']"
         ]
@@ -136,7 +136,7 @@ class TestCheckSchema:
         check = CheckSchema(
             schema=None, head=None, tail=None, sample=None, random_state=None
         )
-        res = check.mk_check(lambda _: 0, (), {})
+        res = check(lambda _: 0, (), {})
         assert res(pd.Series()) == []
 
     def test_key(self) -> None:
@@ -149,7 +149,7 @@ class TestCheckSchema:
                 }
             )
         )
-        check_fn = check.mk_check(lambda a_col, b_col: 0, ("a", "b"), {})
+        check_fn = check(lambda a_col, b_col: 0, ("a", "b"), {})
         assert list(check_fn(pd.DataFrame(columns=["a", "b"]))) == []
         errs = list(check_fn(pd.DataFrame(columns=["a", "x"])))
         assert len(errs) == 1
@@ -164,7 +164,7 @@ class TestIs:
         """Test for inplace argument."""
         res = is_("df")
         df = pd.DataFrame(index=[])
-        fn = res.mk_check(lambda df: df, (df,), {})
+        fn = res(lambda df: df, (df,), {})
         assert list(fn(df)) == []
         assert list(fn(df.copy())) == ["is not df"]
 
@@ -181,9 +181,9 @@ class TestCheckIsNot:
     """Test cases for CheckIsNot."""
 
     def test_check(self) -> None:
-        """Test is_not.mk_check."""
+        """Test is_not."""
         df = pd.DataFrame()
-        check_fn = is_not("df").mk_check(lambda df: None, (df,), {})
+        check_fn = is_not("df")(lambda df: None, (df,), {})
         assert list(check_fn(df.copy())) == []
         assert list(check_fn(df)) == ["is df"]
 
@@ -193,26 +193,26 @@ class TestCheckRemove:
 
     def test(self) -> None:
         """Base test."""
-        fn = removed(["x"]).mk_check(lambda: 0, (), {})
+        fn = removed(["x"])(lambda: 0, (), {})
         assert list(fn(pd.DataFrame(columns=["a"]))) == []
 
     def test_from_arg__single(self) -> None:
         """Test with column from_arg."""
-        fn = removed([from_arg("arg")]).mk_check(lambda arg: 0, ("x",), {})
+        fn = removed([from_arg("arg")])(lambda arg: 0, ("x",), {})
         assert list(fn(pd.DataFrame(columns=["x"]))) == [
             "Column 'x' still exists in DataFrame"
         ]
 
     def test_from_arg__multipe(self) -> None:
         """Test with column from_arg."""
-        fn = removed([from_arg("arg")]).mk_check(lambda arg: 0, (["x", "y"],), {})
+        fn = removed([from_arg("arg")])(lambda arg: 0, (["x", "y"],), {})
         assert list(fn(pd.DataFrame(columns=["x"]))) == [
             "Column 'x' still exists in DataFrame"
         ]
 
     def test_failing(self) -> None:
         """Test failing test."""
-        fn = removed(["x"]).mk_check(lambda: 0, (), {})
+        fn = removed(["x"])(lambda: 0, (), {})
         assert list(fn(pd.DataFrame(columns=["x"]))) == [
             "Column 'x' still exists in DataFrame"
         ]

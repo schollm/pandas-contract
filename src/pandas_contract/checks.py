@@ -71,7 +71,7 @@ class same_index_as(Check):  # noqa: N801
         """
         self.args = split_or_list(args)
 
-    def mk_check(
+    def __call__(
         self, fn: Callable, args: tuple[Any, ...], kwargs: dict[str, Any]
     ) -> DataCheckFunctionT:
         """Check the DataFrame and keep the index."""
@@ -215,7 +215,7 @@ class extends(Check):  # noqa: N801
         self.arg = arg
         self.modified = CheckSchema(modified)
 
-    def mk_check(
+    def __call__(
         self, fn: Callable, args: tuple[Any, ...], kwargs: dict[str, Any]
     ) -> DataCheckFunctionT:
         """Check the DataFrame and keep the index."""
@@ -223,7 +223,7 @@ class extends(Check):  # noqa: N801
         df_extends = get_df_arg(fn, arg, args, kwargs)
         modified_cols = self._get_modified_columns(fn, args, kwargs)
         hash_other = self._get_hash(df_extends, modified_cols)
-        check_modified = self.modified.mk_check(fn, args, kwargs)
+        check_modified = self.modified(fn, args, kwargs)
 
         def check(df: pd.DataFrame | pd.Series) -> Iterable[str]:
             """Check the DataFrame and keep the index."""
@@ -363,7 +363,7 @@ class is_not(Check):  # noqa: N801
         """
         self.args = split_or_list(args)
 
-    def mk_check(
+    def __call__(
         self, fn: Callable, args: tuple[Any, ...], kwargs: dict[str, Any]
     ) -> DataCheckFunctionT:
         """Create the check function."""
@@ -407,7 +407,7 @@ class removed(Check):  # noqa: N801
         """
         self.columns = set(columns)
 
-    def mk_check(
+    def __call__(
         self, fn: MyFunctionType, args: tuple, kwargs: dict[str, Any]
     ) -> DataCheckFunctionT:
         """Check function factory for removed."""
