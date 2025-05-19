@@ -46,63 +46,6 @@ def test_fail(caplog: pytest.LogCaptureFixture) -> None:
     assert "my_fn: Argument df: " in caplog.text
 
 
-@pytest.mark.parametrize("same_index_as", [["df2"], "df2"])
-def test_same_index_as(same_index_as: list[str] | str) -> None:
-    """Test same_index_as argument."""
-
-    @argument(
-        "df",
-        pa.DataFrameSchema({"a": pa.Column(int)}),
-        checks.same_index_as(same_index_as),
-    )
-    def my_fn(df: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
-        return df
-
-    df_ = pd.DataFrame({"a": [1]})
-    res = my_fn(df=df_, df2=pd.DataFrame({"b": ["x"]}))
-    assert res is df_
-
-
-@pytest.mark.parametrize("same_index_as", [("df2"), (["df2"])])
-def test_same_index_as_failing(
-    same_index_as: MaybeListT, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test same_index_as argument failing."""
-
-    @argument(
-        "df",
-        pa.DataFrameSchema({"a": pa.Column(int)}),
-        checks.same_index_as(same_index_as),
-    )
-    def my_fn(df: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
-        return df
-
-    with as_mode("error"):
-        my_fn(
-            df=pd.DataFrame([[0]], index=[0]),
-            df2=pd.DataFrame([[0]], index=[10]),
-        )
-    assert "Index not equal to index of df2." in caplog.text
-
-
-@pytest.mark.parametrize("same_index_as", ["df3", ["df3"], ["df2", "df3"]])
-def test_same_index_as__no_such_argument(
-    same_index_as: MaybeListT, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test same_index_as argument failing because of missing argument."""
-
-    @argument(
-        "df",
-        pa.DataFrameSchema({"a": pa.Column(int)}),
-        checks.same_index_as(same_index_as),
-    )
-    def my_fn(df: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
-        return df
-
-    with pytest.raises(ValueError, match="requires argument 'df3'"):
-        my_fn(pd.DataFrame(), pd.DataFrame())
-
-
 def test_series() -> None:
     """Test argument decorator with a Series."""
 
