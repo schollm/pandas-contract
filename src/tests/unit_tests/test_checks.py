@@ -163,6 +163,7 @@ class TestIs:
     def test(self) -> None:
         """Test for inplace argument."""
         res = is_("df")
+        assert res is not None
         df = pd.DataFrame(index=[])
         fn = res(lambda df: df, (df,), {})
         assert list(fn(df)) == []
@@ -172,22 +173,22 @@ class TestIs:
         """Test for inplace argument."""
         res = is_("")
         assert res is None
-        # df = pd.DataFrame(index=[])
-        # fn = res(lambda df: df, (df,), {})
-        # assert list(fn(df)) == []
-        # assert list(fn(df.copy())) == []
 
-    def test_argument(self):
+    def test_argument(self) -> None:
+        """Test with argument decorator."""
+
         @argument("df", is_("df2"))
-        def foo(df, df2):
+        def foo(df: pd.DataFrame, df2: pd.DataFrame) -> None:
             pass
 
         df = pd.DataFrame()
         foo(df, df)
 
-    def test_argument_none(self):
-        @argument("df", is_(None))
-        def foo(df, df2):
+    def test_argument_none(self) -> None:
+        """Test with is_(arg=None)."""
+
+        @argument("df", is_(""))
+        def foo(df: pd.DataFrame, df2: pd.DataFrame) -> None:
             pass
 
         df = pd.DataFrame()
@@ -200,7 +201,9 @@ class TestCheckIsNot:
     def test_check(self) -> None:
         """Test is_not."""
         df = pd.DataFrame()
-        check_fn = is_not("df")(lambda df: None, (df,), {})
+        check_factory = is_not("df")
+        assert check_factory is not None
+        check_fn = check_factory(lambda df: None, (df,), {})
         assert list(check_fn(df.copy())) == []
         assert list(check_fn(df)) == ["is df"]
 
@@ -210,26 +213,16 @@ class TestCheckRemove:
 
     def test(self) -> None:
         """Base test."""
-        fn = removed(["x"])(lambda: 0, (), {})
+        check_factory = removed(["x"])
+        assert check_factory
+        fn = check_factory(lambda: 0, (), {})
         assert list(fn(pd.DataFrame(columns=["a"]))) == []
 
-    def test_from_arg__single(self) -> None:
+    @pytest.mark.parametrize("arg_val", ["x", ["x", "y"]])
+    def test_from_arg__single(self, arg_val: Any) -> None:
         """Test with column from_arg."""
-        fn = removed([from_arg("arg")])(lambda arg: 0, ("x",), {})
-        assert list(fn(pd.DataFrame(columns=["x"]))) == [
-            "Column 'x' still exists in DataFrame"
-        ]
-
-    def test_from_arg__multipe(self) -> None:
-        """Test with column from_arg."""
-        fn = removed([from_arg("arg")])(lambda arg: 0, (["x", "y"],), {})
-        assert list(fn(pd.DataFrame(columns=["x"]))) == [
-            "Column 'x' still exists in DataFrame"
-        ]
-
-    def test_failing(self) -> None:
-        """Test failing test."""
-        fn = removed(["x"])(lambda: 0, (), {})
-        assert list(fn(pd.DataFrame(columns=["x"]))) == [
-            "Column 'x' still exists in DataFrame"
-        ]
+        check_factory = removed([from_arg("arg")])
+        assert check_factory
+        fn = check_factory(lambda arg: 0, (arg_val,), {})
+        df = pd.DataFrame(columns=["x"])
+        assert list(fn(df)) == ["Column 'x' still exists in DataFrame"]

@@ -21,7 +21,7 @@ from pandas_contract._lib import MyFunctionType, get_df_arg, split_or_list
 from pandas_contract._private_checks import Check, CheckSchema
 
 if TYPE_CHECKING:  # pragma: no cover
-    from collections.abc import Hashable
+    from collections.abc import Hashable, Sequence
 
     from pandera.api.base.schema import BaseSchema
 
@@ -30,7 +30,7 @@ __all__ = ["extends", "is_", "is_not", "removed", "same_index_as", "same_length_
 DataCheckFunctionT = Callable[[Union[pd.DataFrame, pd.Series]], Iterable[str]]
 
 
-class same_index_as(Check):  # noqa: N801
+def same_index_as(args_: str | Iterable[str] | None, /) -> Check | None:
     """Check that the DataFrame index is the same as another DataFrame.
 
     This check ensures that the index of the data-frame is identical to the dataframe of
@@ -39,6 +39,10 @@ class same_index_as(Check):  # noqa: N801
 
     The argument `arg` can be either a single argument name, a comma-separated list of
     argument names or an iterable of argument names.
+
+    :param args_: Argument that the result should have the same index as.
+        It can be either a string or an iterable of strings.
+        If it is a string, it will be split by commas.
 
     **Example**
     Simple example, checking that the result has the same index as both df1 and df2
@@ -58,29 +62,23 @@ class same_index_as(Check):  # noqa: N801
     ...     return df.join(df2)
 
     """
+    arg_names = split_or_list(args_)
+    if not arg_names:
+        return None
 
-    __slots__ = ("args",)
-    args: list[str]
-
-    def __init__(self, args: str | Iterable[str] | None, /) -> None:
-        """Ensure that the result has the same index as another dataframe.
-
-        :param args: Argument that the result should have the same index as.
-            It can be either a string or an iterable of strings.
-            If it is a string, it will be split by commas.
-        """
-        self.args = split_or_list(args)
-
-    def __call__(
-        self, fn: Callable, args: tuple[Any, ...], kwargs: dict[str, Any]
+    def mk_check(
+        fn: Callable, args: tuple[Any, ...], kwargs: dict[str, Any]
     ) -> DataCheckFunctionT:
         """Check the DataFrame and keep the index."""
-        indices = [(arg, get_df_arg(fn, arg, args, kwargs).index) for arg in self.args]
+        # must be a list - we must keep a copy of the index
+        indices = [get_df_arg(fn, arg, args, kwargs).index.copy() for arg in arg_names]
         return lambda df: (
             f"Index not equal to index of {other_arg}."
-            for other_arg, other_idx in indices
+            for other_arg, other_idx in zip(arg_names, indices)
             if not df.index.equals(other_idx)
         )
+
+    return mk_check
 
 
 def same_length_as(args_: str | Iterable[str] | None, /) -> Check | None:
@@ -91,6 +89,7 @@ def same_length_as(args_: str | Iterable[str] | None, /) -> Check | None:
 
     The argument `arg` can be either a single argument name, a comma-separated list of
     argument names or an iterable of argument names.
+
     :param args_: Argument that the result should have the same length as.
         It can be either a string or an iterable of strings.
         If it is a string, it will be split by commas.
@@ -289,8 +288,8 @@ class _HashErr(NamedTuple):
     err: str
 
 
-def is_(arg: str) -> Check | None:
-    """Ensures that the result is identical (`is` operator) to another dataframe.
+def is_(arg: str, /) -> Check | None:
+    """Ensure that the result is identical (`is` operator) to another dataframe.
 
     This check is most useful for the :class:`@result <pandas_contract.result>`
     decorator as it ensures that the output is changed in-place.
@@ -310,20 +309,23 @@ def is_(arg: str) -> Check | None:
     if not arg:
         return None
 
-    def check(fn, args, kwargs) -> DataCheckFunctionT:
-        return lambda df: (
+    return lambda fn, args, kwargs: (
+        lambda df: (
             [f"is not {arg}"] if df is not get_df_arg(fn, arg, args, kwargs) else []
         )
+    )
 
-    return check
 
-
-class is_not(Check):  # noqa: N801
-    """Ensures that the result is not identical (`is not` operator) to `others`.
+def is_not(args: Sequence[str] | str, /) -> Check | None:
+    """Ensure that the result is not identical (`is not` operator) to `others`.
 
     This check is most useful for the :class:`@result <pandas_contract.result>`
     decorator as it ensures that the output is not changed in-place.
     It is the opposite of the :func:`is_() <pandas_contract.checks.is_>` check.
+
+    :param args: Argument that the result should not be identical to.
+        It can be either a string or an iterable of strings.
+        If it is a string, it will be split by commas.
 
     **Example**
     Simple example, ensure that a copy is created.
@@ -334,32 +336,24 @@ class is_not(Check):  # noqa: N801
     ...    return df.assign(x=1)  # .assign creates a copy
 
     """
+    arg_names = split_or_list(args)
+    if not arg_names:
+        return None
 
-    __slots__ = ("args",)
-    args: list[str]
-
-    def __init__(self, args: str | Iterable[str] | None, /) -> None:
-        """Ensure that the result is not identical (`is` operator) to `others`.
-
-        :param args: Argument that the result should not be identical to.
-            It can be either a string or an iterable of strings.
-            If it is a string, it will be split by commas.
-        """
-        self.args = split_or_list(args)
-
-    def __call__(
-        self, fn: Callable, args: tuple[Any, ...], kwargs: dict[str, Any]
-    ) -> DataCheckFunctionT:
-        """Create the check function."""
-        return lambda df: (
+    return lambda fn, args, kwargs: (
+        lambda df: (
             f"is {other}"
-            for other in self.args
+            for other in arg_names
             if get_df_arg(fn, other.strip(), args, kwargs) is df
         )
+    )
 
 
-class removed(Check):  # noqa: N801
+def removed(columns: list[Any]) -> Check | None:
     """Ensure given columns are removed.
+
+    :arg columns: List of columns that must not exist in the DataFrame. They can
+        also be dynamically created via :meth:`~pandas_contract.from_arg`.
 
     **Example** Mark drop_x as dropping column x
 
@@ -373,38 +367,19 @@ class removed(Check):  # noqa: N801
     >>> @pc.result(pc.checks.removed([pc.from_arg("cols")]))
     ... def drop_cols(df: pd.DataFrame, cols: list[str]):
     ...    return df.drop(columns=cols)
-    >>> drop_cols(pd.DataFrame([[0, 1, 2]], columns=["a", "b", "c"]), cols=["a", "b"])
+    >>> df = pd.DataFrame([[0, 1, 2]], columns=["a", "b", "c"])
+    >>> drop_cols(df, cols=["a", "b"])
        c
     0  2
     """
-
-    __slots__ = ("columns",)
-
-    columns: set[Any]
-
-    def __init__(self, columns: list[Any]) -> None:
-        """Ensure given columns are removed.
-
-        :arg columns: List of columns that must not exist in the DataFrame. They can
-            also be dynamically created via :meth:`~pandas_contract.from_arg`.
-
-        """
-        self.columns = set(columns)
-
-    def __call__(
-        self, fn: MyFunctionType, args: tuple, kwargs: dict[str, Any]
-    ) -> DataCheckFunctionT:
-        """Check function factory for removed."""
-        return lambda df: (
-            f"Column {col!r} still exists in DataFrame"
-            for col in self._get_columns(fn, args, kwargs)
-            if col in df
-        )
+    columns_ = set(columns)
+    if not columns_:
+        return None
 
     def _get_columns(
-        self, fn: MyFunctionType, arg: tuple, kwargs: dict[str, Any]
+        fn: MyFunctionType, arg: tuple, kwargs: dict[str, Any]
     ) -> Iterable[Hashable]:
-        for col in self.columns:
+        for col in columns_:
             if callable(col):
                 col_from_fn = col(fn, arg, kwargs)
                 if isinstance(col_from_fn, list):
@@ -413,3 +388,11 @@ class removed(Check):  # noqa: N801
                     yield col_from_fn
             else:
                 yield col
+
+    return lambda fn, args, kwargs: (
+        lambda df: (
+            f"Column {col!r} still exists in DataFrame"
+            for col in _get_columns(fn, args, kwargs)
+            if col in df
+        )
+    )
