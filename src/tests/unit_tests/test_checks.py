@@ -172,7 +172,7 @@ class TestIs:
         """Test for inplace argument."""
         res = is_(None)
         df = pd.DataFrame(index=[])
-        fn = res.mk_check(lambda df: df, (df,), {})
+        fn = res(lambda df: df, (df,), {})
         assert list(fn(df)) == []
         assert list(fn(df.copy())) == []
 
