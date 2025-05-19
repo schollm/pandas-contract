@@ -122,7 +122,7 @@ class same_length_as(Check):  # noqa: N801
         """
         self.args = split_or_list(args)
 
-    def __call__(
+    def mk_check(
         self, fn: Callable, args: tuple[Any, ...], kwargs: dict[str, Any]
     ) -> DataCheckFunctionT:
         """Check the DataFrame and keep the index."""
@@ -323,7 +323,7 @@ class is_(Check):  # noqa: N801
         """
         self.arg = arg or ""
 
-    def __call__(
+    def mk_check(
         self, fn: Callable, args: tuple[Any], kwargs: dict[str, Any]
     ) -> DataCheckFunctionT:
         """Create a check function."""
