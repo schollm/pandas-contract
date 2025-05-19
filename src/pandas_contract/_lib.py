@@ -172,7 +172,7 @@ def get_fn_arg(
                 return arg
     if func.__kwdefaults__ is not None and arg_name in func.__kwdefaults__:
         return func.__kwdefaults__[arg_name]
-    msg = f"{func.__qualname__} does mot have argument '{arg_name}'"
+    msg = f"{func.__qualname__} requires argument '{arg_name}' for pandas_contract"
     raise ValueError(msg)
 
 

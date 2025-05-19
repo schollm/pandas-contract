@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import copy
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Callable, Protocol, Union, cast
 
@@ -23,15 +23,8 @@ class Check(Protocol):  # pragma: no cover
 
     This is the base for all pandas_decorator.checks.
 
-    In order to create a new check, the attribute args as well as the
-    method mk_check must be implemented. Note that arg can be either
-    implemented as properties or attributes.
+    In order to create a new check, the method mk_check must be implemented.
     """
-
-    @property
-    def args(self) -> Sequence[str]:
-        """Get a list of all arguments."""
-        ...
 
     def mk_check(
         self, fn: MyFunctionType, args: tuple, kwargs: dict[str, Any]
@@ -63,10 +56,6 @@ class CheckSchema(Check):
     tail: int | None = None
     sample: int | None = None
     random_state: int | None = None
-
-    @property
-    def args(self) -> list[str]:
-        return []
 
     def mk_check(
         self, fn: Callable, args: tuple[Any, ...], kwargs: dict[str, Any]

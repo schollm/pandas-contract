@@ -102,13 +102,15 @@ def test_result() -> None:
 )
 def test_unknown_arg(verify: WrappedT) -> None:
     """Test that the decorator raises an error for an unknown argument."""
+
+    @verify
+    def my_fn(a: int) -> None: ...
+
     with pytest.raises(
         ValueError,
-        match=(r"my_fn \@.* requires argument 'x' in function signature."),
+        match=(r"requires argument 'x'"),
     ):
-
-        @verify
-        def my_fn(a: int) -> None: ...
+        my_fn(0)
 
 
 class TestComplete:
