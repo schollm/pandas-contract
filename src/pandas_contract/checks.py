@@ -186,8 +186,8 @@ class extends(Check):  # noqa: N801
 
     """
 
-    __slots__ = ("args", "modified")
-    args: tuple[str, ...]
+    __slots__ = ("arg", "modified")
+    arg: str
     modified: CheckSchema
 
     def __init__(
@@ -203,7 +203,7 @@ class extends(Check):  # noqa: N801
         """
         if arg is None:
             self.modified = cast("CheckSchema", None)
-            self.args = ()
+            self.arg = ""
             return
 
         if modified is not None and not isinstance(modified, pa.DataFrameSchema):
@@ -212,14 +212,14 @@ class extends(Check):  # noqa: N801
                 f"pandera.DataFrameSchema, got {type(modified)}."
             )
             raise TypeError(msg)
-        self.args = (arg,) if arg else ()
+        self.arg = arg
         self.modified = CheckSchema(modified)
 
     def mk_check(
         self, fn: Callable, args: tuple[Any, ...], kwargs: dict[str, Any]
     ) -> DataCheckFunctionT:
         """Check the DataFrame and keep the index."""
-        arg = self.args[0]
+        arg = self.arg
         df_extends = get_df_arg(fn, arg, args, kwargs)
         modified_cols = self._get_modified_columns(fn, args, kwargs)
         hash_other = self._get_hash(df_extends, modified_cols)
@@ -313,7 +313,7 @@ class is_(Check):  # noqa: N801
     """
 
     __slots__ = ("args",)
-    args: tuple[str, ...]
+    arg: str
 
     def __init__(self, arg: str | None) -> None:
         """Ensure result is identical to another DataFrame.
@@ -321,7 +321,7 @@ class is_(Check):  # noqa: N801
         :param arg: Name of argument of the decorated function that contains the other
             DataFrame.
         """
-        self.args = (arg,) if arg else ()
+        self.arg = arg or ""
 
     def mk_check(
         self, fn: Callable, args: tuple[Any], kwargs: dict[str, Any]
@@ -329,8 +329,8 @@ class is_(Check):  # noqa: N801
         """Create a check function."""
         return lambda df: (
             f"is not {arg_name}"
-            for arg_name in self.args
-            if df is not get_df_arg(fn, arg_name, args, kwargs)
+            for arg_name in (self.arg,)
+            if arg_name and df is not get_df_arg(fn, arg_name, args, kwargs)
         )
 
 
@@ -396,7 +396,6 @@ class removed(Check):  # noqa: N801
 
     __slots__ = ("columns",)
 
-    args: tuple[str, ...] = ()
     columns: set[Any]
 
     def __init__(self, columns: list[Any]) -> None:

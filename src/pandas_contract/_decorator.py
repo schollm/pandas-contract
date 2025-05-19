@@ -16,16 +16,11 @@ from ._lib import (
     ValidateDictT,
     WrappedT,
     get_fn_arg,
-    has_fn_arg,
 )
 
 if TYPE_CHECKING:  # pragma: no cover
-    from collections.abc import Iterable
-
     import pandas as pd
 
-    from ._lib import MyFunctionType
-    from ._private_checks import Check
 
 _T = TypeVar("_T", bound=Callable[..., Any])
 """"Type variable for the function type."""
@@ -142,9 +137,6 @@ def argument(
             return fn
 
         orig_fn = getattr(fn, ORIGINAL_FUNCTION_ATTRIBUTE, fn)
-        _check_fn_args(
-            f"@argument({arg!r})", orig_fn, _collect_args([arg], checks_list)
-        )
 
         @functools.wraps(fn)
         def wrapper(*args: Any, **kwargs: Any) -> _T:
@@ -292,7 +284,6 @@ def result(
         if get_mode() == Modes.SKIP:
             return fn
         orig_fn = getattr(fn, ORIGINAL_FUNCTION_ATTRIBUTE, fn)
-        _check_fn_args("@result", orig_fn, _collect_args([], checks_lst))
 
         @functools.wraps(fn)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
@@ -328,22 +319,3 @@ def _get_from_key(key: Any, input_: Any) -> pd.DataFrame:
     if callable(key):
         return cast("pd.DataFrame", key(input_))
     return input_[key]
-
-
-def _check_fn_args(prefix: str, fn: MyFunctionType, args: Iterable[str]) -> None:
-    """Check if the function has the required arguments."""
-    if setup_errs := [
-        f"{fn.__qualname__} {prefix} requires argument {arg!r} in function signature."
-        for arg in args
-        if not has_fn_arg(fn, arg)
-    ]:
-        raise ValueError("\n".join(setup_errs))
-
-
-def _collect_args(args: Iterable[str], checks: Iterable[Check]) -> Iterable[str]:
-    """Get a list of all required argument that are required by the checks and also add
-    extra args via args.
-    """
-    yield from args
-    for check in checks:
-        yield from check.args

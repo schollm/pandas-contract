@@ -100,7 +100,7 @@ def test_default(fn_: MyFunctionType) -> None:
 )
 def test_no_such_argument(fn_: MyFunctionType) -> None:
     """Test that ValueError is raised when the argument is not found."""
-    with pytest.raises(ValueError, match="<lambda> does mot have argument 'b'"):
+    with pytest.raises(ValueError, match="<lambda> requires argument 'b'"):
         get_fn_arg(fn_, "b", (1,), {})
 
 

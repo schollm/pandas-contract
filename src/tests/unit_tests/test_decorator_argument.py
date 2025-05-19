@@ -90,15 +90,17 @@ def test_same_index_as__no_such_argument(
     same_index_as: MaybeListT, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test same_index_as argument failing because of missing argument."""
-    with pytest.raises(ValueError, match="requires argument 'df3'"):
 
-        @argument(
-            "df",
-            pa.DataFrameSchema({"a": pa.Column(int)}),
-            checks.same_index_as(same_index_as),
-        )
-        def my_fn(df: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
-            return df
+    @argument(
+        "df",
+        pa.DataFrameSchema({"a": pa.Column(int)}),
+        checks.same_index_as(same_index_as),
+    )
+    def my_fn(df: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
+        return df
+
+    with pytest.raises(ValueError, match="requires argument 'df3'"):
+        my_fn(pd.DataFrame(), pd.DataFrame())
 
 
 def test_series() -> None:
@@ -189,17 +191,21 @@ class TestFromArg:
             """Test function."""
             return len(df[a_col])
 
-        with pytest.raises(ValueError, match=r"my_fn does mot have argument 'x_col'"):
+        with pytest.raises(ValueError, match=r"my_fn requires argument 'x_col'"):
             my_fn(df=pd.DataFrame({"a": [1]}), a_col="a")
 
     def test_no_such_column(self) -> None:
         """Test from_arg function failing."""
-        with pytest.raises(ValueError, match=r"requires argument 'xxx'"):
 
-            @argument("df", checks.same_index_as("xxx"))
-            def my_fn(df: pd.DataFrame) -> int:
-                """Test function."""
-                return len(df)
+        @argument("df", checks.same_index_as("xxx"))
+        def my_fn(df: pd.DataFrame) -> int:
+            """Test function."""
+            return len(df)
+
+        with pytest.raises(
+            ValueError, match=r"my_fn requires argument 'xxx' for pandas_contract"
+        ):
+            my_fn(pd.DataFrame())
 
 
 def test_no_handling__in_setup() -> None:
