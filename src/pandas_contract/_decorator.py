@@ -29,7 +29,7 @@ _T = TypeVar("_T", bound=Callable[..., Any])
 def argument(
     arg: str,
     /,
-    *checks_: _checks.Check | BaseSchema,
+    *checks_: _checks.Check | BaseSchema | None,
     key: KeyT = UNDEFINED,
     validate_kwargs: ValidateDictT | None = None,
 ) -> WrappedT:
@@ -159,7 +159,7 @@ def argument(
 
 
 def result(
-    *checks_: _checks.Check | BaseSchema,
+    *checks_: _checks.Check | BaseSchema | None,
     key: Any = UNDEFINED,
     validate_kwargs: ValidateDictT | None = None,
 ) -> WrappedT:
