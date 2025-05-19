@@ -130,6 +130,7 @@ def argument(
         if isinstance(check, BaseSchema)
         else check
         for check in checks_
+        if check
     ]
 
     def wrapped(fn: _T) -> _T:
@@ -278,6 +279,7 @@ def result(
         if isinstance(check, BaseSchema)
         else check
         for check in checks_
+        if check
     ]
 
     def wrapped(fn: _T) -> _T:
