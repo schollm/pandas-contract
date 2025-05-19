@@ -1,3 +1,7 @@
+"""Tests for pandas_contract.checks.same_index_as."""
+
+from __future__ import annotations
+
 import pandas as pd
 import pandera as pa
 import pytest
