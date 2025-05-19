@@ -18,6 +18,12 @@ if TYPE_CHECKING:  # pragma: no cover
 DataCheckFunctionT = Callable[[Union[pd.DataFrame, pd.Series]], Iterable[str]]
 
 
+def noop_check_fn(
+    fn: MyFunctionType, args: tuple, kwargs: dict[str, Any]
+) -> DataCheckFunctionT:
+    return lambda _: []
+
+
 class Check(Protocol):  # pragma: no cover
     """Protocol for a DataFrame or Series check class.
 

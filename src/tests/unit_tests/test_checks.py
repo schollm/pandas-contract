@@ -9,7 +9,7 @@ import pandera as pa
 import pytest
 from pandera import DataFrameSchema, SeriesSchema
 
-from pandas_contract import from_arg, result
+from pandas_contract import argument, from_arg, result
 from pandas_contract._private_checks import CheckSchema
 from pandas_contract.checks import (
     extends,
@@ -170,11 +170,28 @@ class TestIs:
 
     def test_check_none(self) -> None:
         """Test for inplace argument."""
-        res = is_(None)
-        df = pd.DataFrame(index=[])
-        fn = res.mk_check(lambda df: df, (df,), {})
-        assert list(fn(df)) == []
-        assert list(fn(df.copy())) == []
+        res = is_("")
+        assert res is None
+        # df = pd.DataFrame(index=[])
+        # fn = res(lambda df: df, (df,), {})
+        # assert list(fn(df)) == []
+        # assert list(fn(df.copy())) == []
+
+    def test_argument(self):
+        @argument("df", is_("df2"))
+        def foo(df, df2):
+            pass
+
+        df = pd.DataFrame()
+        foo(df, df)
+
+    def test_argument_none(self):
+        @argument("df", is_(None))
+        def foo(df, df2):
+            pass
+
+        df = pd.DataFrame()
+        foo(df, df)
 
 
 class TestCheckIsNot:

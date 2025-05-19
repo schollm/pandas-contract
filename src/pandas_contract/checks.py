@@ -83,7 +83,7 @@ class same_index_as(Check):  # noqa: N801
         )
 
 
-class same_length_as(Check):  # noqa: N801
+def same_length_as(args_: str | Iterable[str] | None, /) -> Check | None:
     """Check that the DataFrame length is the same as another DataFrame.
 
     This check ensures that the lenth of the data-frames are identical.
@@ -91,6 +91,9 @@ class same_length_as(Check):  # noqa: N801
 
     The argument `arg` can be either a single argument name, a comma-separated list of
     argument names or an iterable of argument names.
+    :param args_: Argument that the result should have the same length as.
+        It can be either a string or an iterable of strings.
+        If it is a string, it will be split by commas.
 
     **Example** Simple check that the result length is the same as both df1 and df2.
 
@@ -109,30 +112,23 @@ class same_length_as(Check):  # noqa: N801
     ...     return df.join(df2)
 
     """
-
-    __slots__ = ("args",)
-    args: list[str]
-
-    def __init__(self, args: str | Iterable[str] | None, /) -> None:
-        """Ensure that the result has the same length as another dataframe.
-
-        :param same_length_as: Argument that the result should have the same length as.
-            It can be either a string or an iterable of strings.
-            If it is a string, it will be split by commas.
-        """
-        self.args = split_or_list(args)
+    arg_names = split_or_list(args_)
+    if not arg_names:
+        return None
 
     def mk_check(
-        self, fn: Callable, args: tuple[Any, ...], kwargs: dict[str, Any]
+        fn: Callable, args: tuple[Any, ...], kwargs: dict[str, Any]
     ) -> DataCheckFunctionT:
         """Check the DataFrame and keep the index."""
-        lengths = [(arg, len(get_df_arg(fn, arg, args, kwargs))) for arg in self.args]
+        lengths = [(arg, len(get_df_arg(fn, arg, args, kwargs))) for arg in arg_names]
 
         return lambda df: (
             f"Length of {other_arg} = {other_len} != {len(df)}."
             for other_arg, other_len in lengths
             if len(df) != other_len
         )
+
+    return mk_check
 
 
 class extends(Check):  # noqa: N801
@@ -293,7 +289,7 @@ class _HashErr(NamedTuple):
     err: str
 
 
-class is_(Check):  # noqa: N801
+def is_(arg: str) -> Check | None:
     """Ensures that the result is identical (`is` operator) to another dataframe.
 
     This check is most useful for the :class:`@result <pandas_contract.result>`
@@ -311,27 +307,15 @@ class is_(Check):  # noqa: N801
     ...    return df
 
     """
+    if not arg:
+        return None
 
-    __slots__ = ("args",)
-    arg: str
-
-    def __init__(self, arg: str | None) -> None:
-        """Ensure result is identical to another DataFrame.
-
-        :param arg: Name of argument of the decorated function that contains the other
-            DataFrame.
-        """
-        self.arg = arg or ""
-
-    def mk_check(
-        self, fn: Callable, args: tuple[Any], kwargs: dict[str, Any]
-    ) -> DataCheckFunctionT:
-        """Create a check function."""
+    def check(fn, args, kwargs) -> DataCheckFunctionT:
         return lambda df: (
-            f"is not {arg_name}"
-            for arg_name in (self.arg,)
-            if arg_name and df is not get_df_arg(fn, arg_name, args, kwargs)
+            [f"is not {arg}"] if df is not get_df_arg(fn, arg, args, kwargs) else []
         )
+
+    return check
 
 
 class is_not(Check):  # noqa: N801
