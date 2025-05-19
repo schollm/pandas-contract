@@ -21,6 +21,7 @@ DataCheckFunctionT = Callable[[Union[pd.DataFrame, pd.Series]], Iterable[str]]
 def noop_check_fn(
     fn: MyFunctionType, args: tuple, kwargs: dict[str, Any]
 ) -> DataCheckFunctionT:
+    del fn, args, kwargs
     return lambda _: []
 
 
