@@ -196,8 +196,8 @@ class extends(Check):  # noqa: N801
         :param arg: Argument that this DataFrame extends.
         :param modified: Pandera SchemaDefinition.
         """
-        if arg is None:
-            self.modified = cast("CheckSchema", None)
+        if not arg:
+            self.modified = cast("CheckSchema", modified)
             self.arg = ""
             return
 
