@@ -4,12 +4,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] - 2025-05-20
+### Changed
+- Internal: pandas_contract.checks can now be a function. Removed attributes `args` and 
+  `is_active` and renamed `mk_check` to `__call__` in the protocol.
+### Added
+- Official Python 3.13 support.
+
 ## [0.8.1] - 2025-05-17
 ### Added
 - `checks.removed`: Define a column to be non-existent.
 - Documentation: Links to source
 - Documentation: Add development guide
 - Test: Run doctest in CI
+### Fixed
+- Examples in docstrings
 
 ## [0.8.0] - 2025-05-16
 ### Changed
@@ -22,7 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add more documentation
 
 ## [0.7.0] - 2025-05-15
-### Changes
+### Changed
 - pandas_contract.argument first argument is positional only (aligned with argument2)
 - pandas_contract.argument/result V1 checks are keyword only.
 - Rename checks.extends second argument from schema to modified.
@@ -37,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Documentation: Fixed multiple entries in TOC
 - Documentation: Document use of PANDAS_CONTRACT_MODE
+
 ## [0.6.3] - 2025-05-11
 ### Changed
 - Fix examples in docstrings.
@@ -53,21 +63,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Documentation is now on [pandas-contract.readthedocs.io/](https://pandas-contract.readthedocs.io/en/latest/)
 ## [0.6.0] - 2025-04-17
-### Changes
+### Changed
 - `pa.result.inplace` renamed to `pa.result.is_`.
 ### Added
 - Add `pa.result.is_not: str | Sequence[str]` to check if the result is not
   identical to the given parameters.
-### Bugfixes
+### Fixed
 - Fix error message in case the `.extend` check does not get a valid argument. 
 - Many documentation fixes to make docstrings sphinx compatible.
 
 ## [0.5.0] - 2025-04-15
-### Changes
-- Add .github/workflow/testing.yml (Internal change)
+### Changed
+- **Internal** Add .github/workflow/testing.yml
 
 ## [0.5.0] - 2025-04-14
-### Bugfix
+### Fixed
 -  Correct error message in case other type is not correct in the extends check.
 ### Added
 - Add `DEBUG` mode to `set_mode`/`as_mode` handler.
@@ -79,9 +89,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `res is $(result.inplace)` is true.
 
 ## [0.3.0] - 2025-04-14
-### Bugfixes
+### Fixed
 - Allow multiple pandas contract checkers attached to a single function
-### Changes
+### Changed
 - By default, be silent.
   - This means that if a contract check fails, it will not output anything.
   - You can still use the `raises` and `as_mode`. For tests, its recommended to
@@ -105,11 +115,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   def func(df: pd.DataFrame, group_cols: list[str]) -> pd.DataFrame:
       return df.assign(**{col: df[col].astype(str) for col in group_cols})
   ```
-### Fixes
+### Fixed
 - Add docstring for argument `eztend` to result decorator
 
 ## [0.1.1] - 2025-03-31
-### Fix
+### Fixed
 - Fix project links in pyproject.toml
 
 ## [0.1.0] - 2025-03-31
