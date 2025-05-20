@@ -11,10 +11,16 @@ from pandas_contract.checks import removed
 
 def test() -> None:
     """Base test."""
-    check_factory = removed(["x"])
+    check_factory = removed(["aa"])
     assert check_factory
     fn = check_factory(lambda: 0, (), {})
     assert list(fn(pd.DataFrame(columns=["a"]))) == []
+
+
+def test_no_test() -> None:
+    """Base test."""
+    check_factory = removed([])
+    assert check_factory is None
 
 
 @pytest.mark.parametrize("arg_val", ["x", ["x", "y"]])
