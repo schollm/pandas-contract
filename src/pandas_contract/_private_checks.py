@@ -18,15 +18,25 @@ if TYPE_CHECKING:  # pragma: no cover
 DataCheckFunctionT = Callable[[Union[pd.DataFrame, pd.Series]], Iterable[str]]
 
 
+def noop_check_fn(
+    fn: MyFunctionType, args: tuple, kwargs: dict[str, Any]
+) -> DataCheckFunctionT:
+    del fn, args, kwargs
+    return lambda _: []
+
+
 class Check(Protocol):  # pragma: no cover
     """Protocol for a DataFrame or Series check class.
 
-    This is the base for all pandas_decorator.checks.
+    A check is a callable that returns a check function.
 
-    In order to create a new check, the method mk_check must be implemented.
+    The check function gets the wrapped function fn, its arguments and kwargs as input.
+     It returns a function that takes a single argument, the value to check
+    (the DataFrame/Series object) and yields a list of errors as strings.
+
     """
 
-    def mk_check(
+    def __call__(
         self, fn: MyFunctionType, args: tuple, kwargs: dict[str, Any]
     ) -> DataCheckFunctionT:
         """Check function factory.
@@ -57,7 +67,7 @@ class CheckSchema(Check):
     sample: int | None = None
     random_state: int | None = None
 
-    def mk_check(
+    def __call__(
         self, fn: Callable, args: tuple[Any, ...], kwargs: dict[str, Any]
     ) -> DataCheckFunctionT:
         if self.schema is None:
