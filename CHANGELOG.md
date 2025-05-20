@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] - 2025-05-20
+### Changed
+- Internal: pandas_contract.checks can now be a function. Removed attributes `args` and 
+  `is_active` and renamed `mk_check` to `__call__` in the protocol.
+### Added
+- Official Python 3.13 support.
+
 ## [0.8.1] - 2025-05-17
 ### Added
 - `checks.removed`: Define a column to be non-existent.
