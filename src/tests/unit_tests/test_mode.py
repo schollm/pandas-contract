@@ -112,6 +112,12 @@ def test_mode_logging(mode: Modes, caplog: pytest.LogCaptureFixture) -> None:
     assert "prefix: err" in caplog.text
 
 
+def test_set_mode_invalid() -> None:
+    """Test that an invalid mode raises a ValueError."""
+    with pytest.raises(ValueError, match="invalid"):
+        set_mode(cast("ModesT", "invalid"))
+
+
 @pytest.mark.parametrize(
     "env, expected, log_msg",
     [
