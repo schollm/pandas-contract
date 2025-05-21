@@ -40,11 +40,11 @@ import enum
 import os
 from contextlib import contextmanager
 from logging import getLogger
-from typing import TYPE_CHECKING, Literal, Union
+from typing import TYPE_CHECKING, Literal, Union, cast
 
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Iterable, Iterator
-
+PANDAS_CONTRACT_MODE_ENV = "PANDAS_CONTRACT_MODE"
 ModesT = Union[
     "Modes",
     Literal[
@@ -113,9 +113,6 @@ class Modes(enum.Enum):
         if isinstance(other, str):
             return self.value == other
         return super().__eq__(other)
-
-
-_MODE: Modes = Modes(os.getenv("PANDAS_CONTRACT_MODE", "silent"))
 
 
 def get_mode() -> Modes:
@@ -202,3 +199,26 @@ def silent() -> Iterator[None]:
     """
     with as_mode(Modes.SILENT):
         yield
+
+
+def _get_mode_from_env() -> Modes:
+    """Set the mode from the environment variable PANDAS_CONTRACT_MODE."""
+    mode_env = os.getenv(PANDAS_CONTRACT_MODE_ENV)
+    if not mode_env:
+        logger.info(
+            "No environment variable %s set. Default to silent.",
+            PANDAS_CONTRACT_MODE_ENV,
+        )
+        return set_mode(Modes.SILENT)
+    try:
+        return set_mode(cast("ModesT", mode_env))
+    except ValueError:
+        logger.warning(
+            "Environment variable %s contains invalid value. "
+            "Setting to default mode: silent",
+            PANDAS_CONTRACT_MODE_ENV,
+        )
+        return set_mode(Modes.SILENT)
+
+
+_MODE: Modes = _get_mode_from_env()

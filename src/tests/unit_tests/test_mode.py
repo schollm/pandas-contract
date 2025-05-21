@@ -1,13 +1,24 @@
 """Test the mode module."""
 
 from collections.abc import Generator
+from typing import TYPE_CHECKING, cast
 
 import pytest
 
-from pandas_contract.mode import Modes, as_mode, get_mode, raises, silent
+from pandas_contract import set_mode
 from pandas_contract.mode import (
-    logger as mode_logger,
+    PANDAS_CONTRACT_MODE_ENV,
+    Modes,
+    _get_mode_from_env,
+    as_mode,
+    get_mode,
+    raises,
+    silent,
 )
+from pandas_contract.mode import logger as mode_logger
+
+if TYPE_CHECKING:
+    from pandas_contract.mode import ModesT
 
 
 @pytest.fixture(autouse=True)
@@ -97,3 +108,34 @@ def test_mode_logging(mode: Modes, caplog: pytest.LogCaptureFixture) -> None:
     """Test SILENT handling."""
     mode.handle(["err"], "prefix: ")
     assert "prefix: err" in caplog.text
+
+
+@pytest.mark.parametrize(
+    "env, expected, log_msg",
+    [
+        ("silent", Modes.SILENT, ""),
+        ("error", Modes.ERROR, ""),
+        (
+            "invalid",
+            Modes.SILENT,
+            "Environment variable PANDAS_CONTRACT_MODE contains invalid value. Setting"
+            " to default mode: silent",
+        ),
+        (
+            "",
+            Modes.SILENT,
+            "No environment variable PANDAS_CONTRACT_MODE set. Default to silent.",
+        ),
+    ],
+)
+def test_mode_from_env(
+    env: str,
+    expected: Modes,
+    log_msg: str,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test _get_mode_from_env."""
+    monkeypatch.setenv(PANDAS_CONTRACT_MODE_ENV, env)
+    assert _get_mode_from_env() == expected
+    assert log_msg in caplog.text
