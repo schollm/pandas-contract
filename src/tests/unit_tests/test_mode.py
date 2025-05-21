@@ -24,8 +24,11 @@ if TYPE_CHECKING:
 @pytest.fixture(autouse=True)
 def set_default_mode() -> Generator[None, None, None]:
     """Set the default mode to raise."""
+    level = mode_logger.getEffectiveLevel()
+    mode_logger.setLevel(-10)
     with as_mode("raise"):
         yield
+    mode_logger.setLevel(level)
 
 
 @pytest.mark.parametrize(
@@ -33,7 +36,6 @@ def set_default_mode() -> Generator[None, None, None]:
 )
 def test_modes_handler_logging(caplog: pytest.LogCaptureFixture, mode: Modes) -> None:
     """Test that the mode handler logs the messages."""
-    mode_logger.setLevel(-10)
     mode.handle(["test-msg"], "prefix: ")
     assert "prefix: test-msg" in caplog.text
 
