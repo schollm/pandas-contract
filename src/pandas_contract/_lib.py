@@ -50,8 +50,7 @@ class KeyT(Protocol):
     The key can also be an arbitrary function that takes the input arg and has to
     return the DataFrame/Series to check.
 
-    This can be used to create a Series, which is then checkable out of non-checkable
-    Data:
+    This can be used to create a Series, which is then checkable:
 
     >>> @pc.result(pa.SeriesSchema(int), key=pd.Series)
     ... def f1():
@@ -70,7 +69,7 @@ class KeyT(Protocol):
     ...     pa.DataFrameSchema({"name": pa.Column(str)}),
     ...     key=lambda res: res[fn_as_key],
     ... )
-    ... def return_generators():
+    ... def return_function_to_df():
     ...     # f1 is a key to a dictionary holding the data frame to be tested.
     ...     return {
     ...         fn_as_key: pd.DataFrame([{"name": "f1"}])
@@ -107,7 +106,7 @@ def from_arg(arg: str) -> Callable[[MyFunctionType, tuple[Any], dict[str, Any]],
 
     Returns a call-back function that can be used to get the named argument from the
     function call. In combination with pandas_contract integration of pandera, it can
-    be used to speciy required columns that come from a function argument.
+    be used to specify required columns that come from a function argument.
 
     It will inspect all arguments provided to the function as well as the default
     values.

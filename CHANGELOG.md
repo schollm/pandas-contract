@@ -6,6 +6,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.9.1] - 2025-05-21
 ### Changed
 - Do not crash if the environment variable PANDAS_CONTRACT_MODE contains an invalid mode.
+## [Planned]
+- Use pandas extra dependency group
+- Use explicit pandera.pandas interface
+
+## [Upcoming]
+### Changed
+- Documentation: Expand and fix typos
+
+## [0.9.1] - 2025-05-21
+### Changed
+- Do not crash if the environment variable PANDAS_CONTRACT_MODE contains an invalid mode.
 
 ## [0.9.0] - 2025-05-20
 ### Changed

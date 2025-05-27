@@ -70,7 +70,6 @@ intersphinx_mapping = {
     "sphinx": ("https://www.sphinx-doc.org/en/master/", None),
     "pandera": ("https://pandera.readthedocs.io/en/stable/", None),
 }
-intersphinx_disabled_domains = ["std"]
 html_theme_options = {"navigation_depth": 2}
 templates_path = ["_out/_templates"]
 # -- Options for EPUB output

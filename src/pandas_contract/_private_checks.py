@@ -24,7 +24,7 @@ class Check(Protocol):  # pragma: no cover
     A check is a callable that returns a check function.
 
     The check function gets the wrapped function fn, its arguments and kwargs as input.
-     It returns a function that takes a single argument, the value to check
+    It returns a function that takes a single argument, the value to check
     (the DataFrame/Series object) and yields a list of errors as strings.
 
     """
