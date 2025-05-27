@@ -30,7 +30,7 @@ requires-python = ">=3.9"
 dependencies = [
     # Keep in sync with .github/workflows/python.yml
     "pandas>=1.4.0",
-    "pandera>=0.10.0",
+    "pandera[pandas]>=0.10.0",
 ]
 [project.urls]
 homepage= "https://pandas-contract.readthedocs.io/en/latest/"

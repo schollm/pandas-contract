@@ -735,7 +735,7 @@ docs = [
 [package.metadata]
 requires-dist = [
     { name = "pandas", specifier = ">=1.4.0" },
-    { name = "pandera", specifier = ">=0.10.0" },
+    { name = "pandera", extras = ["pandas"], specifier = ">=0.10.0" },
 ]
 
 [package.metadata.requires-dev]
