@@ -15,8 +15,9 @@ By default, the contract violation will be silenced.
     >>> # print warn messages on standard log.
     >>> pc.set_mode("warn") # doctest: +SKIP
 
-    Alternatively, the environment variable PANDAS_CONTRACT_MODE can be set to one of
-    the values of
+    Alternatively, the environment variable
+    :class:`PANDAS_CONTRACT_MODE <PANDAS_CONTRACT_MODE_ENV>`
+    can be set to one of the values of :class:`~pandas_contract.mode.ModesT`.
 
     It is recommended to set the mode once in the main module of your application.
     For tests, this can be overwritten in the test-setup.
@@ -24,6 +25,7 @@ By default, the contract violation will be silenced.
 For specific runs, the context generators :meth:`~pandas_contract.mode.as_mode` and the
 short-cuts :meth:`pc.raises() <pandas_contract.mode.raises>` and
 :meth:`pc.silent() <pandas_contract.mode.silent>` can be used to set the mode.
+Note, that these are not thread-safe, so they should not be used in parallel.
 
 >>> import pandas_contract as pc
 >>> # print warn messages on standard log.
@@ -44,7 +46,12 @@ from typing import TYPE_CHECKING, Literal, Union, cast
 
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Iterable, Iterator
+
+#: Environment variable to set the mode for the pandas-contract library.
+#: Can be one of the literal values of :class:`~ModesT`.
 PANDAS_CONTRACT_MODE_ENV = "PANDAS_CONTRACT_MODE"
+
+#: List of valid modes for the pandas-contract library.
 ModesT = Union[
     "Modes",
     Literal[
@@ -128,12 +135,12 @@ def as_mode(mode: ModesT) -> Iterator[None]:
     >>> import pandas_contract as pc
     >>> @pc.result(pc.checks.same_index_as("df"))
     ... def problematic_call(df):
-    ...    return df.reset_index(drop=True)
-
+    ...    return df.reset_index()
+    ...
     >>> with as_mode("warn"):
     ...     problematic_call(pd.DataFrame({"a": [1]}, index=[10]))
-       a
-    0  1
+       index  a
+    0     10  1
     """
     prev_mode = _MODE
     set_mode(mode)
@@ -147,8 +154,8 @@ def set_mode(mode: ModesT) -> Modes:
     """Set the global mode for handling errors.
     This function should be set at initialization of the application.
 
-    Note that if mode == "skip", then once a module has been imported once, the
-    decorator cannot be activated anymore.
+    Note that if mode equals ``"skip"`` / :class:`Modes.SKIP`, then once a module has
+    been imported, the decorator cannot be activated anymore.
 
     **Example to set the mode to raise an exception on error**
 
