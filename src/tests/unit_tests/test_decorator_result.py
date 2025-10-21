@@ -158,7 +158,7 @@ def test_result_extends__fail_change_idx() -> None:
     def my_fn(df: pd.DataFrame) -> pd.DataFrame:
         return df.assign(a=1).set_index([10])
 
-    with pytest.raises(KeyError, match="None of .10. are"):
+    with pytest.raises(KeyError, match=r"None of .10. are"):
         my_fn(pd.DataFrame(index=[0]))
 
 

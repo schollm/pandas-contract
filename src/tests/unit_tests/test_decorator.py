@@ -5,7 +5,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Callable
 
 import pandas as pd
-import pandera as pa
+
+try:
+    import pandera.pandas as pa
+except ImportError:
+    import pandera as pa
 import pytest
 from pandas import DataFrame
 
@@ -64,7 +68,7 @@ class TestArgument:
         """Test Extends check failing."""
         df = pd.DataFrame({"a": 1, "b": 2}, index=[1, 2])
         with pytest.raises(
-            ValueError, match="foo: Argument df: extends df2: Column 'b' was changed."
+            ValueError, match=r"foo: Argument df: extends df2: Column 'b' was changed."
         ):
             foo(df.assign(b=10), df, df)
 
@@ -75,14 +79,14 @@ class TestArgument:
         def foo_int(dfs: list[pd.DataFrame]) -> None:
             pass
 
-        df = pd.DataFrame({"a_col": [1]})
+        df = pd.DataFrame({"a_col": pd.Series([1], dtype=int)})
         foo_int([df, df])
 
         with pytest.raises(IndexError, match="list index out of range"):
             foo_int([df])
 
-        with pytest.raises(KeyError, match="a_col"):
-            foo_int([df.drop("a_col")])
+        with pytest.raises(ValueError, match="a_col"):
+            foo_int([df, df.drop(columns="a_col")])
 
 
 def test_result() -> None:
@@ -181,7 +185,7 @@ class TestComplete:
         """Change index of one input."""
         df_new = pd.DataFrame(df.to_dict(orient="list"), index=[100, 200])
         with pytest.raises(
-            ValueError, match="Argument ds: Index not equal to index of df."
+            ValueError, match=r"Argument ds: Index not equal to index of df."
         ):
             self.my_fn(df_new, df2, ds=ds)
 
@@ -196,7 +200,7 @@ class TestComplete:
             return df.assign(x=1, extra=0)
 
         with pytest.raises(
-            ValueError, match="Output: extends df: Columns differ.*'extra'."
+            ValueError, match=r"Output: extends df: Columns differ.*'extra'."
         ):
             self.my_fn(df, df2, ds=ds, callback=change_df)
 
@@ -214,7 +218,7 @@ class TestComplete:
 
         with pytest.raises(
             ValueError,
-            match="Output: Index not equal to index of df2.",
+            match=r"Output: Index not equal to index of df2.",
         ) as exc_info:
             self.my_fn(df, df2, ds=ds, callback=change_df)
         exc_info.match(" Output: extends df: index differ")

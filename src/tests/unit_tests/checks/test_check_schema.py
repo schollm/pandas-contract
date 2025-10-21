@@ -16,7 +16,7 @@ def test_none() -> None:
         schema=None, head=None, tail=None, sample=None, random_state=None
     )
     res = check(lambda _: 0, (), {})
-    assert res(pd.Series()) == []
+    assert res(pd.Series(dtype=object)) == []
 
 
 def test_key() -> None:

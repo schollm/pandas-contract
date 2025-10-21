@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Upcoming]
 
+## [0.10.0]
+### Changed
+- Do not check explicitly the argument modified in checks.extends.
+- Raised minimum Pandas version to 1.5.0
+- Raises minimum Pandera version to 0.22.0
+
+### Fixed
+- Allow pandera 
 ## [0.9.2] - 2025-05-27
 ### Changed
 - Use pandas extra dependency group

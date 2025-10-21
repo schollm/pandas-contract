@@ -14,8 +14,6 @@ from itertools import zip_longest
 from typing import TYPE_CHECKING, Any, Callable, NamedTuple, Union, cast
 
 import pandas as pd
-import pandera as pa
-from pandera import DataFrameSchema
 
 from pandas_contract._lib import MyFunctionType, get_df_arg, split_or_list
 from pandas_contract._private_checks import Check, CheckSchema
@@ -23,7 +21,9 @@ from pandas_contract._private_checks import Check, CheckSchema
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Hashable, Sequence
 
+    from pandera import DataFrameSchema
     from pandera.api.base.schema import BaseSchema
+
 
 __all__ = ["extends", "is_", "is_not", "removed", "same_index_as", "same_length_as"]
 
@@ -141,6 +141,7 @@ class extends(Check):  # noqa: N801
     **Example**
     Simple example, output must set a column `"x"`
 
+    >>> import pandera as pa
     >>> import pandas_contract as pc
     >>> @pc.result(pc.checks.extends("df", pa.DataFrameSchema({"x": pa.Column(int)})))
     ... def my_fn(df: pd.DataFrame) -> pd.DataFrame:
@@ -201,12 +202,6 @@ class extends(Check):  # noqa: N801
             self.arg = ""
             return
 
-        if modified is not None and not isinstance(modified, pa.DataFrameSchema):
-            msg = (
-                f"CheckExtends: If modified is set, then it must be of type "
-                f"pandera.DataFrameSchema, got {type(modified)}."
-            )
-            raise TypeError(msg)
         self.arg = arg
         self.modified = CheckSchema(modified)
 

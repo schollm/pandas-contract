@@ -7,7 +7,7 @@ from typing import Any
 import pandas as pd
 import pandera as pa
 import pytest
-from pandera import DataFrameSchema, SeriesSchema
+from pandera import DataFrameSchema
 
 from pandas_contract import from_arg, result
 from pandas_contract.checks import extends
@@ -30,23 +30,6 @@ def test_init_none(arg: Any) -> None:
     check = extends(arg, modified=modified)
     assert check.arg == ""
     assert check.modified is modified
-
-
-@pytest.mark.parametrize(
-    "schema",
-    [
-        SeriesSchema(),
-        [1, 2],
-    ],
-)
-def test_init__fail(schema: Any) -> None:
-    """Test initialization of CheckExtends."""
-    with pytest.raises(
-        TypeError,
-        match="CheckExtends: If modified is set, then it must be of type "
-        "pandera.DataFrameSchema, got",
-    ):
-        extends("df", schema)
 
 
 @pytest.mark.parametrize(
@@ -100,7 +83,7 @@ def test_mk_check__invalid_output() -> None:
     """Test mk_check method of CheckExtends."""
     check = extends("df", modified=DataFrameSchema())
     df = pd.DataFrame([])
-    df2 = pd.Series([])
+    df2 = pd.Series([], dtype=object)
     fn = check(lambda df: df, (df,), {})
     assert list(fn(df2)) == [
         "extends df: Backend DataFrameSchema not applicable to Series",
@@ -111,7 +94,7 @@ def test_mk_check__invalid_output() -> None:
 def test_mk_check__invalid_output__identical_arg() -> None:
     """Test mk_check method of CheckExtends."""
     check = extends("df2", DataFrameSchema())
-    df = pd.Series([])
+    df = pd.Series([], dtype=object)
     fn = check(lambda df2, df: df2, (df, df), {})
     assert list(fn(df)) == [
         "extends df2: Backend DataFrameSchema not applicable to Series",
