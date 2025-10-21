@@ -50,7 +50,7 @@ def test_failing(arg: str | list[str]) -> None:
     def my_fn(df: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
         return df
 
-    with pytest.raises(ValueError, match="Length of df2 = 2 != 1."):
+    with pytest.raises(ValueError, match=r"Length of df2 = 2 != 1."):
         my_fn(
             df=pd.DataFrame([[0]], index=[0]),
             df2=pd.DataFrame([[0]], index=[0, 1]),

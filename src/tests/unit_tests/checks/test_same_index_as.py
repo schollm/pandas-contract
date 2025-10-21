@@ -50,7 +50,7 @@ def test_failing(arg: str | list[str]) -> None:
     def my_fn(df: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
         return df
 
-    with pytest.raises(ValueError, match="Index not equal to index of df2."):
+    with pytest.raises(ValueError, match=r"Index not equal to index of df2."):
         my_fn(
             df=pd.DataFrame([[0]], index=[0]),
             df2=pd.DataFrame([[0]], index=[10]),
