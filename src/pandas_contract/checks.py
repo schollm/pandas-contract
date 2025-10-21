@@ -14,8 +14,6 @@ from itertools import zip_longest
 from typing import TYPE_CHECKING, Any, Callable, NamedTuple, Union, cast
 
 import pandas as pd
-import pandera as pa
-from pandera import DataFrameSchema
 
 from pandas_contract._lib import MyFunctionType, get_df_arg, split_or_list
 from pandas_contract._private_checks import Check, CheckSchema
@@ -24,6 +22,8 @@ if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Hashable, Sequence
 
     from pandera.api.base.schema import BaseSchema
+    from pandera import DataFrameSchema
+
 
 __all__ = ["extends", "is_", "is_not", "removed", "same_index_as", "same_length_as"]
 
