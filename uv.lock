@@ -718,7 +718,7 @@ dependencies = [
     { name = "pandera", extra = ["pandas"] },
 ]
 
-[package.optional-dependencies]
+[package.dev-dependencies]
 dev = [
     { name = "pandas-stubs", version = "2.2.2.240807", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "pandas-stubs", version = "2.2.3.250527", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
@@ -729,8 +729,6 @@ dev = [
     { name = "ruff" },
     { name = "setuptools" },
 ]
-
-[package.dev-dependencies]
 docs = [
     { name = "myst-parser", version = "3.0.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "myst-parser", version = "4.0.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
@@ -744,18 +742,19 @@ docs = [
 [package.metadata]
 requires-dist = [
     { name = "pandas", specifier = ">=1.4.0" },
-    { name = "pandas-stubs", marker = "extra == 'dev'", specifier = ">=2.2.2.240807" },
     { name = "pandera", extras = ["pandas"], specifier = ">=0.10.0" },
-    { name = "pyright", marker = "extra == 'dev'", specifier = ">=1.1.398" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.3.5" },
-    { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=6.1.1" },
-    { name = "pytest-mypy", marker = "extra == 'dev'", specifier = ">=1.0.0" },
-    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.11.0" },
-    { name = "setuptools", marker = "extra == 'dev'", specifier = ">=78.1.0" },
 ]
-provides-extras = ["dev"]
 
 [package.metadata.requires-dev]
+dev = [
+    { name = "pandas-stubs", specifier = ">=2.2.2.240807" },
+    { name = "pyright", specifier = ">=1.1.398" },
+    { name = "pytest", specifier = ">=8.3.5" },
+    { name = "pytest-cov", specifier = ">=6.1.1" },
+    { name = "pytest-mypy", specifier = ">=1.0.0" },
+    { name = "ruff", specifier = ">=0.11.0" },
+    { name = "setuptools", specifier = ">=78.1.0" },
+]
 docs = [
     { name = "myst-parser", specifier = ">=3.0.1" },
     { name = "sphinx", specifier = ">=5.3.0" },
