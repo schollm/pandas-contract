@@ -120,6 +120,10 @@ class Modes(enum.Enum):
         if isinstance(other, str):
             return self.value == other
         return super().__eq__(other)
+    
+    def __hash__(self) -> int:
+        """Hash the mode."""
+        return hash(self.value)
 
 
 def get_mode() -> Modes:
