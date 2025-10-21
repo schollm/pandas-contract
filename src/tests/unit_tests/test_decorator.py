@@ -5,7 +5,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Callable
 
 import pandas as pd
-import pandera as pa
+
+try:
+    import pandera.pandas as pa
+except ImportError:
+    import pandera as pa
 import pytest
 from pandas import DataFrame
 
@@ -75,14 +79,14 @@ class TestArgument:
         def foo_int(dfs: list[pd.DataFrame]) -> None:
             pass
 
-        df = pd.DataFrame({"a_col": [1]})
+        df = pd.DataFrame({"a_col": pd.Series([1], dtype=int)})
         foo_int([df, df])
 
         with pytest.raises(IndexError, match="list index out of range"):
             foo_int([df])
 
-        with pytest.raises(KeyError, match="a_col"):
-            foo_int([df.drop("a_col")])
+        with pytest.raises(ValueError, match="a_col"):
+            foo_int([df, df.drop(columns="a_col")])
 
 
 def test_result() -> None:

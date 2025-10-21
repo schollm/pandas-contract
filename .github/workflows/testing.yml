@@ -36,13 +36,11 @@ jobs:
           python-version: "3.10"
       - name: Install uv
         uses: astral-sh/setup-uv@v5
-      - name: Install dependencies
-        run: uv sync
       - name: Run pytest
         run: |
           # Keep --with in sync pyproject.toml
-          # python 3.10 is the latest with pre-compiled pandas 1.4.0 releases. 
-          uv run --python 3.10 --with pandas==1.4.0 --with pandera==0.10.0 pytest src/tests
+          # python 3.10 is the latest with pre-compiled pandas 1.5.0 releases. 
+          uv run --python 3.10 --with pandas==1.5.0 --with pandera==0.22.0 --with "numpy<2.0" pytest src/tests
   test:
     name: Test Python 🐍 application
     strategy:

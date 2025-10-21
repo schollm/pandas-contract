@@ -83,7 +83,7 @@ def test_mk_check__invalid_output() -> None:
     """Test mk_check method of CheckExtends."""
     check = extends("df", modified=DataFrameSchema())
     df = pd.DataFrame([])
-    df2 = pd.Series([])
+    df2 = pd.Series([], dtype=object)
     fn = check(lambda df: df, (df,), {})
     assert list(fn(df2)) == [
         "extends df: Backend DataFrameSchema not applicable to Series",
@@ -94,7 +94,7 @@ def test_mk_check__invalid_output() -> None:
 def test_mk_check__invalid_output__identical_arg() -> None:
     """Test mk_check method of CheckExtends."""
     check = extends("df2", DataFrameSchema())
-    df = pd.Series([])
+    df = pd.Series([], dtype=object)
     fn = check(lambda df2, df: df2, (df, df), {})
     assert list(fn(df)) == [
         "extends df2: Backend DataFrameSchema not applicable to Series",
