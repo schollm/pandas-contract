@@ -7,7 +7,7 @@ from typing import Any
 import pandas as pd
 import pandera as pa
 import pytest
-from pandera import DataFrameSchema, SeriesSchema
+from pandera import DataFrameSchema
 
 from pandas_contract import from_arg, result
 from pandas_contract.checks import extends
