@@ -21,8 +21,8 @@ from pandas_contract._private_checks import Check, CheckSchema
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Hashable, Sequence
 
-    from pandera.api.base.schema import BaseSchema
     from pandera import DataFrameSchema
+    from pandera.api.base.schema import BaseSchema
 
 
 __all__ = ["extends", "is_", "is_not", "removed", "same_index_as", "same_length_as"]
