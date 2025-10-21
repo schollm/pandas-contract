@@ -33,23 +33,6 @@ def test_init_none(arg: Any) -> None:
 
 
 @pytest.mark.parametrize(
-    "schema",
-    [
-        SeriesSchema(),
-        [1, 2],
-    ],
-)
-def test_init__fail(schema: Any) -> None:
-    """Test initialization of CheckExtends."""
-    with pytest.raises(
-        TypeError,
-        match="CheckExtends: If modified is set, then it must be of type "
-        "pandera.DataFrameSchema, got",
-    ):
-        extends("df", schema)
-
-
-@pytest.mark.parametrize(
     "df_to_be_extend, expect",
     [
         (pd.DataFrame({"a": [1]}), []),

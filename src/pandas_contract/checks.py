@@ -201,12 +201,6 @@ class extends(Check):  # noqa: N801
             self.arg = ""
             return
 
-        if modified is not None and not isinstance(modified, pa.DataFrameSchema):
-            msg = (
-                f"CheckExtends: If modified is set, then it must be of type "
-                f"pandera.DataFrameSchema, got {type(modified)}."
-            )
-            raise TypeError(msg)
         self.arg = arg
         self.modified = CheckSchema(modified)
 
