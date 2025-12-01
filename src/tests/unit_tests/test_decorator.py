@@ -9,7 +9,7 @@ import pandas as pd
 try:
     import pandera.pandas as pa
 except ImportError:
-    import pandera as pa
+    import pandera.pandas as pa
 import pytest
 from pandas import DataFrame
 

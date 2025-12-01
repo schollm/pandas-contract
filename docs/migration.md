@@ -9,7 +9,7 @@ See below for an comparison of the two API styles
 
 ```python
 import pandas_contract as pc
-import pandera as pa
+import pandera.pandas as pa
 schema = pa.DataFrameSchema(...)
 # OLD:
 pc.argument(
@@ -90,7 +90,7 @@ done one after each other.
    *: Note that extends moves the old schema definition into the decorator, e.g.,
    ```python
    import pandas_contract as pc
-   import pandera as pa
+   import pandera.pandas as pa
 
    schema = pa.DataFrameSchema({"x": pa.Column()})
    pc.result(schema, extends="df") # Old

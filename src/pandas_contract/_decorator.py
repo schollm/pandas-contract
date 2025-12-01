@@ -70,7 +70,7 @@ def argument(
     Note that all examples use the following preamble:
 
     >>> import pandas as pd
-    >>> import pandera as pa
+    >>> import pandera.pandas as pa
     >>> import pandas_contract as pc
 
     Ensure columns exist in DataFrame
@@ -200,7 +200,7 @@ def result(
     Note that all examples use the following preamble:
 
     >>> import pandas as pd
-    >>> import pandera as pa
+    >>> import pandera.pandas as pa
     >>> import pandas_contract as pc
 
     Output column exists

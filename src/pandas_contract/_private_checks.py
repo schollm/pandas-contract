@@ -6,8 +6,8 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Callable, Protocol, Union, cast
 
 import pandas as pd
-import pandera as pa
 import pandera.errors as pa_errors
+import pandera.pandas as pa
 
 if TYPE_CHECKING:  # pragma: no cover
     from pandera.api.base.schema import BaseSchema

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import pandas as pd
-import pandera as pa
+import pandera.pandas as pa
 import pytest
 
 from pandas_contract import argument

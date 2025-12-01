@@ -35,7 +35,7 @@ class KeyT(Protocol):
 
     >>> import pandas as pd
     >>> import pandas_contract as pc
-    >>> import pandera as pa
+    >>> import pandera.pandas as pa
     >>> @pc.result(pa.SeriesSchema(int), key=1)
     ... def f1():
     ...    return "res", pd.Series([1,2,3])
@@ -115,7 +115,7 @@ def from_arg(arg: str) -> Callable[[MyFunctionType, tuple[Any], dict[str, Any]],
 
     >>> import pandas as pd
     >>> import pandas_contract as pc
-    >>> import pandera as pa
+    >>> import pandera.pandas as pa
 
     >>> @pc.argument("df", pa.DataFrameSchema({pc.from_arg("col"): pa.Column()}))
     ... @pc.result(pa.DataFrameSchema({pc.from_arg("col"): pa.Column(str)}))

@@ -20,7 +20,7 @@ See [Setup](https://pandas-contract.readthedocs.io/en/latest/module-mode.html) f
 > ```python
 > import pandas as pd
 > import pandas_contract as pc
-> import pandera as pa
+> import pandera.pandas as pa
 > ```
 
 

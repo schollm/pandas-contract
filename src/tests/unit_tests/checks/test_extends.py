@@ -5,9 +5,9 @@ from __future__ import annotations
 from typing import Any
 
 import pandas as pd
-import pandera as pa
+import pandera.pandas as pa
 import pytest
-from pandera import DataFrameSchema
+from pandera.pandas import DataFrameSchema
 
 from pandas_contract import from_arg, result
 from pandas_contract.checks import extends
