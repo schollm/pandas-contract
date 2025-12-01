@@ -102,7 +102,7 @@ addopts = """
 """
 [tool.pyright]
 include = ["src/"]
-# strict = ["src/"]  # TODO: enable later
+strict = ["src/pandas_contract/"]
 reportIncompatibleMethodOverride = "none"
 
 
