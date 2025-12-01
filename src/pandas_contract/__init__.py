@@ -16,6 +16,16 @@ on another function argument, e.g., to check that a DataFrame contains a column,
 is set as an argument to the function.
 """
 
+try:
+    import pandera.pandas as pa
+except ImportError:
+    import sys
+
+    import pandera as pa
+
+    sys.modules["pandera.pandas"] = pa
+    del pa
+
 from . import checks
 from ._decorator import argument, result
 from ._lib import from_arg

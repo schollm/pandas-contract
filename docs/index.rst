@@ -5,7 +5,7 @@ Decorators to check functions arguments and return values using pandas DataFrame
 
 .. code-block:: python
 
-  import pandera as pa
+  import pandera.pandas as pa
   import pandas_contract as pc
   import pandas as pd
 

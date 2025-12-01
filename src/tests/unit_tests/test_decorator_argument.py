@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Union
 
 import pandas as pd
-import pandera as pa
+import pandera.pandas as pa
 import pytest
 
 from pandas_contract import argument, as_mode, checks, from_arg

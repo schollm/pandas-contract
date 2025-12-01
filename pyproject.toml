@@ -1,6 +1,6 @@
 [project]
 name = "pandas-contract"
-version = "0.10.0"
+version = "0.11.0"
 description = "Define input and output columns for functions working on pandas dataframes."
 readme = "README.md"
 authors = [
@@ -67,7 +67,6 @@ ignore = [
     "D213",  #  `multi-line-summary-first-line` (D212) and `multi-line-summary-second-line` (D213) are incompatible.
     "D203",  # `incorrect-blank-line-before-class` (D203) and `no-blank-line-before-class` (D211) are incompatible.
     "COM812", # Missing trailing comma in a single-line list - already applied by ruff format.
-    "PD901", # Avoid using generic name 'df' for DataFrame
     "TRY003", # Checks for long exception messages that are not defined in the exception class itself
     "EM101", # Exception must not use a string literal, assign to variable first
     "ANN401", # Dynamically typed expressions (typing.Any) are disallowed: This is also applied to *arg, **kwargs.
@@ -103,7 +102,7 @@ addopts = """
 """
 [tool.pyright]
 include = ["src/"]
-sttrict = ["src/"]
+# strict = ["src/"]  # TODO: enable later
 reportIncompatibleMethodOverride = "none"
 
 

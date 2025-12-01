@@ -141,7 +141,7 @@ class extends(Check):  # noqa: N801
     **Example**
     Simple example, output must set a column `"x"`
 
-    >>> import pandera as pa
+    >>> import pandera.pandas as pa
     >>> import pandas_contract as pc
     >>> @pc.result(pc.checks.extends("df", pa.DataFrameSchema({"x": pa.Column(int)})))
     ... def my_fn(df: pd.DataFrame) -> pd.DataFrame:

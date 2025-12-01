@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable, Protocol, TypedDict, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Callable, Protocol, TypeVar, cast
 
 if TYPE_CHECKING:  # pragma: no cover
     import types
@@ -21,13 +21,6 @@ class MyFunctionType(Protocol):  # pragma: no cover
     __qualname__: str
 
 
-class ValidateDictT(TypedDict, total=False):
-    head: int | None
-    tail: int | None
-    sample: int | None
-    random_state: int | None
-
-
 class KeyT(Protocol):
     """KeyType protocol, define a lookup key for an argument or the result.
 
@@ -42,7 +35,7 @@ class KeyT(Protocol):
 
     >>> import pandas as pd
     >>> import pandas_contract as pc
-    >>> import pandera as pa
+    >>> import pandera.pandas as pa
     >>> @pc.result(pa.SeriesSchema(int), key=1)
     ... def f1():
     ...    return "res", pd.Series([1,2,3])
@@ -122,7 +115,7 @@ def from_arg(arg: str) -> Callable[[MyFunctionType, tuple[Any], dict[str, Any]],
 
     >>> import pandas as pd
     >>> import pandas_contract as pc
-    >>> import pandera as pa
+    >>> import pandera.pandas as pa
 
     >>> @pc.argument("df", pa.DataFrameSchema({pc.from_arg("col"): pa.Column()}))
     ... @pc.result(pa.DataFrameSchema({pc.from_arg("col"): pa.Column(str)}))

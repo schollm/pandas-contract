@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import pandas as pd
-import pandera as pa
-from pandera import DataFrameSchema
+import pandera.pandas as pa
+from pandera.pandas import DataFrameSchema
 
 from pandas_contract import from_arg
 from pandas_contract._private_checks import CheckSchema

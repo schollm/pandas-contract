@@ -6,7 +6,7 @@ from collections.abc import Hashable
 from typing import TYPE_CHECKING, Any, Callable, TypeVar
 
 import pandas as pd
-import pandera as pa
+import pandera.pandas as pa
 import pytest
 
 from pandas_contract import as_mode, checks, from_arg, result
