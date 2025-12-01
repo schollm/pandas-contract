@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import functools
 from itertools import chain
-from typing import TYPE_CHECKING, Any, Callable, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Callable, TypedDict, TypeVar, cast
 
 from pandera.api.base.schema import BaseSchema
 
@@ -13,7 +13,6 @@ from ._lib import (
     ORIGINAL_FUNCTION_ATTRIBUTE,
     UNDEFINED,
     KeyT,
-    ValidateDictT,
     WrappedT,
     get_fn_arg,
 )
@@ -24,6 +23,13 @@ if TYPE_CHECKING:  # pragma: no cover
 
 _T = TypeVar("_T", bound=Callable[..., Any])
 """"Type variable for the function type."""
+
+
+class ValidateDictT(TypedDict, total=False):
+    head: int | None
+    tail: int | None
+    sample: int | None
+    random_state: int | None
 
 
 def argument(
