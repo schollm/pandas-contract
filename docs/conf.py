@@ -16,7 +16,10 @@ from __future__ import annotations
 # -- Project information -----------------------------------------------------
 from pathlib import Path
 
-import tomllib
+try:
+    import tomllib  # type: ignore[import-not-found]
+except ImportError:
+    import tomli as tomllib  # type: ignore[import-not-found,no-redef]
 
 pyproject = tomllib.loads(
     (Path(__file__).parents[1] / "pyproject.toml").read_text("utf-8")
