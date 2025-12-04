@@ -67,6 +67,9 @@ class CheckSchema(Check):
             return lambda _: []
 
         def check(df: pd.DataFrame | pd.Series) -> Iterable[str]:
+            if df is None:  # pragma: no cover
+                yield "Value is None"
+                return
             try:
                 parsed_schema = self.parse_schema(fn, args, kwargs)
                 parsed_schema.validate(
