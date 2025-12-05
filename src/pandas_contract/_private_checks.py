@@ -62,7 +62,11 @@ class CheckSchema(Check):
         self, fn: Callable[..., Any], args: tuple[Any, ...], kwargs: dict[str, Any]
     ) -> DataCheckFunctionT:
         if self.schema is None:
-            return lambda _: []
+
+            def check_empty_schema(df: pd.DataFrame | pd.Series) -> Iterable[str]:
+                return []
+
+            return check_empty_schema
 
         def check(df: pd.DataFrame | pd.Series | None) -> Iterable[str]:
             if df is None:  # pragma: no cover
@@ -99,8 +103,8 @@ class CheckSchema(Check):
     ) -> BaseSchema:
         """Replace column name functions with actual column names.
 
-        Return a copy of the schema where any callables column names are replaced with
-        the actual values.
+        Return either the original schema, untouched, or a copy of the schema
+        where any callables column names are replaced with the actual values.
 
         :param fn: The function used to extract the column argument from.
         :param args: The positional arguments of the function.
@@ -115,7 +119,7 @@ class CheckSchema(Check):
         for col in list(getattr(schema, "columns", {})):
             # col in ist to get a copy of schema.columns
             if callable(col):
-                if schema is self.schema:  # lazy copy
+                if schema is self.schema:  # lazy copy - only copy if needed
                     schema = copy.deepcopy(schema)
                 col_arg: list[Hashable] | Hashable = col(fn, args, kwargs)
                 col_schema = schema.columns.pop(col)
