@@ -64,7 +64,7 @@ class CheckSchema(Check):
         if self.schema is None:
             return lambda _: []
 
-        def check(df: pd.DataFrame | pd.Series) -> Iterable[str]:
+        def check(df: pd.DataFrame | pd.Series | None) -> Iterable[str]:
             if df is None:  # pragma: no cover
                 yield "Value is None"
                 return
