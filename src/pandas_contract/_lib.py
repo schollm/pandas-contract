@@ -158,7 +158,7 @@ def get_fn_arg(
         ):
             if arg_name == var_name:
                 return arg
-    kwdefaults = getattr(func, "__kwdefaults__", None) or {}
+    kwdefaults: dict[str, Any] = getattr(func, "__kwdefaults__", None) or {}
     if arg_name in kwdefaults:
         return kwdefaults[arg_name]
     msg = f"{get_function_name(func)} requires argument '{arg_name}' for pandas_contract"
