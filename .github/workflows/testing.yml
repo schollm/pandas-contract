@@ -13,7 +13,7 @@ jobs:
       - name: Install project dependencies
         run: uv sync
       - name: 'Type check'
-        run: uv run pyright src
+        run: uv run pyrefly check src
   lint:
     runs-on: ubuntu-latest
     steps:

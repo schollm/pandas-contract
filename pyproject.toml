@@ -52,8 +52,7 @@ dev = [
     "pytest>=8.3.5",
     "ruff>=0.11.0",
     "pandas-stubs>=2.2.2.240807",
-    "pytest-mypy>=1.0.0",
-    "pyright>=1.1.398",
+    "pyrefly>=0.44.1",
     "pytest-cov>=6.1.1",
     "setuptools>=78.1.0",
 ]
@@ -99,11 +98,12 @@ addopts = """
   --cov-report term-missing
   --cov-branch
   --doctest-modules
+  --strict
 """
-[tool.pyright]
-include = ["src/"]
-strict = ["src/pandas_contract/"]
-reportIncompatibleMethodOverride = "none"
+
+[tool.pyrefly]
+project-includes = ["src/"]
+infer-with-first-use = false
 
 
 [build-system]
