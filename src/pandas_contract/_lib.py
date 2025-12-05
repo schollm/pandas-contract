@@ -171,7 +171,18 @@ def get_df_arg(
     args: tuple[Any, ...],
     kwargs: dict[str, Any],
 ) -> pd.DataFrame:
-    """Get the named argument as a DataFrame from function call."""
+    """
+    Get the named argument as a DataFrame from a function call.
+
+    Parameters
+    ----------
+    :param func: The function being called.
+    :param arg_name: The name of the argument to retrieve.
+    :param args: The positional arguments passed to the function.
+    :param kwargs: The keyword arguments passed to the function.
+
+    :returns: The argument value, cast as a pandas DataFrame.
+    """
     res = get_fn_arg(func, arg_name, args, kwargs)
     return cast("pd.DataFrame", res)
 
