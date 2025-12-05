@@ -17,7 +17,7 @@ from __future__ import annotations
 from pathlib import Path
 
 try:
-    import tomllib  # type: ignore[import-not-found]
+    import tomllib  # type: ignore[import-not-found,unused-ignore]
 except ImportError:
     import tomli as tomllib  # type: ignore[import-not-found,no-redef]
 
