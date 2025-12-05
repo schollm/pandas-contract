@@ -18,7 +18,7 @@ is set as an argument to the function.
 
 try:
     import pandera.pandas as pa
-except ImportError:
+except ImportError:  # pragma: no cover
     import sys
 
     import pandera as pa  # type: ignore[no-redef]
