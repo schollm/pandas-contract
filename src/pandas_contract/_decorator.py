@@ -20,9 +20,7 @@ from ._lib import (
 if TYPE_CHECKING:  # pragma: no cover
     import pandas as pd
 
-_T2 = TypeVar("_T2", bound=Any)
-
-_CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
+_T = TypeVar("_T", bound=Any)
 """"Type variable for the function type."""
 
 
@@ -140,14 +138,14 @@ def argument(
         if check
     ]
 
-    def decorator(fn: Callable[..., _T2]) -> Callable[..., _T2]:
+    def decorator(fn: Callable[..., _T]) -> Callable[..., _T]:
         if get_mode() == Modes.SKIP:
             return fn
 
         orig_fn = getattr(fn, ORIGINAL_FUNCTION_ATTRIBUTE, fn)
 
         @functools.wraps(fn)
-        def wrapper(*args: Any, **kwargs: Any) -> _T2:
+        def wrapper(*args: Any, **kwargs: Any) -> _T:
             if (mode := get_mode()).no_handling():
                 return fn(*args, **kwargs)
 
@@ -289,13 +287,13 @@ def result(
         if check
     ]
 
-    def wrapped(fn: Callable[..., _T2]) -> Callable[..., _T2]:
+    def wrapped(fn: Callable[..., _T]) -> Callable[..., _T]:
         if get_mode() == Modes.SKIP:
             return fn
         orig_fn = getattr(fn, ORIGINAL_FUNCTION_ATTRIBUTE, fn)
 
         @functools.wraps(fn)
-        def wrapper(*args: Any, **kwargs: Any) -> _T2:
+        def wrapper(*args: Any, **kwargs: Any) -> _T:
             if (mode := get_mode()).no_handling():
                 return fn(*args, **kwargs)
 
