@@ -3,7 +3,7 @@ from __future__ import annotations
 import copy
 from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Callable, Protocol, Union, cast
+from typing import TYPE_CHECKING, Any, Callable, Hashable, Protocol, Union, cast
 
 import pandas as pd
 import pandera.errors as pa_errors
@@ -117,7 +117,7 @@ class CheckSchema(Check):
             if callable(col):
                 if schema is self.schema:  # lazy copy
                     schema = copy.deepcopy(schema)
-                col_arg = col(fn, args, kwargs)
+                col_arg: list[Hashable] | Hashable = col(fn, args, kwargs)
                 col_schema = schema.columns.pop(col)
                 for col_val in col_arg if isinstance(col_arg, list) else [col_arg]:
                     schema.columns[col_val] = col_schema

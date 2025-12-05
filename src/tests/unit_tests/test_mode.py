@@ -155,7 +155,7 @@ def test_hashable() -> None:
     assert Modes.SILENT in s
     assert Modes.RAISE in s
 
-def test_hash() -> None:
-    """Test that Modes have a hash."""
+def test_hash_uniqueness() -> None:
+    """Test that each Mode has a unique hash."""
     assert isinstance(hash(Modes.RAISE), int)
     assert len({hash(m) for m in Modes}) == len(Modes)

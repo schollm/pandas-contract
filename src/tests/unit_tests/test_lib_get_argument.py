@@ -108,7 +108,7 @@ class ClassWithCallable:
     """Test class with __call__ method."""
 
     def __call__(self, b: int) -> None:
-        """Callable class with two arguments, one with default value."""
+        """Callable class with one argument."""
 
 
 @pytest.mark.parametrize(

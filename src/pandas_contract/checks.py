@@ -266,11 +266,12 @@ class extends(Check):  # noqa: N801
         if not isinstance(df, pd.DataFrame):
             return _HashErr(f"not a DataFrame, got {type(df).__qualname__}.")
         df_hash = df[[c for c in df if c not in modified_cols]]
+        data = [(col, hash(df_hash[col].to_numpy().tobytes())) for col in df_hash]
         return _HashDf(
             type=pd.DataFrame,
             index_=hash(df.index.to_numpy().tobytes()),
             columns=list(df_hash.columns),
-            data=[(col, hash(df_hash[col].to_numpy().tobytes())) for col in df_hash],
+            data=data,
         )
 
 
