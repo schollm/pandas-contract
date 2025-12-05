@@ -91,6 +91,7 @@ def test_mk_check__invalid_output() -> None:
     fn = check(lambda df: ..., (ds_in,), {})
     assert list(fn(cast("pd.DataFrame", 1))) == [
         "extends df: Backend DataFrameSchema not applicable to int",
+        "extends df: <input> not a DataFrame, got Series.",
         "extends df: <output> not a DataFrame, got int.",
     ]
 
