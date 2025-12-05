@@ -12,8 +12,6 @@ import pandera.pandas as pa
 if TYPE_CHECKING:  # pragma: no cover
     from pandera.api.base.schema import BaseSchema
 
-    from ._lib import MyFunctionType
-
 
 DataCheckFunctionT = Callable[[Union[pd.DataFrame, pd.Series]], Iterable[str]]
 
@@ -30,7 +28,7 @@ class Check(Protocol):  # pragma: no cover
     """
 
     def __call__(
-        self, fn: MyFunctionType, args: tuple, kwargs: dict[str, Any]
+        self, fn: Callable[..., Any], args: tuple[Any, ...], kwargs: dict[str, Any]
     ) -> DataCheckFunctionT:
         """Check function factory.
 
@@ -50,7 +48,7 @@ class Check(Protocol):  # pragma: no cover
         ...
 
 
-@dataclass(frozen=True)  # type: ignore[call-overload]
+@dataclass(frozen=True)
 class CheckSchema(Check):
     """Check the DataFrame using the schema."""
 
@@ -61,7 +59,7 @@ class CheckSchema(Check):
     random_state: int | None = None
 
     def __call__(
-        self, fn: Callable, args: tuple[Any, ...], kwargs: dict[str, Any]
+        self, fn: Callable[..., Any], args: tuple[Any, ...], kwargs: dict[str, Any]
     ) -> DataCheckFunctionT:
         if self.schema is None:
             return lambda _: []
@@ -72,7 +70,9 @@ class CheckSchema(Check):
                 return
             try:
                 parsed_schema = self.parse_schema(fn, args, kwargs)
-                parsed_schema.validate(
+                validate = cast("Callable[..., Any]", parsed_schema.validate)
+
+                validate(
                     df,
                     head=self.head,
                     tail=self.tail,
@@ -93,7 +93,7 @@ class CheckSchema(Check):
 
     def parse_schema(
         self,
-        fn: Callable,
+        fn: Callable[..., Any],
         args: tuple[Any, ...],
         kwargs: dict[str, Any],
     ) -> BaseSchema:

@@ -57,6 +57,11 @@ class TestCheckIsNot:
         df = pd.DataFrame()
         check_factory = is_not("df")
         assert check_factory is not None
-        check_fn = check_factory(lambda df: None, (df,), {})
+
+        def my_fn(df: pd.DataFrame) -> int:
+            del df
+            return 0
+
+        check_fn = check_factory(my_fn, (df,), {})
         assert list(check_fn(df.copy())) == []
         assert list(check_fn(df)) == ["is df"]

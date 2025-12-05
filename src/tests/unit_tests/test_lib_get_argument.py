@@ -1,10 +1,10 @@
 """Test _lib functions."""
 
-from typing import Any, NoReturn
+from typing import Any, Callable, NoReturn, cast
 
 import pytest
 
-from pandas_contract._lib import MyFunctionType, get_fn_arg, has_fn_arg, split_or_list
+from pandas_contract._lib import get_fn_arg, has_fn_arg, split_or_list
 
 DEFAULT = 2
 
@@ -68,10 +68,10 @@ def fn_kw_only(a: int, *, b: int = DEFAULT) -> NoReturn:
     ],
 )
 def test(
-    fn_: MyFunctionType, args: tuple[int], kwargs: dict[str, int], expected: int
+    fn_: Callable[..., Any], args: tuple[int], kwargs: dict[str, int], expected: int
 ) -> None:
     """Test get_fn_arg returns the correct argument."""
-    _get_argument = get_fn_arg(fn_, "b", args, kwargs) == expected
+    assert get_fn_arg(fn_, "b", args, kwargs) == expected
 
 
 @pytest.mark.parametrize(
@@ -85,7 +85,7 @@ def test(
         lambda *, a=1, b=DEFAULT: None,
     ],
 )
-def test_default(fn_: MyFunctionType) -> None:
+def test_default(fn_: Callable[..., Any]) -> None:
     """Test get_fn_arg returns the default value if the argument is not provided."""
     assert get_fn_arg(fn_, "b", (), {}) == DEFAULT
 
@@ -98,10 +98,17 @@ def test_default(fn_: MyFunctionType) -> None:
         lambda a=1: None,
     ],
 )
-def test_no_such_argument(fn_: MyFunctionType) -> None:
+def test_no_such_argument(fn_: Callable[..., Any]) -> None:
     """Test that ValueError is raised when the argument is not found."""
     with pytest.raises(ValueError, match="<lambda> requires argument 'b'"):
         get_fn_arg(fn_, "b", (1,), {})
+
+
+class ClassWithCallable:
+    """Test class with __call__ method."""
+
+    def __call__(self, b: int) -> None:
+        """Callable class with two arguments, one with default value."""
 
 
 @pytest.mark.parametrize(
@@ -115,9 +122,23 @@ def test_no_such_argument(fn_: MyFunctionType) -> None:
         lambda a, b=DEFAULT: None,
         lambda a, b=DEFAULT, /: None,
         lambda *, a, b=DEFAULT: None,
+        ClassWithCallable(),
     ],
 )
-def test_has_fn_arg(fn_: MyFunctionType) -> None:
+def test_has_fn_arg(fn_: Callable[..., Any]) -> None:
     """Test that has_fn_arg returns True if the function has the argument."""
     assert has_fn_arg(fn_, "b")
     assert not has_fn_arg(fn_, "x")
+
+
+def test_raise_on_missing_code() -> None:
+    """Test that raise is propagated when function code object is missing."""
+
+    class CallableWithoutCode:
+        """Function without code object."""
+
+        __code__ = None
+        __call__ = cast("Callable[..., Any]", None)
+
+    with pytest.raises(TypeError, match="has no code object"):
+        has_fn_arg(CallableWithoutCode(), "arg")

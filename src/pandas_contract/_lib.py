@@ -8,17 +8,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
     import pandas as pd
 
-_T = TypeVar("_T", bound=Callable)
-
-
-class MyFunctionType(Protocol):  # pragma: no cover
-    def __call__(self, *args: Any, **kwargs: Any) -> Any: ...
-
-    __code__: types.CodeType
-    __name__: str
-    __defaults__: tuple[Any, ...] | None
-    __kwdefaults__: dict[str, Any]
-    __qualname__: str
+_T = TypeVar("_T", bound=Callable[..., Any])
 
 
 class KeyT(Protocol):
@@ -94,7 +84,9 @@ def split_or_list(value: str | Iterable[str] | None) -> list[str]:
     return list(value)
 
 
-def from_arg(arg: str) -> Callable[[MyFunctionType, tuple[Any], dict[str, Any]], Any]:
+def from_arg(
+    arg: str,
+) -> Callable[[Callable[..., Any], tuple[Any], dict[str, Any]], Any]:
     """Get the named argument from the function call via a call-back.
 
     Returns a call-back function that can be used to get the named argument from the
@@ -132,7 +124,7 @@ def from_arg(arg: str) -> Callable[[MyFunctionType, tuple[Any], dict[str, Any]],
     """
 
     def wrapper(
-        fn: MyFunctionType, args: tuple[Any, ...], kwargs: dict[str, Any]
+        fn: Callable[..., Any], args: tuple[Any, ...], kwargs: dict[str, Any]
     ) -> object:
         """Get the value of the named argument from the function call.
         :arg fn: Function that contains the argument `arg`
@@ -146,36 +138,69 @@ def from_arg(arg: str) -> Callable[[MyFunctionType, tuple[Any], dict[str, Any]],
 
 
 def get_fn_arg(
-    func: MyFunctionType, arg_name: str, args: tuple[Any, ...], kwargs: dict[str, Any]
+    func: Callable[..., Any],
+    arg_name: str,
+    args: tuple[Any, ...],
+    kwargs: dict[str, Any],
 ) -> object:
     """Get the named argument from function call (either from *args or **kwargs)."""
     if arg_name in kwargs:
         return kwargs[arg_name]
-    co = func.__code__
+    co = _get_code(func)
     for var_name, arg in zip(co.co_varnames, args):
         if arg_name == var_name:
             return arg
-    if func.__defaults__:
+    defaults = getattr(func, "__defaults__", None)
+    if defaults:
         for var_name, arg in zip(
-            func.__code__.co_varnames[co.co_argcount - len(func.__defaults__) :],
-            func.__defaults__,
+            co.co_varnames[co.co_argcount - len(defaults) :],
+            defaults,
         ):
             if arg_name == var_name:
                 return arg
-    if func.__kwdefaults__ is not None and arg_name in func.__kwdefaults__:
-        return func.__kwdefaults__[arg_name]
-    msg = f"{func.__qualname__} requires argument '{arg_name}' for pandas_contract"
+    kwdefaults = getattr(func, "__kwdefaults__", None) or {}
+    if arg_name in kwdefaults:
+        return kwdefaults[arg_name]
+    msg = f"{get_function_name(func)} requires argument '{arg_name}' for pandas_contract"
     raise ValueError(msg)
 
 
 def get_df_arg(
-    func: MyFunctionType, arg_name: str, args: tuple[Any, ...], kwargs: dict[str, Any]
+    func: Callable[..., Any],
+    arg_name: str,
+    args: tuple[Any, ...],
+    kwargs: dict[str, Any],
 ) -> pd.DataFrame:
+    """Get the named argument as a DataFrame from function call."""
     res = get_fn_arg(func, arg_name, args, kwargs)
     return cast("pd.DataFrame", res)
 
 
-def has_fn_arg(func: MyFunctionType, arg_name: str) -> bool:
+def has_fn_arg(func: Callable[..., Any], arg_name: str) -> bool:
     """Check if the function has the named argument."""
-    co = func.__code__
+    co = _get_code(func)
     return arg_name in co.co_varnames[: co.co_argcount + co.co_kwonlyargcount]
+
+
+def _get_code(func: Callable[..., Any]) -> types.CodeType:
+    """Get the source code of the function."""
+    co = getattr(func, "__code__", None)
+    if co is None:
+        call = getattr(func, "__call__", None)
+        co = getattr(call, "__code__", None)
+    if co is None:
+        msg = (
+            f"Function {get_function_name(func)} has no code object"
+            " (This should never happen)."
+        )
+        raise TypeError(msg)
+    return cast("types.CodeType", co)
+
+
+def get_function_name(fn: Callable[..., Any]) -> str:
+    """Get the qualified name of the function."""
+    name = getattr(fn, "__qualname__", None)
+    if name is not None:
+        return cast("str", name)
+
+    return getattr(fn, "__name__", str(fn))

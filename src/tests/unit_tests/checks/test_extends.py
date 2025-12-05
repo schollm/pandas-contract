@@ -28,8 +28,10 @@ def test_init_none(arg: Any) -> None:
     """Test initialization of CheckExtends."""
     modified = DataFrameSchema()
     check = extends(arg, modified=modified)
-    assert check.arg == ""
-    assert check.modified is modified
+    assert check.arg == arg
+    assert check.modified.schema is modified
+    check_fn = check(lambda df: df, (pd.DataFrame(),), {})
+    assert check_fn(pd.DataFrame()) == ["extends: no arg specified."]
 
 
 @pytest.mark.parametrize(
