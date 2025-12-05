@@ -18,18 +18,20 @@ is set as an argument to the function.
 
 try:
     import pandera.pandas as pa
-except ImportError:
+except ImportError:  # pragma: no cover
     import sys
 
-    import pandera as pa
+    import pandera as pa  # type: ignore[no-redef]
 
     sys.modules["pandera.pandas"] = pa
-    del pa
+
 
 from . import checks
 from ._decorator import argument, result
 from ._lib import from_arg
 from .mode import Modes, as_mode, get_mode, raises, set_mode, silent
+
+del pa
 
 __all__ = [
     "Modes",

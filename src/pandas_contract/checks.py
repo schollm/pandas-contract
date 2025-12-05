@@ -10,19 +10,18 @@ of two arguments match, or that an argument is changed in-place (or a copy is cr
 from __future__ import annotations
 
 from collections.abc import Iterable
-from itertools import zip_longest
 from typing import TYPE_CHECKING, Any, Callable, NamedTuple, Union, cast
 
 import pandas as pd
 
-from pandas_contract._lib import MyFunctionType, get_df_arg, split_or_list
+from pandas_contract._lib import get_df_arg, split_or_list
 from pandas_contract._private_checks import Check, CheckSchema
 
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Hashable, Sequence
 
-    from pandera import DataFrameSchema
     from pandera.api.base.schema import BaseSchema
+    from pandera.pandas import DataFrameSchema
 
 
 __all__ = ["extends", "is_", "is_not", "removed", "same_index_as", "same_length_as"]
@@ -67,7 +66,7 @@ def same_index_as(args_: str | Iterable[str] | None, /) -> Check | None:
         return None
 
     def mk_check(
-        fn: Callable, args: tuple[Any, ...], kwargs: dict[str, Any]
+        fn: Callable[..., Any], args: tuple[Any, ...], kwargs: dict[str, Any]
     ) -> DataCheckFunctionT:
         """Check the DataFrame and keep the index."""
         # must be a list - we must keep a copy of the index
@@ -75,7 +74,7 @@ def same_index_as(args_: str | Iterable[str] | None, /) -> Check | None:
         return lambda df: (
             f"Index not equal to index of {other_arg}."
             for other_arg, other_idx in zip(arg_names, indices)
-            if not df.index.equals(other_idx)
+            if not df.index.equals(other_idx)  # pyright: ignore[reportUnknownMemberType]
         )
 
     return mk_check
@@ -116,7 +115,7 @@ def same_length_as(args_: str | Iterable[str] | None, /) -> Check | None:
         return None
 
     def mk_check(
-        fn: Callable, args: tuple[Any, ...], kwargs: dict[str, Any]
+        fn: Callable[..., Any], args: tuple[Any, ...], kwargs: dict[str, Any]
     ) -> DataCheckFunctionT:
         """Check the DataFrame and keep the index."""
         lengths = [(arg, len(get_df_arg(fn, arg, args, kwargs))) for arg in arg_names]
@@ -183,7 +182,7 @@ class extends(Check):  # noqa: N801
     """
 
     __slots__ = ("arg", "modified")
-    arg: str
+    arg: str | None
     modified: CheckSchema
 
     def __init__(
@@ -197,19 +196,25 @@ class extends(Check):  # noqa: N801
         :param arg: Argument that this DataFrame extends.
         :param modified: Pandera SchemaDefinition.
         """
-        if not arg:
-            self.modified = cast("CheckSchema", modified)
-            self.arg = ""
-            return
-
         self.arg = arg
         self.modified = CheckSchema(modified)
 
     def __call__(
-        self, fn: Callable, args: tuple[Any, ...], kwargs: dict[str, Any]
+        self, fn: Callable[..., Any], args: tuple[Any, ...], kwargs: dict[str, Any]
     ) -> DataCheckFunctionT:
         """Check the DataFrame and keep the index."""
         arg = self.arg
+        if not arg:
+
+            def check_empty_arg(
+                df: pd.DataFrame | pd.Series,
+            ) -> Iterable[str]:
+                """Check the DataFrame and keep the index."""
+                del df
+                yield "extends: no arg specified."
+
+            return check_empty_arg
+
         df_extends = get_df_arg(fn, arg, args, kwargs)
         modified_cols = self._get_modified_columns(fn, args, kwargs)
         hash_other = self._get_hash(df_extends, modified_cols)
@@ -223,36 +228,55 @@ class extends(Check):  # noqa: N801
 
             hash_self = self._get_hash(df, modified_cols)
             if isinstance(hash_self, _HashErr) or isinstance(hash_other, _HashErr):
-                if isinstance(hash_self, _HashErr):
-                    yield f"{prefix}<input> {hash_self.err}"
                 if isinstance(hash_other, _HashErr):
-                    yield f"{prefix}{arg} {hash_other.err}"
+                    yield f"{prefix}<input> {hash_other.err}"
+                if isinstance(hash_self, _HashErr):
+                    yield f"{prefix}<output> {hash_self.err}"
                 return
+
             if hash_self == hash_other:
                 return  # early exit
 
-            if hash_self.index_ != hash_other.index_:
-                yield f"{prefix}index differ"
-
-            if hash_self.columns != hash_other.columns:
-                yield (
-                    f"{prefix}Columns differ: "
-                    f"{hash_self.columns} != {hash_other.columns}"
-                )
-
-            for (col1, val1), (col2, val2) in zip_longest(
-                hash_self.data, hash_other.data, fillvalue=("<missing>", -1)
+            for check in (
+                self._check_index,
+                self._check_columns,
+                self._check_data_hashes,
             ):
-                if col1 == col2 and val1 != val2:
-                    yield f"{prefix}Column {col1!r} was changed."
+                yield from check(prefix, hash_self, hash_other)
 
         return check
 
+    def _check_index(
+        self, prefix: str, hash_self: _HashDf, hash_other: _HashDf
+    ) -> Iterable[str]:
+        if hash_self.index_ != hash_other.index_:
+            yield f"{prefix}index differ"
+
+    def _check_columns(
+        self, prefix: str, hash_self: _HashDf, hash_other: _HashDf
+    ) -> Iterable[str]:
+        cols_self = set(hash_self.columns)
+        cols_other = set(hash_other.columns)
+        for col in cols_self - cols_other:
+            yield f"{prefix}Column {col!r} was added but not allowed."
+        for col in cols_other - cols_self:
+            yield f"{prefix}Column {col!r} was removed but not allowed."
+
+    def _check_data_hashes(
+        self, prefix: str, hash_self: _HashDf, hash_other: _HashDf
+    ) -> Iterable[str]:
+        data_self = dict(hash_self.data)
+        data_other = dict(hash_other.data)
+        for col in data_self.keys() & data_other.keys():
+            if data_self[col] != data_other[col]:
+                yield f"{prefix}Column {col!r} data was changed."
+
     def _get_modified_columns(
-        self, fn: Callable, args: Any, kwargs: Any
+        self, fn: Callable[..., Any], args: Any, kwargs: Any
     ) -> list[Hashable]:
         if self.modified.schema is None:
             return []
+
         parsed = cast("DataFrameSchema", self.modified.parse_schema(fn, args, kwargs))
         return list(parsed.columns)
 
@@ -260,18 +284,17 @@ class extends(Check):  # noqa: N801
         if not isinstance(df, pd.DataFrame):
             return _HashErr(f"not a DataFrame, got {type(df).__qualname__}.")
         df_hash = df[[c for c in df if c not in modified_cols]]
+        data = [(col, hash(df_hash[col].to_numpy().tobytes())) for col in df_hash]  # pyright: ignore[reportUnknownMemberType]
         return _HashDf(
-            type=pd.DataFrame,
             index_=hash(df.index.to_numpy().tobytes()),
             columns=list(df_hash.columns),
-            data=[(col, hash(df_hash[col].to_numpy().tobytes())) for col in df_hash],
+            data=data,
         )
 
 
 class _HashDf(NamedTuple):
     """Helper for Extends: Tuple containing the hash of a DataFrame."""
 
-    type: type
     index_: int
     columns: list[str]
     data: list[tuple[Hashable, int]]
@@ -304,11 +327,14 @@ def is_(arg: str, /) -> Check | None:
     if not arg:
         return None
 
-    return lambda fn, args, kwargs: (
-        lambda df: (
+    def check_fn(
+        fn: Callable[..., Any], args: tuple[Any, ...], kwargs: dict[str, Any]
+    ) -> DataCheckFunctionT:
+        return lambda df: (
             [f"is not {arg}"] if df is not get_df_arg(fn, arg, args, kwargs) else []
         )
-    )
+
+    return check_fn
 
 
 def is_not(args: Sequence[str] | str, /) -> Check | None:
@@ -335,13 +361,20 @@ def is_not(args: Sequence[str] | str, /) -> Check | None:
     if not arg_names:
         return None
 
-    return lambda fn, args, kwargs: (
-        lambda df: (
-            f"is {other}"
-            for other in arg_names
-            if get_df_arg(fn, other.strip(), args, kwargs) is df
-        )
-    )
+    def check_fn(
+        fn: Callable[..., Any], args: tuple[Any, ...], kwargs: dict[str, Any]
+    ) -> DataCheckFunctionT:
+        def check_is_not(df: pd.DataFrame | pd.Series) -> Iterable[str]:
+            """Check the DataFrame and keep the index."""
+            return (
+                f"is {other}"
+                for other in arg_names
+                if get_df_arg(fn, other.strip(), args, kwargs) is df
+            )
+
+        return check_is_not
+
+    return check_fn
 
 
 def removed(columns: list[Any]) -> Check | None:
@@ -372,7 +405,7 @@ def removed(columns: list[Any]) -> Check | None:
         return None
 
     def _get_columns(
-        fn: MyFunctionType, arg: tuple, kwargs: dict[str, Any]
+        fn: Callable[..., Any], arg: tuple[Any, ...], kwargs: dict[str, Any]
     ) -> Iterable[Hashable]:
         for col in columns_:
             if callable(col):
@@ -384,10 +417,13 @@ def removed(columns: list[Any]) -> Check | None:
             else:
                 yield col
 
-    return lambda fn, args, kwargs: (
-        lambda df: (
+    def check_fn(
+        fn: Callable[..., Any], args: tuple[Any, ...], kwargs: dict[str, Any]
+    ) -> DataCheckFunctionT:
+        return lambda df: (
             f"Column {col!r} still exists in DataFrame"
             for col in _get_columns(fn, args, kwargs)
             if col in df
         )
-    )
+
+    return check_fn

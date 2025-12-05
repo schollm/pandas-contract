@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import copy
-from collections.abc import Iterable
+from collections.abc import Hashable, Iterable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Callable, Protocol, Union, cast
 
@@ -11,8 +11,6 @@ import pandera.pandas as pa
 
 if TYPE_CHECKING:  # pragma: no cover
     from pandera.api.base.schema import BaseSchema
-
-    from ._lib import MyFunctionType
 
 
 DataCheckFunctionT = Callable[[Union[pd.DataFrame, pd.Series]], Iterable[str]]
@@ -30,7 +28,7 @@ class Check(Protocol):  # pragma: no cover
     """
 
     def __call__(
-        self, fn: MyFunctionType, args: tuple, kwargs: dict[str, Any]
+        self, fn: Callable[..., Any], args: tuple[Any, ...], kwargs: dict[str, Any]
     ) -> DataCheckFunctionT:
         """Check function factory.
 
@@ -50,7 +48,7 @@ class Check(Protocol):  # pragma: no cover
         ...
 
 
-@dataclass(frozen=True)  # type: ignore[call-overload]
+@dataclass(frozen=True)
 class CheckSchema(Check):
     """Check the DataFrame using the schema."""
 
@@ -61,15 +59,20 @@ class CheckSchema(Check):
     random_state: int | None = None
 
     def __call__(
-        self, fn: Callable, args: tuple[Any, ...], kwargs: dict[str, Any]
+        self, fn: Callable[..., Any], args: tuple[Any, ...], kwargs: dict[str, Any]
     ) -> DataCheckFunctionT:
         if self.schema is None:
-            return lambda _: []
+            return always_valid_check
 
-        def check(df: pd.DataFrame | pd.Series) -> Iterable[str]:
+        def check(df: pd.DataFrame | pd.Series | None) -> Iterable[str]:
+            if df is None:  # pragma: no cover
+                yield "Value is None"
+                return
             try:
-                parsed_schema = self.parse_schema(fn, args, kwargs)
-                parsed_schema.validate(
+                parsed_schema = cast("Any", self.parse_schema(fn, args, kwargs))
+                validate = parsed_schema.validate
+
+                validate(
                     df,
                     head=self.head,
                     tail=self.tail,
@@ -90,14 +93,14 @@ class CheckSchema(Check):
 
     def parse_schema(
         self,
-        fn: Callable,
+        fn: Callable[..., Any],
         args: tuple[Any, ...],
         kwargs: dict[str, Any],
     ) -> BaseSchema:
         """Replace column name functions with actual column names.
 
-        Return a copy of the schema where any callables column names are replaced with
-        the actual values.
+        Return either the original schema, untouched, or a copy of the schema
+        where any callables column names are replaced with the actual values.
 
         :param fn: The function used to extract the column argument from.
         :param args: The positional arguments of the function.
@@ -112,10 +115,22 @@ class CheckSchema(Check):
         for col in list(getattr(schema, "columns", {})):
             # col in ist to get a copy of schema.columns
             if callable(col):
-                if schema is self.schema:  # lazy copy
+                if schema is self.schema:  # lazy copy - only copy if needed
                     schema = copy.deepcopy(schema)
-                col_arg = col(fn, args, kwargs)
                 col_schema = schema.columns.pop(col)
-                for col_val in col_arg if isinstance(col_arg, list) else [col_arg]:
+                col_arg = col(fn, args, kwargs)
+                for col_val in (
+                    cast("list[Hashable]", col_arg)
+                    if isinstance(col_arg, list)
+                    else [col_arg]
+                ):
                     schema.columns[col_val] = col_schema
         return schema
+
+
+def always_valid_check(
+    df: pd.DataFrame | pd.Series,
+) -> Iterable[str]:
+    """Never complain check."""
+    del df
+    return []

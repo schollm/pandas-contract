@@ -12,7 +12,7 @@ lint-uv:
 	uv run ruff format --check
 
 lint-type:
-	uv run pyright src/
+	uv run pyrefly check src/
 
 docs:  ## Generate docs
 	uv run --group docs "$(MAKE)" -C docs html
