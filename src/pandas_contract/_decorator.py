@@ -146,7 +146,8 @@ def argument(
 
         @functools.wraps(fn)
         def wrapper(*args: Any, **kwargs: Any) -> _T:
-            if (mode := get_mode()).no_handling():
+            mode = get_mode()
+            if mode.no_handling():
                 return fn(*args, **kwargs)
 
             checkers = [check(orig_fn, args, kwargs) for check in checks_list]
@@ -294,7 +295,8 @@ def result(
 
         @functools.wraps(fn)
         def wrapper(*args: Any, **kwargs: Any) -> _T:
-            if (mode := get_mode()).no_handling():
+            mode = get_mode()
+            if mode.no_handling():
                 return fn(*args, **kwargs)
 
             checkers = [check(orig_fn, args, kwargs) for check in checks_lst]

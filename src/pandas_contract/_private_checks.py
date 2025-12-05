@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import copy
-from collections.abc import Iterable
+from collections.abc import Hashable, Iterable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Callable, Hashable, Protocol, Union, cast
+from typing import TYPE_CHECKING, Any, Callable, Protocol, Union, cast
 
 import pandas as pd
 import pandera.errors as pa_errors
@@ -62,19 +62,15 @@ class CheckSchema(Check):
         self, fn: Callable[..., Any], args: tuple[Any, ...], kwargs: dict[str, Any]
     ) -> DataCheckFunctionT:
         if self.schema is None:
-
-            def check_empty_schema(df: pd.DataFrame | pd.Series) -> Iterable[str]:
-                return []
-
-            return check_empty_schema
+            return always_valid_check
 
         def check(df: pd.DataFrame | pd.Series | None) -> Iterable[str]:
             if df is None:  # pragma: no cover
                 yield "Value is None"
                 return
             try:
-                parsed_schema = self.parse_schema(fn, args, kwargs)
-                validate = cast("Callable[..., Any]", parsed_schema.validate)
+                parsed_schema = cast("Any", self.parse_schema(fn, args, kwargs))
+                validate = parsed_schema.validate
 
                 validate(
                     df,
@@ -121,8 +117,20 @@ class CheckSchema(Check):
             if callable(col):
                 if schema is self.schema:  # lazy copy - only copy if needed
                     schema = copy.deepcopy(schema)
-                col_arg: list[Hashable] | Hashable = col(fn, args, kwargs)
                 col_schema = schema.columns.pop(col)
-                for col_val in col_arg if isinstance(col_arg, list) else [col_arg]:
+                col_arg = col(fn, args, kwargs)
+                for col_val in (
+                    cast("list[Hashable]", col_arg)
+                    if isinstance(col_arg, list)
+                    else [col_arg]
+                ):
                     schema.columns[col_val] = col_schema
         return schema
+
+
+def always_valid_check(
+    df: pd.DataFrame | pd.Series,
+) -> Iterable[str]:
+    """Never complain check."""
+    del df
+    return []

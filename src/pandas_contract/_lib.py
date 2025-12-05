@@ -161,7 +161,9 @@ def get_fn_arg(
     kwdefaults: dict[str, Any] = getattr(func, "__kwdefaults__", None) or {}
     if arg_name in kwdefaults:
         return kwdefaults[arg_name]
-    msg = f"{get_function_name(func)} requires argument '{arg_name}' for pandas_contract"
+    msg = (
+        f"{get_function_name(func)} requires argument '{arg_name}' for pandas_contract"
+    )
     raise ValueError(msg)
 
 
@@ -171,17 +173,15 @@ def get_df_arg(
     args: tuple[Any, ...],
     kwargs: dict[str, Any],
 ) -> pd.DataFrame:
-    """
-    Get the named argument as a DataFrame from a function call.
+    """Get the named argument as a DataFrame from a function call.
 
-    Parameters
-    ----------
     :param func: The function being called.
     :param arg_name: The name of the argument to retrieve.
     :param args: The positional arguments passed to the function.
     :param kwargs: The keyword arguments passed to the function.
 
     :returns: The argument value, cast as a pandas DataFrame.
+
     """
     res = get_fn_arg(func, arg_name, args, kwargs)
     return cast("pd.DataFrame", res)
@@ -197,7 +197,7 @@ def _get_code(func: Callable[..., Any]) -> types.CodeType:
     """Get the source code of the function."""
     co = getattr(func, "__code__", None)
     if co is None:
-        call = getattr(func, "__call__", None)
+        call = getattr(func, "__call__", None)  # noqa: B004
         co = getattr(call, "__code__", None)
     if co is None:
         msg = (

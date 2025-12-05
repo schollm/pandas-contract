@@ -138,7 +138,7 @@ def test_raise_on_missing_code() -> None:
         """Function without code object."""
 
         __code__ = None
-        __call__ = cast("Callable[..., Any]", None)
+        __call__ = None
 
     with pytest.raises(TypeError, match="has no code object"):
-        has_fn_arg(CallableWithoutCode(), "arg")
+        has_fn_arg(cast("Callable[..., Any]", CallableWithoutCode()), "arg")

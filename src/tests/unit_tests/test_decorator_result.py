@@ -146,9 +146,12 @@ def test_result_extends__fail_extra_column() -> None:
     def my_fn(df: pd.DataFrame) -> pd.DataFrame:
         return df.assign(a=1, b=2)
 
-    with pytest.raises(ValueError, match="Columns differ") as exc:
+    with pytest.raises(ValueError, match=r"was added") as exc:
         my_fn(pd.DataFrame())
-    assert "my_fn: Output: extends df: Columns differ: ['b'] != []" in exc.value.args[0]
+    assert (
+        "my_fn: Output: extends df: Column 'b' was added but not allowed."
+        in exc.value.args[0]
+    )
 
 
 def test_result_extends__fail_change_idx() -> None:
