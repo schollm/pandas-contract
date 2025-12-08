@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable
+from typing import Any, Callable
 
 import pandas as pd
 
@@ -15,9 +15,6 @@ from pandas import DataFrame
 
 import pandas_contract as pc
 from pandas_contract import argument, checks, result
-
-if TYPE_CHECKING:
-    from pandas_contract._lib import WrappedT
 
 
 @argument(
@@ -68,7 +65,8 @@ class TestArgument:
         """Test Extends check failing."""
         df = pd.DataFrame({"a": 1, "b": 2}, index=[1, 2])
         with pytest.raises(
-            ValueError, match=r"foo: Argument df: extends df2: Column 'b' was changed."
+            ValueError,
+            match=r"foo: Argument df: extends df2: Column 'b' data was changed.",
         ):
             foo(df.assign(b=10), df, df)
 
@@ -104,7 +102,7 @@ def test_result() -> None:
         result(checks.same_length_as("x")),
     ],
 )
-def test_unknown_arg(verify: WrappedT) -> None:
+def test_unknown_arg(verify: Callable[..., Any]) -> None:
     """Test that the decorator raises an error for an unknown argument."""
 
     @verify
@@ -176,7 +174,7 @@ class TestComplete:
             df["x"] = df2["b"]
             return df
 
-        with pytest.raises(ValueError, match="Column 'a' was changed"):
+        with pytest.raises(ValueError, match="Column 'a' data was changed"):
             self.my_fn(df, df2, ds=ds, callback=change_df)
 
     def test_different_input_index(
@@ -199,9 +197,7 @@ class TestComplete:
         ) -> pd.DataFrame:
             return df.assign(x=1, extra=0)
 
-        with pytest.raises(
-            ValueError, match=r"Output: extends df: Columns differ.*'extra'."
-        ):
+        with pytest.raises(ValueError, match=r"Output: extends df: .*but not allowed."):
             self.my_fn(df, df2, ds=ds, callback=change_df)
 
     def test_change_output_index(
@@ -235,9 +231,9 @@ class TestComplete:
             df["x"] = 1
             return df
 
-        with pytest.raises(ValueError, match=r"Columns differ:") as exc:
+        with pytest.raises(ValueError, match=r"'a' was removed") as exc:
             self.my_fn(df, df2, ds=ds, callback=change_df)
-        assert "Output: extends df: Columns differ: [] != ['a']" in exc.value.args[0]
+        assert "Output: extends df: Column 'a' was removed" in exc.value.args[0]
 
     def test_output_is_input__fail(
         self, df: pd.DataFrame, df2: pd.DataFrame, ds: pd.Series
@@ -248,6 +244,17 @@ class TestComplete:
             df: pd.DataFrame, df2: pd.DataFrame, ds: pd.Series
         ) -> pd.DataFrame:
             return df.assign(x=ds)
+
+        with pytest.raises(ValueError, match="Output: is not df"):
+            self.my_fn(df, df2, ds, callback=change_df)
+
+    def test_output_is_different_type__fail(
+        self, df: pd.DataFrame, df2: pd.DataFrame, ds: pd.Series
+    ) -> None:
+        """Test result.inplace argument."""
+
+        def change_df(df: pd.DataFrame, df2: pd.DataFrame, ds: pd.Series) -> pd.Series:
+            return pd.Series(0, index=df.index)
 
         with pytest.raises(ValueError, match="Output: is not df"):
             self.my_fn(df, df2, ds, callback=change_df)

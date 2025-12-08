@@ -128,7 +128,7 @@ class Modes(enum.Enum):
 
 def get_mode() -> Modes:
     """Get the global mode for handling errors."""
-    return _MODE
+    return _mode
 
 
 @contextmanager
@@ -146,7 +146,7 @@ def as_mode(mode: ModesT) -> Iterator[None]:
        index  a
     0     10  1
     """
-    prev_mode = _MODE
+    prev_mode = _mode
     set_mode(mode)
     try:
         yield
@@ -167,10 +167,10 @@ def set_mode(mode: ModesT) -> Modes:
     <Modes.RAISE: 'raise'>
 
     """
-    global _MODE  # noqa: PLW0603
+    global _mode  # noqa: PLW0603
     if isinstance(mode, str):
         mode = Modes(mode)
-    _MODE = mode
+    _mode = mode
     return mode
 
 
@@ -232,4 +232,4 @@ def _get_mode_from_env() -> Modes:
         return set_mode(Modes.SILENT)
 
 
-_MODE: Modes = _get_mode_from_env()
+_mode: Modes = _get_mode_from_env()

@@ -13,15 +13,14 @@ from ._lib import (
     ORIGINAL_FUNCTION_ATTRIBUTE,
     UNDEFINED,
     KeyT,
-    WrappedT,
     get_fn_arg,
+    get_function_name,
 )
 
 if TYPE_CHECKING:  # pragma: no cover
     import pandas as pd
 
-
-_T = TypeVar("_T", bound=Callable[..., Any])
+_T = TypeVar("_T", bound=Any)
 """"Type variable for the function type."""
 
 
@@ -38,7 +37,7 @@ def argument(
     *checks_: _checks.Check | BaseSchema | None,
     key: KeyT = UNDEFINED,
     validate_kwargs: ValidateDictT | None = None,
-) -> WrappedT:
+) -> Callable[..., Any]:
     """Check the input DataFrame.
 
     :param arg: The name of the argument to check. This must be the name of one of the
@@ -139,7 +138,7 @@ def argument(
         if check
     ]
 
-    def wrapped(fn: _T) -> _T:
+    def decorator(fn: Callable[..., _T]) -> Callable[..., _T]:
         if get_mode() == Modes.SKIP:
             return fn
 
@@ -147,7 +146,8 @@ def argument(
 
         @functools.wraps(fn)
         def wrapper(*args: Any, **kwargs: Any) -> _T:
-            if (mode := get_mode()).no_handling():
+            mode = get_mode()
+            if mode.no_handling():
                 return fn(*args, **kwargs)
 
             checkers = [check(orig_fn, args, kwargs) for check in checks_list]
@@ -155,20 +155,20 @@ def argument(
             df = _get_from_key(key, arg_value)
             errs = chain.from_iterable(check(df) for check in checkers)
 
-            mode.handle(errs, f"{fn.__name__}: Argument {arg}: ")
+            mode.handle(errs, f"{get_function_name(fn)}: Argument {arg}: ")
             return fn(*args, **kwargs)
 
         setattr(wrapper, ORIGINAL_FUNCTION_ATTRIBUTE, orig_fn)
-        return cast("_T", wrapper)
+        return wrapper
 
-    return wrapped
+    return decorator
 
 
 def result(
     *checks_: _checks.Check | BaseSchema | None,
     key: Any = UNDEFINED,
     validate_kwargs: ValidateDictT | None = None,
-) -> WrappedT:
+) -> Callable[..., Any]:
     """Validate a DataFrame result using pandera.
 
     :param checks_: Additional checks and the pandera schema verification to perform on
@@ -269,7 +269,7 @@ def result(
 
     * df does not have a column "in" of type int
     * The result does not have a column "out" of type int
-    * The column 'a' was changed.
+    * The column 'a' data was changed.
 
     >>> @argument("df", pa.DataFrameSchema({"in": pa.Column(pa.Int)}))
     ... @result(
@@ -288,14 +288,15 @@ def result(
         if check
     ]
 
-    def wrapped(fn: _T) -> _T:
+    def wrapped(fn: Callable[..., _T]) -> Callable[..., _T]:
         if get_mode() == Modes.SKIP:
             return fn
         orig_fn = getattr(fn, ORIGINAL_FUNCTION_ATTRIBUTE, fn)
 
         @functools.wraps(fn)
-        def wrapper(*args: Any, **kwargs: Any) -> Any:
-            if (mode := get_mode()).no_handling():
+        def wrapper(*args: Any, **kwargs: Any) -> _T:
+            mode = get_mode()
+            if mode.no_handling():
                 return fn(*args, **kwargs)
 
             checkers = [check(orig_fn, args, kwargs) for check in checks_lst]
@@ -303,11 +304,11 @@ def result(
             res = fn(*args, **kwargs)
             df = _get_from_key(key, res)
             errs = chain.from_iterable(check(df) for check in checkers)
-            mode.handle(errs, f"{fn.__name__}: Output: ")
+            mode.handle(errs, f"{get_function_name(fn)}: Output: ")
             return res
 
         setattr(wrapper, ORIGINAL_FUNCTION_ATTRIBUTE, orig_fn)
-        return cast("_T", wrapper)
+        return wrapper
 
     return wrapped
 
@@ -323,7 +324,7 @@ def _get_from_key(key: Any, input_: Any) -> pd.DataFrame:
     callable, i.e. key=lambda x: x
     """
     if key is UNDEFINED:
-        return input_
+        return cast("pd.DataFrame", input_)
     if callable(key):
         return cast("pd.DataFrame", key(input_))
-    return input_[key]
+    return cast("pd.DataFrame", input_[key])
