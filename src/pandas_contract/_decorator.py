@@ -269,7 +269,7 @@ def result(
 
     * df does not have a column "in" of type int
     * The result does not have a column "out" of type int
-    * The column 'a' was changed.
+    * The column 'a' data was changed.
 
     >>> @argument("df", pa.DataFrameSchema({"in": pa.Column(pa.Int)}))
     ... @result(
