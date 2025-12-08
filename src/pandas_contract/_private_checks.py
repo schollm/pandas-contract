@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import copy
-from collections.abc import Hashable, Iterable
+from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Callable, Protocol, Union, cast
 
@@ -10,6 +10,8 @@ import pandera.errors as pa_errors
 import pandera.pandas as pa
 
 if TYPE_CHECKING:  # pragma: no cover
+    from collections.abc import Hashable
+
     from pandera.api.base.schema import BaseSchema
 
 
