@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable
+from typing import Any, Callable
 
 import pandas as pd
 
@@ -15,9 +15,6 @@ from pandas import DataFrame
 
 import pandas_contract as pc
 from pandas_contract import argument, checks, result
-
-if TYPE_CHECKING:
-    from pandas_contract._lib import WrappedT
 
 
 @argument(
@@ -105,7 +102,7 @@ def test_result() -> None:
         result(checks.same_length_as("x")),
     ],
 )
-def test_unknown_arg(verify: WrappedT) -> None:
+def test_unknown_arg(verify: Callable[..., Any]) -> None:
     """Test that the decorator raises an error for an unknown argument."""
 
     @verify

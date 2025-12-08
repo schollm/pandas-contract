@@ -1,14 +1,12 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable, Protocol, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Callable, Protocol, cast
 
 if TYPE_CHECKING:  # pragma: no cover
     import types
     from collections.abc import Iterable
 
     import pandas as pd
-
-_T = TypeVar("_T", bound=Callable[..., Any])
 
 
 class KeyT(Protocol):
@@ -59,12 +57,6 @@ class KeyT(Protocol):
     ...     }
 
     """
-
-
-class WrappedT(Protocol):  # pragma: no cover
-    """Type for wrapper function."""
-
-    def __call__(self, fn: _T) -> _T: ...
 
 
 UNDEFINED = object()
