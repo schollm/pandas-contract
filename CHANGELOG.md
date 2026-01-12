@@ -7,9 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Planned]
 
 ## [Upcoming]
+
+## [0.11.2]
+### Added
 * Internal: Add .github/copilot-instructions.md
 
 ## [0.11.1]
+### Changed
 * Internal: Transition from pyright to pyrefly for type checking.
 
 ## [0.11.0]
