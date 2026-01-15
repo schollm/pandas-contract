@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable
+from typing import Any, Callable, cast
 
 import pandas as pd
 
@@ -243,6 +243,7 @@ class TestComplete:
         def change_df(
             df: pd.DataFrame, df2: pd.DataFrame, ds: pd.Series
         ) -> pd.DataFrame:
+            del df2  # unused
             return df.assign(x=ds)
 
         with pytest.raises(ValueError, match="Output: is not df"):
@@ -253,8 +254,11 @@ class TestComplete:
     ) -> None:
         """Test result.inplace argument."""
 
-        def change_df(df: pd.DataFrame, df2: pd.DataFrame, ds: pd.Series) -> pd.Series:
-            return pd.Series(0, index=df.index)
+        def change_df(
+            df: pd.DataFrame, df2: pd.DataFrame, ds: pd.Series
+        ) -> pd.DataFrame:
+            del df2, ds  # unused
+            return cast("pd.DataFrame", pd.Series(0, index=df.index))
 
         with pytest.raises(ValueError, match="Output: is not df"):
             self.my_fn(df, df2, ds, callback=change_df)
