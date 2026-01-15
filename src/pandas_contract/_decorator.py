@@ -21,7 +21,7 @@ if TYPE_CHECKING:  # pragma: no cover
     import pandas as pd
 
 _WrappedT = TypeVar("_WrappedT", bound=Callable[..., Any])
-""""Type variable for the function type."""
+"""Type variable for the function type."""
 
 
 class ValidateDictT(TypedDict, total=False):
