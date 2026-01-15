@@ -20,8 +20,8 @@ from ._lib import (
 if TYPE_CHECKING:  # pragma: no cover
     import pandas as pd
 
-_T = TypeVar("_T", bound=Any)
-""""Type variable for the function type."""
+_WrappedT = TypeVar("_WrappedT", bound=Callable[..., Any])
+"""Type variable for the function type."""
 
 
 class ValidateDictT(TypedDict, total=False):
@@ -37,7 +37,7 @@ def argument(
     *checks_: _checks.Check | BaseSchema | None,
     key: KeyT = UNDEFINED,
     validate_kwargs: ValidateDictT | None = None,
-) -> Callable[..., Any]:
+) -> Callable[[_WrappedT], _WrappedT]:
     """Check the input DataFrame.
 
     :param arg: The name of the argument to check. This must be the name of one of the
@@ -138,14 +138,14 @@ def argument(
         if check
     ]
 
-    def decorator(fn: Callable[..., _T]) -> Callable[..., _T]:
+    def decorator(fn: _WrappedT) -> _WrappedT:
         if get_mode() == Modes.SKIP:
             return fn
 
         orig_fn = getattr(fn, ORIGINAL_FUNCTION_ATTRIBUTE, fn)
 
         @functools.wraps(fn)
-        def wrapper(*args: Any, **kwargs: Any) -> _T:
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
             mode = get_mode()
             if mode.no_handling():
                 return fn(*args, **kwargs)
@@ -159,7 +159,7 @@ def argument(
             return fn(*args, **kwargs)
 
         setattr(wrapper, ORIGINAL_FUNCTION_ATTRIBUTE, orig_fn)
-        return wrapper
+        return cast("_WrappedT", wrapper)
 
     return decorator
 
@@ -168,7 +168,7 @@ def result(
     *checks_: _checks.Check | BaseSchema | None,
     key: Any = UNDEFINED,
     validate_kwargs: ValidateDictT | None = None,
-) -> Callable[..., Any]:
+) -> Callable[[_WrappedT], _WrappedT]:
     """Validate a DataFrame result using pandera.
 
     :param checks_: Additional checks and the pandera schema verification to perform on
@@ -288,13 +288,13 @@ def result(
         if check
     ]
 
-    def wrapped(fn: Callable[..., _T]) -> Callable[..., _T]:
+    def wrapped(fn: _WrappedT) -> _WrappedT:
         if get_mode() == Modes.SKIP:
             return fn
         orig_fn = getattr(fn, ORIGINAL_FUNCTION_ATTRIBUTE, fn)
 
         @functools.wraps(fn)
-        def wrapper(*args: Any, **kwargs: Any) -> _T:
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
             mode = get_mode()
             if mode.no_handling():
                 return fn(*args, **kwargs)
@@ -308,7 +308,7 @@ def result(
             return res
 
         setattr(wrapper, ORIGINAL_FUNCTION_ATTRIBUTE, orig_fn)
-        return wrapper
+        return cast("_WrappedT", wrapper)
 
     return wrapped
 
