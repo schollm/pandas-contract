@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Upcoming]
 ### Changed
-* Fix return types of argument and return decorators.
+* Fix return types of argument and result decorators.
 
 ## [0.11.2]
 ### Added
