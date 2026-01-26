@@ -1,4 +1,4 @@
-.PHONY: help format test test-src lint lint-uv lint-type docs clean-docs
+.PHONY: help format test test-src lint lint-uv lint-type lint-type-mypy docs clean-docs
 
 help:  ## Show this help message
 	@echo "Available make targets:"
