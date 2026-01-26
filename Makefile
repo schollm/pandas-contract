@@ -18,7 +18,7 @@ lint-uv:  ## Run ruff linter
 lint-type:  ## Run type checker
 	uv run pyrefly check src/
 
-lint-type-mypy:  ## Run type checker
+lint-type-mypy:  ## Run mypy type checker
 	uv run mypy src/
 
 docs:  ## Generate docs
