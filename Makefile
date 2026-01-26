@@ -1,4 +1,4 @@
-.PHONY: help format test test-src lint lint-uv lint-type docs clean-docs
+.PHONY: help format test test-src lint lint-uv lint-type lint-type-mypy docs clean-docs
 
 help:  ## Show this help message
 	@echo "Available make targets:"
@@ -10,13 +10,16 @@ test: test-src lint  ## Run all tests and linters
 test-src:  ## Run tests on source code
 	uv run pytest src/
 
-lint: lint-uv lint-type  ## Run all linters
+lint: lint-uv lint-type lint-type-mypy  ## Run all linters
 lint-uv:  ## Run ruff linter
 	uv run ruff check
 	uv run ruff format --check
 
 lint-type:  ## Run type checker
 	uv run pyrefly check src/
+
+lint-type-mypy:  ## Run mypy type checker
+	uv run mypy src/
 
 docs:  ## Generate docs
 	uv run --group docs "$(MAKE)" -C docs html

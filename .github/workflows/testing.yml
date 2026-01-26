@@ -12,8 +12,18 @@ jobs:
         uses: astral-sh/setup-uv@v5
       - name: Install project dependencies
         run: uv sync
-      - name: 'Type check'
+      - name: 'Type check (pyrefly)'
         run: uv run pyrefly check src
+  lint-typing-mypy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+      - name: Install project dependencies
+        run: uv sync
+      - name: 'Type check (mypy)'
+        run: uv run mypy src
   lint:
     runs-on: ubuntu-latest
     steps:
