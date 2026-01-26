@@ -12,8 +12,6 @@ from pandera.pandas import DataFrameSchema
 from pandas_contract import from_arg, result
 from pandas_contract.checks import extends
 
-"""Unit tests for the CheckExtends class."""
-
 
 def test_init() -> None:
     """Test initialization of CheckExtends."""

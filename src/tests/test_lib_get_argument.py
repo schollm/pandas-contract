@@ -67,7 +67,7 @@ def fn_kw_only(a: int, *, b: int = DEFAULT) -> NoReturn:
         ((), {"a": 1}, DEFAULT),
     ],
 )
-def test(
+def test_get_fn_arg(
     fn_: Callable[..., Any], args: tuple[int], kwargs: dict[str, int], expected: int
 ) -> None:
     """Test get_fn_arg returns the correct argument."""

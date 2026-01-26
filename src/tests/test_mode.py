@@ -68,8 +68,8 @@ def test_silent_2() -> None:
     assert get_mode() == "raise"
 
 
-def test_raises() -> None:
-    """Test silent context manager."""
+def test_nested() -> None:
+    """Test nesting of context managers."""
     with silent():
         assert get_mode() == Modes.SILENT
         with raises():

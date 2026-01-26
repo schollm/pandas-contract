@@ -1,4 +1,4 @@
-"""Tests for pandas_contract.checks.same_index_as."""
+"""Tests for pandas_contract.checks.same_length_as."""
 
 from __future__ import annotations
 
@@ -7,16 +7,16 @@ import pandera.pandas as pa
 import pytest
 
 from pandas_contract import argument
-from pandas_contract.checks import same_index_as
+from pandas_contract.checks import same_length_as
 
 
 @pytest.mark.parametrize("arg", [["df2"], "df2", "", None])
-def test(arg: list[str] | str) -> None:
-    """Test same_index_as argument."""
+def test_same_length_as(arg: list[str] | str) -> None:
+    """Test same_length_as argument."""
 
     @argument(
         "df",
-        same_index_as(arg),
+        same_length_as(arg),
     )
     def my_fn(df: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
         return df
@@ -28,12 +28,12 @@ def test(arg: list[str] | str) -> None:
 
 @pytest.mark.parametrize("arg", ["df3", ["df3"], ["df2", "df3"]])
 def test_no_such_argument(arg: str | list[str]) -> None:
-    """Test same_index_as argument failing because of missing argument."""
+    """Test same_length_as argument failing because of missing argument."""
 
     @argument(
         "df",
         pa.DataFrameSchema({"a": pa.Column(int)}),
-        same_index_as(arg),
+        same_length_as(arg),
     )
     def my_fn(df: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
         return df
@@ -44,14 +44,14 @@ def test_no_such_argument(arg: str | list[str]) -> None:
 
 @pytest.mark.parametrize("arg", [("df2"), (["df2"])])
 def test_failing(arg: str | list[str]) -> None:
-    """Test same_index_as argument failing."""
+    """Test same_length_as argument failing."""
 
-    @argument("df", same_index_as(arg))
+    @argument("df", same_length_as(arg))
     def my_fn(df: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
         return df
 
-    with pytest.raises(ValueError, match=r"Index not equal to index of df2."):
+    with pytest.raises(ValueError, match=r"Length of df2 = 2 != 1."):
         my_fn(
             df=pd.DataFrame([[0]], index=[0]),
-            df2=pd.DataFrame([[0]], index=[10]),
+            df2=pd.DataFrame([[0]], index=[0, 1]),
         )
