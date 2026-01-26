@@ -76,5 +76,5 @@ def into_dict():
     return dict(data=pd.DataFrame())
 ```
 
-See [Key Type](https://pandas-contract.readthedocs.io/en/latest/public-api.html#pandas_contract._decorator_v2.KeyT) for 
+See [Key Type](https://pandas-contract.readthedocs.io/en/latest/public-api.html#pandas_contract._decorator.KeyT) for 
 more information and examples.

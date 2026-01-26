@@ -16,7 +16,7 @@ Decorators to check functions arguments and return values using pandas DataFrame
               "age": pa.Column(pa.Int, pa.Check.ge(0)),
           }
       ),
-      pc.check.same_index_as("df2"),
+      pc.checks.same_index_as("df2"),
   )
   @pc.result(
       pa.DataFrameSchema(
