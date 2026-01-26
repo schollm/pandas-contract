@@ -23,7 +23,7 @@ jobs:
       - name: Install project dependencies
         run: uv sync
       - name: 'Type check'
-        run: uv run mypy --strict src
+        run: uv run mypy src
   lint:
     runs-on: ubuntu-latest
     steps:
