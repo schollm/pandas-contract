@@ -61,6 +61,7 @@ dev = [
 [tool.mypy]
 strict = true
 files = ["src/"]
+python_version = 3.9
 
 
 [tool.ruff]
