@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Upcoming]
 ### Added
+* Add CODE_OF_CONDUCT.md
 * Add Makefile help target
 * Flatten test structure
 * Support of Python 3.14 (Add tests and marker)
