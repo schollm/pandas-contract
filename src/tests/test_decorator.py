@@ -5,14 +5,9 @@ from __future__ import annotations
 from typing import Any, Callable, cast
 
 import pandas as pd
+import pandera.pandas as pa
 import pytest
 from pandas import DataFrame
-
-try:
-    import pandera.pandas as pa
-except ImportError:
-    import pandera as pa
-
 
 import pandas_contract as pc
 from pandas_contract import argument, checks, result
