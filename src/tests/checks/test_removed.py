@@ -9,7 +9,7 @@ from pandas_contract import from_arg
 from pandas_contract.checks import removed
 
 
-def test() -> None:
+def test_check_removed() -> None:
     """Base test."""
     check_factory = removed(["aa"])
     assert check_factory

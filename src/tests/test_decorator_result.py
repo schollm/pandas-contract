@@ -15,8 +15,7 @@ if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
 
-@pytest.mark.parametrize("lazy", [True, False])
-def test(lazy: bool) -> None:
+def test_result() -> None:
     """Test result decorator."""
 
     @result(pa.DataFrameSchema({"a": pa.Column(int)}))
@@ -206,7 +205,7 @@ class TestIsNot:
             "df",
             ["df"],
             ["df", "df2"],
-            "df, df2",  # foo
+            "df, df2",
             " df  ,  df2 ",
         ],
     )

@@ -11,7 +11,7 @@ from pandas_contract.checks import same_length_as
 
 
 @pytest.mark.parametrize("arg", [["df2"], "df2", "", None])
-def test(arg: list[str] | str) -> None:
+def test_same_length_as(arg: list[str] | str) -> None:
     """Test same_length_as argument."""
 
     @argument(
