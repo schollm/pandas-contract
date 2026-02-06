@@ -47,7 +47,7 @@ Setup package
 -------------
 
 .. important:: By default, the decorators will be attached to the functions, but
-  **they will not run**. This ensures that production code is not affected
+  **they will not run**. This ensures that production code is not affected.
   See :py:mod:`pandas_contract.mode` for more information.
 
 .. toctree::
