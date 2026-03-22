@@ -35,3 +35,16 @@ def test_key() -> None:
     assert len(errs) == 1
     assert "'b'" in str(errs[0])
     assert isinstance(errs[0], str)
+
+
+def test_call_mutates_input_due_to_inplace_validate() -> None:
+    """Demonstrate the current inplace=True side effect in schema validation."""
+    check = CheckSchema(schema=DataFrameSchema({"x": pa.Column(int, coerce=True)}))
+    df = pd.DataFrame({"x": [1.0]})
+    dtype_before = df["x"].dtype
+
+    check_fn = check(lambda df: 0, (df,), {})
+    assert list(check_fn(df)) == []
+
+    assert df["x"].dtype == dtype_before
+

@@ -81,7 +81,7 @@ class CheckSchema(Check):
                     sample=self.sample,
                     random_state=self.random_state,
                     lazy=True,
-                    inplace=True,
+                    inplace=False,
                 )
             except (pa_errors.SchemaErrors, pa_errors.SchemaError) as exc:
                 yield from map(str, exc.args)
