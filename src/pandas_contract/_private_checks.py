@@ -71,8 +71,8 @@ class CheckSchema(Check):
                 yield "Value is None"
                 return
             try:
-                parsed_schema = cast("Any", self.parse_schema(fn, args, kwargs))
-                validate = parsed_schema.validate
+                parsed_schema = self.parse_schema(fn, args, kwargs)
+                validate = cast("Any", parsed_schema.validate)
 
                 validate(
                     df,
