@@ -49,7 +49,7 @@ def argument(
         `DataFrameSchema <https://pandera.readthedocs.io/en/stable/dataframe_schemas.html>`_
         and `SeriesSchema <https://pandera.readthedocs.io/en/stable/series_schemas.html>`_.
     :param key: The key of the input to check. See
-        :class:`~pandas_contract._decorator_v2.KeyT`.
+        :class:`~pandas_contract._lib.KeyT`.
     :param validate_kwargs: Additional Keywords to provide to pandera validate.
         Valid keys are
 
@@ -180,7 +180,7 @@ def result(
         `DataFrameSchema <https://pandera.readthedocs.io/en/stable/dataframe_schemas.html>`_
         and `SeriesSchema <https://pandera.readthedocs.io/en/stable/series_schemas.html>`_.
     :param key: The key of the input to check. See
-        :class:`~pandas_contract._decorator_v2.KeyT`.
+        :class:`~pandas_contract._lib.KeyT`.
 
     :param validate_kwargs: Additional Keywords to provide to pandera validate.
         Valid keys are
