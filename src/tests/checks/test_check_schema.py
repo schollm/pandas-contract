@@ -47,4 +47,3 @@ def test_call_mutates_input_due_to_inplace_validate() -> None:
     assert list(check_fn(df)) == []
 
     assert df["x"].dtype == dtype_before
-
