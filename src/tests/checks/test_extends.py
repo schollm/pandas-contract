@@ -122,3 +122,19 @@ def test_modified_is_none__add_column() -> None:
     assert list(fn(df.assign(x=1))) == [
         "extends df: Column 'x' was added but not allowed."
     ]
+
+
+@pytest.mark.xfail("Not supported yet.")
+def test_extends_hash_collision_hides_data_change(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Intentionally red: hash collisions can hide changed data."""
+    check = extends("df", modified=DataFrameSchema())
+    df_in = pd.DataFrame({"a": [1]})
+    df_out = pd.DataFrame({"a": [2]})
+
+    # Force collisions for index and column data hashes used by extends._get_hash.
+    monkeypatch.setattr("builtins.hash", lambda _value: 0)
+
+    fn = check(lambda df: None, (df_in,), {})
+    assert list(fn(df_out)) == ["extends df: Column 'a' data was changed."]
