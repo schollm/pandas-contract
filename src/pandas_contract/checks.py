@@ -9,6 +9,7 @@ of two arguments match, or that an argument is changed in-place (or a copy is cr
 
 from __future__ import annotations
 
+from collections import Counter
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, Any, Callable, NamedTuple, Union, cast
 
@@ -255,11 +256,11 @@ class extends(Check):  # noqa: N801
     def _check_columns(
         self, prefix: str, hash_self: _HashDf, hash_other: _HashDf
     ) -> Iterable[str]:
-        cols_self = set(hash_self.columns)
-        cols_other = set(hash_other.columns)
-        for col in cols_self - cols_other:
+        cols_self = Counter(hash_self.columns)
+        cols_other = Counter(hash_other.columns)
+        for col in (cols_self - cols_other).elements():
             yield f"{prefix}Column {col!r} was added but not allowed."
-        for col in cols_other - cols_self:
+        for col in (cols_other - cols_self).elements():
             yield f"{prefix}Column {col!r} was removed but not allowed."
 
     def _check_data_hashes(
@@ -293,7 +294,7 @@ class extends(Check):  # noqa: N801
 
 
 class _HashDf(NamedTuple):
-    """Helper for Extends: Tuple containing the hash of a DataFrame."""
+    """Helper for extends: tuple containing hashed dataframe snapshots."""
 
     index_: int
     columns: list[str]

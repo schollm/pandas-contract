@@ -45,7 +45,7 @@ from logging import getLogger
 from typing import TYPE_CHECKING, Literal, Union, cast
 
 if TYPE_CHECKING:  # pragma: no cover
-    from collections.abc import Iterable, Iterator
+    from collections.abc import Generator, Iterable
 
 #: Environment variable to set the mode for the pandas-contract library.
 #: Can be one of the literal values of :class:`~ModesT`.
@@ -132,7 +132,7 @@ def get_mode() -> Modes:
 
 
 @contextmanager
-def as_mode(mode: ModesT) -> Iterator[None]:
+def as_mode(mode: ModesT) -> Generator[None]:
     """Context manager to temporarily set the global mode for handling errors.
 
     >>> import pandas as pd
@@ -175,7 +175,7 @@ def set_mode(mode: ModesT) -> Modes:
 
 
 @contextmanager
-def raises() -> Iterator[None]:
+def raises() -> Generator[None]:
     """Context decorator to raise errors on failed dataframe tests.
 
     >>> import pandas_contract as pc
@@ -194,7 +194,7 @@ def raises() -> Iterator[None]:
 
 
 @contextmanager
-def silent() -> Iterator[None]:
+def silent() -> Generator[None]:
     """Context decorator to silence errors on failed dataframe tests.
 
     >>> import pandas as pd

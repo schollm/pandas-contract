@@ -71,8 +71,8 @@ class CheckSchema(Check):
                 yield "Value is None"
                 return
             try:
-                parsed_schema = cast("Any", self.parse_schema(fn, args, kwargs))
-                validate = parsed_schema.validate
+                parsed_schema = self.parse_schema(fn, args, kwargs)
+                validate = cast("Any", parsed_schema.validate)
 
                 validate(
                     df,
@@ -81,7 +81,7 @@ class CheckSchema(Check):
                     sample=self.sample,
                     random_state=self.random_state,
                     lazy=True,
-                    inplace=True,
+                    inplace=False,
                 )
             except (pa_errors.SchemaErrors, pa_errors.SchemaError) as exc:
                 yield from map(str, exc.args)
