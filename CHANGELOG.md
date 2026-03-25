@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Planned]
 
 ## [Upcoming]
+# Fixed
+* Detect changes when columns with identical labels are added or removed.
+* CheckSchema never changes the DataFrame in-place.
 
 ## [0.11.4]
 ### Added

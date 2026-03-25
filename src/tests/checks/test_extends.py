@@ -77,8 +77,8 @@ def test_callable_key_in_modified__failure() -> None:
         my_fn(pd.DataFrame(index=[0], columns=["aa"]))
     # match from modified schema check: We expect x from col argument
     exc.match(r"column \'x\' not in dataframe")
-    # match from origina (df minus modififed columns) data check: We expect no
-    # columns outside of modified to get changed
+    # match from original (df minus modififed columns) data check: We expect no
+    # columns outside modified to get changed
     exc.match(r"Column \'other\' was added but not allowed")
 
 
@@ -124,7 +124,34 @@ def test_modified_is_none__add_column() -> None:
     ]
 
 
-@pytest.mark.xfail("Not supported yet.")
+def test_duplicate_column_removal_not_detected_by_set() -> None:
+    """Intentionally failing: _check_columns uses set(), losing column multiplicity.
+
+    When a DataFrame has two columns with the same name and one is dropped,
+    set(columns_in) == set(columns_out) so _check_columns never yields
+    "was removed".  Only _check_data_hashes fires — with the wrong diagnosis
+    "data was changed" — while the structural error goes unreported.
+    """
+    check = extends("df", modified=DataFrameSchema())
+    # df_in has two 'a' columns; df_out silently drops one of them.
+    df_in = pd.DataFrame([[1, 2, 3]], columns=["a", "a", "b"])
+    df_out = pd.DataFrame([[1, 3]], columns=["a", "b"])
+
+    fn = check(lambda df: None, (df_in,), {})
+    errors = list(fn(df_out))
+
+    # This assertion currently fails: set(['a','a','b']) == set(['a','b']),
+    # so the removal is never reported.  Only "data was changed" appears.
+    assert "extends df: Column 'a' was removed but not allowed." in errors
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason=(
+        "Hash collisions can hide data changes (early-exit fires on identical hashes). "
+        "This is an accepted trade-off: keeping hash() avoids OOM on large DataFrames."
+    ),
+)
 def test_extends_hash_collision_hides_data_change(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
