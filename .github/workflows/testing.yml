@@ -19,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: check-dependencies
-        uses: schollm/check-dependencies@github-actions
+        uses: schollm/check-dependencies@main
         with:
           file-names: |
             src/pandas_contract/
