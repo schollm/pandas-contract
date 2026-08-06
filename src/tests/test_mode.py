@@ -126,8 +126,10 @@ def test_set_mode_invalid() -> None:
         (
             "invalid",
             Modes.SILENT,
-            "Environment variable PANDAS_CONTRACT_MODE contains invalid value. Setting"
-            " to default mode: silent",
+            (
+                "Environment variable PANDAS_CONTRACT_MODE contains invalid value."
+                " Setting to default mode: silent"
+            ),
         ),
         (
             "",

@@ -10,17 +10,17 @@ See below for an comparison of the two API styles
 ```python
 import pandas_contract as pc
 import pandera.pandas as pa
+
 schema = pa.DataFrameSchema(...)
 # OLD:
 pc.argument(
-   arg="dfs",
-   schema=schema,
-   same_index_as="df2",
-   same_length_a="ds",
-   key=0,
-   head=10,
-   random_state=42,
-
+    arg="dfs",
+    schema=schema,
+    same_index_as="df2",
+    same_length_a="ds",
+    key=0,
+    head=10,
+    random_state=42,
 )
 # NEW:
 pc.argument2(
@@ -93,8 +93,8 @@ done one after each other.
    import pandera.pandas as pa
 
    schema = pa.DataFrameSchema({"x": pa.Column()})
-   pc.result(schema, extends="df") # Old
-   pc.result(pc.checks.extends("df", modified=schema)) # New
+   pc.result(schema, extends="df")  # Old
+   pc.result(pc.checks.extends("df", modified=schema))  # New
    ```
 
 After running the tests, there should be no more deprecation warnings

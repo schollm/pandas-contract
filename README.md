@@ -42,9 +42,7 @@ def col_x_to_string(df: pd.DataFrame) -> pd.DataFrame:
 ### Dynamic Arguments and return values
 Required columns and arguments can also be specified dynamically using a function that returns a schema.
 ```python
-@pc.argument("df", pa.DataFrameSchema(
-    {pc.from_arg("col"): pa.Column()})
-)
+@pc.argument("df", pa.DataFrameSchema({pc.from_arg("col"): pa.Column()}))
 @pc.result(pa.DataFrameSchema({pc.from_arg("col"): pa.String}))
 def col_to_string(df: pd.DataFrame, col: str) -> pd.DataFrame:
     return df.assign(**{col: df[col].astype(str)})
@@ -52,10 +50,7 @@ def col_to_string(df: pd.DataFrame, col: str) -> pd.DataFrame:
 #### Multiple columns in function argument
 The decorator also supports multiple columns from the function argument.
 ```python
-@pc.argument("df", pa.DataFrameSchema(
-        {pc.from_arg("cols"): pa.Column()}
-    )
-)
+@pc.argument("df", pa.DataFrameSchema({pc.from_arg("cols"): pa.Column()}))
 @pc.result(pa.DataFrameSchema({pc.from_arg("cols"): pa.String}))
 def cols_to_string(df: pd.DataFrame, cols: list[str]) -> pd.DataFrame:
     return df.assign(**{col: df[col].astype(str) for col in cols})

@@ -55,6 +55,7 @@ import pandas as pd
 import pandas_contract as pc
 import pandera.pandas as pa
 
+
 @pc.argument("df", pa.DataFrameSchema({"x": pa.Column(int)}))
 @pc.result(pa.DataFrameSchema({"y": pa.Column(str)}))
 def transform(df: pd.DataFrame) -> pd.DataFrame:
@@ -68,6 +69,7 @@ def transform(df: pd.DataFrame) -> pd.DataFrame:
 @pc.result(pa.DataFrameSchema({pc.from_arg("col"): pa.Column(str)}))
 def col_to_string(df: pd.DataFrame, col: str) -> pd.DataFrame:
     return df.assign(**{col: df[col].astype(str)})
+
 
 # Multiple columns from list argument
 @pc.argument("df", pa.DataFrameSchema({pc.from_arg("cols"): pa.Column()}))
@@ -83,10 +85,12 @@ def cols_to_string(df: pd.DataFrame, cols: list[str]) -> pd.DataFrame:
 def add_column(df: pd.DataFrame) -> pd.DataFrame:
     return df.assign(new_col=1)
 
+
 # Result has same index as another argument
 @pc.result(same_index_as="df2")
 def merge_data(df1: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
     return df1.join(df2)
+
 
 # Result is not the same object (no in-place mutation)
 @pc.result(is_not="df")
@@ -101,12 +105,12 @@ def safe_transform(df: pd.DataFrame) -> pd.DataFrame:
 def returns_wrapped() -> dict:
     return {"data": pd.DataFrame({"x": [1, 2, 3]})}
 
+
 # Extract DataFrame using callable
-@pc.argument("config", 
-    pa.DataFrameSchema({"id": pa.Column(int)}),
-    key=lambda cfg: cfg.dataframe)
-def process_config(config: Config) -> None:
-    ...
+@pc.argument(
+    "config", pa.DataFrameSchema({"id": pa.Column(int)}), key=lambda cfg: cfg.dataframe
+)
+def process_config(config: Config) -> None: ...
 ```
 
 ### Validation Modes
@@ -220,16 +224,20 @@ import pandas_contract as pc
 import pandera.pandas as pa
 import pytest
 
-@pytest.mark.parametrize("input_val,expected", [
-    (1, "1"),
-    (2, "2"),
-])
+
+@pytest.mark.parametrize(
+    "input_val,expected",
+    [
+        (1, "1"),
+        (2, "2"),
+    ],
+)
 def test_conversion(input_val, expected):
     @pc.argument("df", pa.DataFrameSchema({"x": pa.Column(int)}))
     @pc.result(pa.DataFrameSchema({"x": pa.Column(str)}))
     def convert(df: pd.DataFrame) -> pd.DataFrame:
         return df.assign(x=df["x"].astype(str))
-    
+
     with pc.raises:
         result = convert(pd.DataFrame({"x": [input_val]}))
         assert result["x"].iloc[0] == expected
