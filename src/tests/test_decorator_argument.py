@@ -94,7 +94,7 @@ def test_extends__fails() -> None:
     "ds_, expected_err",
     [
         (pd.Series([1], name="b", dtype="float"), ", found 'b'"),
-        (pd.Series([1], name="a", dtype="int"), "got int64"),
+        (pd.Series([1], name="a", dtype="int"), "got int"),
         (pd.Series([float("nan")], name="a", dtype="float"), "contains null values"),
     ],
 )
