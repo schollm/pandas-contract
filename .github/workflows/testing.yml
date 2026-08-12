@@ -11,7 +11,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v5
       - name: 'Type check'
-        run: uv run poe lint-type
+        run: uv run poe type
   lint:
     runs-on: ubuntu-latest
     steps:
@@ -38,7 +38,7 @@ jobs:
         run: |
           # Keep --with in sync pyproject.toml
           # python 3.10 is the latest with pre-compiled pandas 1.5.0 releases. 
-          uv run --python 3.10 --with pandas==1.5.0 --with pandera==0.22.0 --with "numpy<2.0" poe pytest
+          uv run --python 3.10 --with pandas==1.5.0 --with pandera==0.22.0 --with "numpy<2.0" pytest src/
   test:
     name: Test Python 🐍 application
     strategy:
