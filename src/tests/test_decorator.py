@@ -73,7 +73,7 @@ class TestArgument:
         def foo_int(dfs: list[pd.DataFrame]) -> None:
             pass
 
-        df = pd.DataFrame({"a_col": pd.Series([1], dtype=int)})
+        df = pd.DataFrame({"a_col": pd.Series([1], dtype="int64")})
         foo_int([df, df])
 
         with pytest.raises(IndexError, match="list index out of range"):

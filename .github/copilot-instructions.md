@@ -159,12 +159,11 @@ with pc.silent:
 
 ### Sphinx Documentation
 - **Location**: `docs/` directory
-- **Build system**: Makefile with standard Sphinx targets
+- **Build system**: poe tasks for Sphinx (`uv run poe docs`, outputs to `docs/_out/build/html/`)
 - **Theme**: sphinx-rtd-theme (Read the Docs theme)
 - **Extensions**:
   - sphinx-autodoc2: Auto-generate API docs from docstrings
   - myst-parser: Markdown support in docs
-- **Build**: `cd docs && make html` (output to `docs/_out/html/`)
 - **Hosted**: [pandas-contract.readthedocs.io](https://pandas-contract.readthedocs.io/)
 
 ### Docstring Style
@@ -208,11 +207,6 @@ cd docs && uv run sphinx-build -b html . _out/html
 - **Dev**: pytest, ruff, pandas-stubs, pyrefly, pytest-cov
 - **Docs**: sphinx, sphinx-rtd-theme, sphinx-autodoc2, myst-parser
 - **Python versions**: 3.9 - 3.13 (including PyPy)
-
-### Makefile
-- **Purpose**: Primarily for Sphinx documentation builds
-- **Targets**: `make html`, `make clean`, `make linkcheck`
-- **Location**: `docs/Makefile`
 
 ## Testing Patterns
 
@@ -268,15 +262,15 @@ uv run ruff check --fix .
 ```bash
 cd docs
 uv run sphinx-build -b html . _out/html
-# Or using Makefile
-make html
+# Or using poe
+uv run poe docs
 ```
 
 ### Release Process
 1. Update version in `pyproject.toml`
 2. Update `CHANGELOG.md` with changes
 3. Run full test suite: `uv run pytest src/tests/`
-4. Build docs and verify: `cd docs && make html`
+4. Build docs and verify: `uv run poe docs`
 5. Tag release and push to GitHub
 6. ReadTheDocs automatically builds new version
 
