@@ -1,11 +1,11 @@
 # Development Guide
 ## Development flow
-After editing the source, run `make test` to run the full test-suite. This will
-not only run `pytest`, including `doctest`, but also `ruff` for linting and
-`pyright` for type-checking.
+After editing the source, run `poe test` to run the full test-suite. This will
+not only run `pytest`, including `doctest`, but it will also run the linter
+and type-check the source code.
 
-Additionally, `make docs` generates the sphinx documentation. The generated
-documentation is located at `docs/_out/build/html/index.html`
+Additionally, `poe docs` generates the sphinx documentation. The generated
+documentation is located at `docs/_out/html/index.html`
 
 ## How to add a new check
 To add a new check to
@@ -15,11 +15,11 @@ see the documentation in the protocol class
 
 ## Coding Standards
 
-| **Type**       | Package   | Comment                      |
-|----------------|-----------|------------------------------|
-| **Automation** | `make`    |                              |
-| **Logging**    | `logger`  | Minimize additional packages |
-| **Packaging**  | `uv`      |                              |
-| **Tests**      | `pytest`  | Including doctests           |
-| **Typing**     | `pyright` | Type all methods             |
-| **Linting**    | `ruff`    | Also used for formatting     |
+| **Type**       | Package      | Comment                      |
+|----------------|--------------|------------------------------|
+| **Automation** | `poethepoet` |                              |
+| **Logging**    | `logger`     | Minimize additional packages |
+| **Packaging**  | `uv`         |                              |
+| **Tests**      | `pytest`     | Including doctests           |
+| **Typing**     | `pyright`    | Type all methods             |
+| **Linting**    | `ruff`       | Also used for formatting     |

@@ -56,7 +56,19 @@ dev = [
     "pyrefly>=0.44.1",
     "pytest-cov>=6.1.1",
     "setuptools>=78.1.0",
+    "poethepoet>=0.37.0",
 ]
+
+[tool.poe.tasks]
+pytest = "pytest src/"
+lint-format = "ruff format --check ."
+format = "ruff format ."
+lint-check = "ruff check ."
+lint = ["lint-check", "lint-format"]
+type = "uv run pyrefly check src/"
+test = ["lint", "type", "pytest"]
+docs = "uv run --group docs sphinx-build -M html docs/ docs/_out/build"
+docs-clean = "rm -rf docs/_out"
 
 [tool.ruff]
 line-length = 88
