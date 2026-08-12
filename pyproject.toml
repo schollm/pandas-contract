@@ -73,7 +73,7 @@ ignore = [
     "D205", # 1 blank line required between summary line and description: ruff format disagrees.
     "D407", # We want sub-headings in docstrsings.
     "D416", # Example(s) is used as headings, so we do not want a column.
-
+    "CPY001",  # Mising Copyright notice
 ]
 
 [tool.ruff.lint.flake8-pytest-style]

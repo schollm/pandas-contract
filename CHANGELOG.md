@@ -158,10 +158,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   import pandas_contract as pc
   import pandera as pa
 
-  @pc.argument("df", schema=pa.DataFrameSchema(
-          {pc.from_arg("group_cols"): pa.Column()}
-      )
-  )
+
+  @pc.argument("df", schema=pa.DataFrameSchema({pc.from_arg("group_cols"): pa.Column()}))
   def func(df: pd.DataFrame, group_cols: list[str]) -> pd.DataFrame:
       return df.assign(**{col: df[col].astype(str) for col in group_cols})
   ```
