@@ -21,5 +21,5 @@ see the documentation in the protocol class
 | **Logging**    | `logger`     | Minimize additional packages |
 | **Packaging**  | `uv`         |                              |
 | **Tests**      | `pytest`     | Including doctests           |
-| **Typing**     | `pyright`    | Type all methods             |
+| **Typing**     | `pyrefly`    | Type all methods             |
 | **Linting**    | `ruff`       | Also used for formatting     |
