@@ -263,7 +263,7 @@ uv run ruff check --fix .
 cd docs
 uv run sphinx-build -b html . _out/html
 # Or using poe
-poe docs
+uv run poe docs
 ```
 
 ### Release Process
