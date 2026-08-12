@@ -159,7 +159,7 @@ with pc.silent:
 
 ### Sphinx Documentation
 - **Location**: `docs/` directory
-- **Build system**: poe tasks for Sphinx (`uv run poe docs`, outputs to `docs/_out/html/`)
+- **Build system**: poe tasks for Sphinx (`uv run poe docs`, outputs to `docs/_out/build/html/`)
 - **Theme**: sphinx-rtd-theme (Read the Docs theme)
 - **Extensions**:
   - sphinx-autodoc2: Auto-generate API docs from docstrings

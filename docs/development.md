@@ -5,7 +5,7 @@ not only run `pytest`, including `doctest`, but it will also run the linter
 and type-check the source code.
 
 Additionally, `poe docs` generates the sphinx documentation. The generated
-documentation is located at `docs/_out/html/index.html`
+documentation is located at `docs/_out/build/html/index.html`
 
 ## How to add a new check
 To add a new check to
