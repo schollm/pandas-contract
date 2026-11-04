@@ -48,8 +48,6 @@ jobs:
         # Add all python versions for ubuntu.
         include:
           - os: "ubuntu-latest"
-            python-version: "3.9"
-          - os: "ubuntu-latest"
             python-version: "3.10"
           - os: "ubuntu-latest"
             python-version: "3.11"
