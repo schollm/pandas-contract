@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import pandas as pd
 import pandera.pandas as pa
@@ -11,6 +11,9 @@ from pandas import DataFrame
 
 import pandas_contract as pc
 from pandas_contract import argument, checks, result
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 @argument(

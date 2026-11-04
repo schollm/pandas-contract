@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable, Protocol, cast
+from typing import TYPE_CHECKING, Any, Protocol, cast
 
 if TYPE_CHECKING:  # pragma: no cover
     import types
-    from collections.abc import Iterable
+    from collections.abc import Callable, Iterable
 
     import pandas as pd
 
@@ -139,7 +139,7 @@ def get_fn_arg(
     if arg_name in kwargs:
         return kwargs[arg_name]
     co = _get_code(func)
-    for var_name, arg in zip(co.co_varnames, args):
+    for var_name, arg in zip(co.co_varnames, args, strict=False):
         if arg_name == var_name:
             return arg
     defaults = getattr(func, "__defaults__", None)
@@ -147,6 +147,7 @@ def get_fn_arg(
         for var_name, arg in zip(
             co.co_varnames[co.co_argcount - len(defaults) :],
             defaults,
+            strict=False,
         ):
             if arg_name == var_name:
                 return arg

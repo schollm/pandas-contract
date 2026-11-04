@@ -2,15 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Union
-
 import pandas as pd
 import pandera.pandas as pa
 import pytest
 
 from pandas_contract import argument, as_mode, checks, from_arg
 
-MaybeListT = Union[list[str], str]
+MaybeListT = list[str] | str
 
 
 def test() -> None:
