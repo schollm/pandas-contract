@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import copy
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Callable, Protocol, Union, cast
+from typing import TYPE_CHECKING, Any, Protocol, cast
 
 import pandas as pd
 import pandera.errors as pa_errors
@@ -15,7 +15,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pandera.api.base.schema import BaseSchema
 
 
-DataCheckFunctionT = Callable[[Union[pd.DataFrame, pd.Series]], Iterable[str]]
+DataCheckFunctionT = Callable[[pd.DataFrame | pd.Series], Iterable[str]]
 
 
 class Check(Protocol):  # pragma: no cover

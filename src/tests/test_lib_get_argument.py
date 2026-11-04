@@ -1,6 +1,7 @@
 """Test _lib functions."""
 
-from typing import Any, Callable, NoReturn, cast
+from collections.abc import Callable
+from typing import Any, NoReturn, cast
 
 import pytest
 

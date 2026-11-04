@@ -10,8 +10,8 @@ of two arguments match, or that an argument is changed in-place (or a copy is cr
 from __future__ import annotations
 
 from collections import Counter
-from collections.abc import Iterable
-from typing import TYPE_CHECKING, Any, Callable, NamedTuple, Union, cast
+from collections.abc import Callable, Iterable
+from typing import TYPE_CHECKING, Any, NamedTuple, cast
 
 import pandas as pd
 
@@ -27,7 +27,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 __all__ = ["extends", "is_", "is_not", "removed", "same_index_as", "same_length_as"]
 
-DataCheckFunctionT = Callable[[Union[pd.DataFrame, pd.Series]], Iterable[str]]
+DataCheckFunctionT = Callable[[pd.DataFrame | pd.Series], Iterable[str]]
 
 
 def same_index_as(args_: str | Iterable[str] | None, /) -> Check | None:
@@ -74,7 +74,7 @@ def same_index_as(args_: str | Iterable[str] | None, /) -> Check | None:
         indices = [get_df_arg(fn, arg, args, kwargs).index.copy() for arg in arg_names]
         return lambda df: (
             f"Index not equal to index of {other_arg}."
-            for other_arg, other_idx in zip(arg_names, indices)
+            for other_arg, other_idx in zip(arg_names, indices, strict=True)
             if not df.index.equals(other_idx)  # pyright: ignore[reportUnknownMemberType]
         )
 
