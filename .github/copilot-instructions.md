@@ -206,7 +206,7 @@ cd docs && uv run sphinx-build -b html . _out/html
 - **Runtime**: pandas>=1.5.0, pandera[pandas]>=0.22.0
 - **Dev**: pytest, ruff, pandas-stubs, pyrefly, pytest-cov
 - **Docs**: sphinx, sphinx-rtd-theme, sphinx-autodoc2, myst-parser
-- **Python versions**: 3.9 - 3.13 (including PyPy)
+- **Python versions**: 3.10 - 3.14 (including PyPy)
 
 ## Testing Patterns
 
