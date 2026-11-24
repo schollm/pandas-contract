@@ -33,7 +33,7 @@ def test_key() -> None:
     assert list(check_fn(pd.DataFrame(columns=["a", "b"]))) == []
     errs = list(check_fn(pd.DataFrame(columns=["a", "x"])))
     assert len(errs) == 1
-    assert "'b'" in str(errs[0])
+    assert "'b'" in errs[0]
     assert isinstance(errs[0], str)
 
 
