@@ -16,6 +16,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: check-dependencies
+        uses: schollm/check-dependencies@v2
+        with:
+          file-names: |
+            src/pandas_contract/
+          include-dev: "false"
+          verbose: "true"
       - uses: astral-sh/ruff-action@v3
         with:
           src: "./src"
