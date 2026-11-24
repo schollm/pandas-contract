@@ -23,7 +23,6 @@ jobs:
             src/pandas_contract/
           include-dev: "false"
           verbose: "true"
-          show-all: "false"
       - uses: astral-sh/ruff-action@v3
         with:
           src: "./src"
