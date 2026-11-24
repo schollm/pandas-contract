@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import functools
+from collections.abc import Callable
 from itertools import chain
-from typing import TYPE_CHECKING, Any, Callable, TypedDict, TypeVar, cast
+from typing import TYPE_CHECKING, Any, TypedDict, TypeVar, cast
 
 from pandera.api.base.schema import BaseSchema
 
